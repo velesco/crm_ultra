@@ -2,17 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\Contact;
-use App\Models\ContactSegment;
 use App\Models\SmsMessage;
 use App\Models\SmsProvider;
+use App\Models\Contact;
+use App\Models\ContactSegment;
 use App\Services\SmsService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class SmsController extends Controller
@@ -26,20 +23,20 @@ class SmsController extends Controller
     }
 
     /**
-     * Display SMS dashboard with overview
+     * Display a listing of SMS messages
      */
     public function index(Request $request)
     {
-        $query = SmsMessage::with(['contact', 'user'])
-            ->latest();
+        $query = SmsMessage::with(['contact', 'smsProvider', 'user'])
+            ->latest('created_at');
 
         // Apply filters
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        if ($request->filled('provider')) {
-            $query->where('provider', $request->provider);
+        if ($request->filled('provider_id')) {
+            $query->where('sms_provider_id', $request->provider_id);
         }
 
         if ($request->filled('date_from')) {
@@ -51,536 +48,350 @@ class SmsController extends Controller
         }
 
         if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('message', 'like', '%' . $request->search . '%')
-                  ->orWhereHas('contact', function($contactQuery) use ($request) {
-                      $contactQuery->where('name', 'like', '%' . $request->search . '%')
-                                 ->orWhere('phone', 'like', '%' . $request->search . '%');
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('message', 'like', "%{$search}%")
+                  ->orWhere('phone_number', 'like', "%{$search}%")
+                  ->orWhereHas('contact', function($cq) use ($search) {
+                      $cq->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%");
                   });
             });
         }
 
         $messages = $query->paginate(20);
 
-        // Get statistics
-        $stats = $this->getSmsStatistics();
+        // Statistics for dashboard
+        $stats = [
+            'total_sent' => SmsMessage::count(),
+            'sent_today' => SmsMessage::whereDate('created_at', today())->count(),
+            'delivered' => SmsMessage::where('status', 'delivered')->count(),
+            'failed' => SmsMessage::where('status', 'failed')->count(),
+            'pending' => SmsMessage::where('status', 'pending')->count(),
+            'delivery_rate' => SmsMessage::count() > 0 ? 
+                round((SmsMessage::where('status', 'delivered')->count() / SmsMessage::count()) * 100, 2) : 0,
+        ];
 
-        return view('sms.index', compact('messages', 'stats'));
+        $providers = SmsProvider::where('is_active', true)->get();
+
+        return view('sms.index', compact('messages', 'stats', 'providers'));
     }
 
     /**
-     * Show SMS compose form
+     * Show the form for creating a new SMS message
      */
     public function create()
     {
-        $contacts = Contact::whereNotNull('phone')
-            ->where('phone', '!=', '')
-            ->select('id', 'name', 'phone')
-            ->orderBy('name')
+        $contacts = Contact::select('id', 'first_name', 'last_name', 'phone')
+            ->where('phone', '!=', null)
+            ->orderBy('first_name')
             ->get();
 
-        $segments = ContactSegment::with('contacts')
-            ->orderBy('name')
-            ->get();
+        $segments = ContactSegment::all();
+        $providers = SmsProvider::where('is_active', true)->get();
 
-        $providers = SmsProvider::where('is_active', true)
-            ->orderBy('name')
-            ->get();
-
-        $templates = $this->getSmsTemplates();
-
-        return view('sms.create', compact('contacts', 'segments', 'providers', 'templates'));
+        return view('sms.create', compact('contacts', 'segments', 'providers'));
     }
 
     /**
-     * Send SMS message(s)
+     * Store a newly created SMS message
      */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'message' => 'required|string|max:1600',
-            'recipients' => 'required|array|min:1',
-            'recipients.*' => 'exists:contacts,id',
+            'send_type' => 'required|in:individual,bulk,segment',
+            'contact_id' => 'required_if:send_type,individual|exists:contacts,id',
+            'contact_ids' => 'required_if:send_type,bulk|array|min:1',
+            'contact_ids.*' => 'exists:contacts,id',
+            'segment_id' => 'required_if:send_type,segment|exists:contact_segments,id',
             'provider_id' => 'nullable|exists:sms_providers,id',
             'schedule_at' => 'nullable|date|after:now',
-            'send_type' => 'required|in:now,scheduled,test'
         ]);
 
         if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
+            return back()->withErrors($validator)->withInput();
         }
 
         try {
-            DB::beginTransaction();
+            $message = $request->message;
+            $scheduleAt = $request->schedule_at ? Carbon::parse($request->schedule_at) : null;
+            $providerId = $request->provider_id;
 
-            $recipientContacts = Contact::whereIn('id', $request->recipients)
-                ->whereNotNull('phone')
-                ->where('phone', '!=', '')
-                ->get();
+            $contacts = $this->getContactsBasedOnSendType($request);
 
-            if ($recipientContacts->isEmpty()) {
-                throw new \Exception('No valid phone numbers found for selected contacts.');
+            if ($contacts->isEmpty()) {
+                return back()->withErrors(['contacts' => 'No valid contacts found for SMS sending.'])->withInput();
             }
 
-            $results = [
-                'success' => 0,
-                'failed' => 0,
-                'scheduled' => 0,
-                'messages' => []
-            ];
+            $sentCount = 0;
+            $failedCount = 0;
 
-            foreach ($recipientContacts as $contact) {
-                $smsMessage = SmsMessage::create([
-                    'contact_id' => $contact->id,
-                    'user_id' => Auth::id(),
-                    'message' => $this->personalizeMessage($request->message, $contact),
-                    'phone_number' => $contact->phone,
-                    'provider' => $request->provider_id ? SmsProvider::find($request->provider_id)->name : null,
-                    'status' => $request->send_type === 'scheduled' ? 'scheduled' : 'pending',
-                    'scheduled_at' => $request->schedule_at,
-                    'metadata' => json_encode([
-                        'send_type' => $request->send_type,
-                        'original_message' => $request->message,
-                        'user_agent' => $request->userAgent(),
-                        'ip_address' => $request->ip()
-                    ])
-                ]);
+            foreach ($contacts as $contact) {
+                if (!$contact->phone) {
+                    $failedCount++;
+                    continue;
+                }
 
-                if ($request->send_type === 'now') {
-                    try {
-                        $response = $this->smsService->sendSms(
+                try {
+                    // Send SMS immediately or schedule
+                    if ($scheduleAt) {
+                        $this->scheduleMessage($contact, $message, $scheduleAt, $providerId);
+                    } else {
+                        $result = $this->smsService->sendSms(
                             $contact->phone,
-                            $smsMessage->message,
-                            $request->provider_id
+                            $message,
+                            $contact->id,
+                            $providerId
                         );
-
-                        $smsMessage->update([
-                            'status' => $response['success'] ? 'sent' : 'failed',
-                            'provider_message_id' => $response['message_id'] ?? null,
-                            'sent_at' => $response['success'] ? now() : null,
-                            'error_message' => $response['error'] ?? null,
-                            'cost' => $response['cost'] ?? 0
-                        ]);
-
-                        if ($response['success']) {
-                            $results['success']++;
+                        
+                        if ($result['success']) {
+                            $sentCount++;
                         } else {
-                            $results['failed']++;
+                            $failedCount++;
                         }
-
-                    } catch (\Exception $e) {
-                        $smsMessage->update([
-                            'status' => 'failed',
-                            'error_message' => $e->getMessage()
-                        ]);
-                        $results['failed']++;
-                        Log::error('SMS sending failed', [
-                            'contact_id' => $contact->id,
-                            'phone' => $contact->phone,
-                            'error' => $e->getMessage()
-                        ]);
                     }
-                } elseif ($request->send_type === 'scheduled') {
-                    $results['scheduled']++;
-                } elseif ($request->send_type === 'test') {
-                    // For test messages, just mark as sent without actually sending
-                    $smsMessage->update([
-                        'status' => 'sent',
-                        'sent_at' => now(),
-                        'cost' => 0
-                    ]);
-                    $results['success']++;
+                } catch (\Exception $e) {
+                    $failedCount++;
+                    \Log::error('SMS send error: ' . $e->getMessage());
                 }
-
-                $results['messages'][] = $smsMessage;
             }
 
-            DB::commit();
-
-            // Create success message based on send type
-            if ($request->send_type === 'scheduled') {
-                $message = "SMS scheduled successfully for {$results['scheduled']} recipient(s) at " . 
-                          Carbon::parse($request->schedule_at)->format('M j, Y \a\t g:i A');
-            } elseif ($request->send_type === 'test') {
-                $message = "Test SMS created for {$results['success']} recipient(s)";
+            $totalContacts = $contacts->count();
+            
+            if ($scheduleAt) {
+                return redirect()->route('sms.index')
+                    ->with('success', "SMS scheduled successfully for {$totalContacts} contacts on " . $scheduleAt->format('d/m/Y H:i'));
             } else {
-                $message = "SMS sent successfully to {$results['success']} recipient(s)";
-                if ($results['failed'] > 0) {
-                    $message .= " ({$results['failed']} failed)";
-                }
+                $message = "SMS sending completed. Sent: {$sentCount}, Failed: {$failedCount} out of {$totalContacts} contacts.";
+                return redirect()->route('sms.index')->with('success', $message);
             }
-
-            return redirect()->route('sms.index')->with('success', $message);
 
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('SMS sending process failed', ['error' => $e->getMessage()]);
-            
-            return redirect()->back()
-                ->with('error', 'Failed to send SMS: ' . $e->getMessage())
-                ->withInput();
+            return back()->withErrors(['error' => 'An error occurred while processing SMS: ' . $e->getMessage()])->withInput();
         }
     }
 
     /**
-     * Display specific SMS message details
+     * Display the specified SMS message
      */
-    public function show(SmsMessage $smsMessage)
+    public function show(SmsMessage $sms)
     {
-        $smsMessage->load(['contact', 'user']);
+        $sms->load(['contact', 'smsProvider', 'user']);
         
-        return view('sms.show', compact('smsMessage'));
+        return view('sms.show', compact('sms'));
     }
 
     /**
-     * Show SMS editing form
+     * Show the form for editing the specified SMS message
      */
-    public function edit(SmsMessage $smsMessage)
+    public function edit(SmsMessage $sms)
     {
-        // Only allow editing of scheduled messages
-        if ($smsMessage->status !== 'scheduled') {
-            return redirect()->route('sms.show', $smsMessage)
-                ->with('error', 'Only scheduled SMS messages can be edited.');
+        // Only allow editing of failed or scheduled messages
+        if (!in_array($sms->status, ['failed', 'scheduled'])) {
+            return redirect()->route('sms.show', $sms)
+                ->withErrors(['error' => 'Only failed or scheduled SMS messages can be edited.']);
         }
 
-        $contacts = Contact::whereNotNull('phone')
-            ->where('phone', '!=', '')
-            ->select('id', 'name', 'phone')
-            ->orderBy('name')
+        $contacts = Contact::select('id', 'first_name', 'last_name', 'phone')
+            ->where('phone', '!=', null)
+            ->orderBy('first_name')
             ->get();
 
-        $providers = SmsProvider::where('is_active', true)
-            ->orderBy('name')
-            ->get();
+        $providers = SmsProvider::where('is_active', true)->get();
 
-        $templates = $this->getSmsTemplates();
-
-        return view('sms.edit', compact('smsMessage', 'contacts', 'providers', 'templates'));
+        return view('sms.edit', compact('sms', 'contacts', 'providers'));
     }
 
     /**
-     * Update SMS message
+     * Update the specified SMS message
      */
-    public function update(Request $request, SmsMessage $smsMessage)
+    public function update(Request $request, SmsMessage $sms)
     {
-        // Only allow updating of scheduled messages
-        if ($smsMessage->status !== 'scheduled') {
-            return redirect()->route('sms.show', $smsMessage)
-                ->with('error', 'Only scheduled SMS messages can be updated.');
+        // Only allow updating of failed or scheduled messages
+        if (!in_array($sms->status, ['failed', 'scheduled'])) {
+            return redirect()->route('sms.show', $sms)
+                ->withErrors(['error' => 'Only failed or scheduled SMS messages can be updated.']);
         }
 
         $validator = Validator::make($request->all(), [
             'message' => 'required|string|max:1600',
-            'schedule_at' => 'nullable|date|after:now'
+            'phone_number' => 'required|string',
+            'provider_id' => 'nullable|exists:sms_providers,id',
+            'schedule_at' => 'nullable|date|after:now',
         ]);
 
         if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
+            return back()->withErrors($validator)->withInput();
         }
 
         try {
-            $smsMessage->update([
-                'message' => $this->personalizeMessage($request->message, $smsMessage->contact),
-                'scheduled_at' => $request->schedule_at,
-                'metadata' => array_merge(
-                    json_decode($smsMessage->metadata, true) ?? [],
-                    [
-                        'updated_at' => now()->toISOString(),
-                        'updated_by' => Auth::id()
-                    ]
-                )
+            $sms->update([
+                'message' => $request->message,
+                'phone_number' => $request->phone_number,
+                'sms_provider_id' => $request->provider_id,
+                'scheduled_at' => $request->schedule_at ? Carbon::parse($request->schedule_at) : null,
+                'status' => $request->schedule_at ? 'scheduled' : 'pending',
             ]);
 
-            return redirect()->route('sms.show', $smsMessage)
+            return redirect()->route('sms.show', $sms)
                 ->with('success', 'SMS message updated successfully.');
 
         } catch (\Exception $e) {
-            Log::error('SMS update failed', [
-                'sms_id' => $smsMessage->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return redirect()->back()
-                ->with('error', 'Failed to update SMS: ' . $e->getMessage())
-                ->withInput();
+            return back()->withErrors(['error' => 'An error occurred while updating SMS: ' . $e->getMessage()])->withInput();
         }
     }
 
     /**
-     * Delete SMS message
+     * Remove the specified SMS message from storage
      */
-    public function destroy(SmsMessage $smsMessage)
+    public function destroy(SmsMessage $sms)
     {
         try {
-            // Only allow deletion of scheduled, failed, or draft messages
-            if (!in_array($smsMessage->status, ['scheduled', 'failed', 'draft'])) {
-                return redirect()->route('sms.index')
-                    ->with('error', 'Cannot delete sent SMS messages.');
-            }
-
-            $smsMessage->delete();
-
+            $sms->delete();
+            
             return redirect()->route('sms.index')
                 ->with('success', 'SMS message deleted successfully.');
 
         } catch (\Exception $e) {
-            Log::error('SMS deletion failed', [
-                'sms_id' => $smsMessage->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return redirect()->route('sms.index')
-                ->with('error', 'Failed to delete SMS message.');
+            return back()->withErrors(['error' => 'An error occurred while deleting SMS: ' . $e->getMessage()]);
         }
     }
 
     /**
-     * Bulk send SMS to contact segment
+     * Resend a failed SMS message
      */
-    public function sendToSegment(Request $request)
+    public function resend(SmsMessage $sms)
     {
-        $validator = Validator::make($request->all(), [
-            'segment_id' => 'required|exists:contact_segments,id',
-            'message' => 'required|string|max:1600',
-            'provider_id' => 'nullable|exists:sms_providers,id',
-            'schedule_at' => 'nullable|date|after:now'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+        if ($sms->status !== 'failed') {
+            return back()->withErrors(['error' => 'Only failed SMS messages can be resent.']);
         }
 
         try {
-            $segment = ContactSegment::with(['contacts' => function($query) {
-                $query->whereNotNull('phone')->where('phone', '!=', '');
-            }])->findOrFail($request->segment_id);
-
-            if ($segment->contacts->isEmpty()) {
-                return response()->json(['error' => 'No contacts with valid phone numbers found in this segment.'], 400);
-            }
-
-            // Create job for bulk SMS sending
-            $recipientIds = $segment->contacts->pluck('id')->toArray();
-            
-            $newRequest = new Request([
-                'message' => $request->message,
-                'recipients' => $recipientIds,
-                'provider_id' => $request->provider_id,
-                'schedule_at' => $request->schedule_at,
-                'send_type' => $request->schedule_at ? 'scheduled' : 'now'
-            ]);
-
-            return $this->store($newRequest);
-
-        } catch (\Exception $e) {
-            Log::error('Bulk SMS to segment failed', [
-                'segment_id' => $request->segment_id,
-                'error' => $e->getMessage()
-            ]);
-
-            return response()->json(['error' => 'Failed to send SMS to segment: ' . $e->getMessage()], 500);
-        }
-    }
-
-    /**
-     * Get SMS statistics
-     */
-    public function statistics()
-    {
-        $stats = $this->getSmsStatistics();
-        
-        return response()->json($stats);
-    }
-
-    /**
-     * Cancel scheduled SMS
-     */
-    public function cancel(SmsMessage $smsMessage)
-    {
-        if ($smsMessage->status !== 'scheduled') {
-            return redirect()->back()
-                ->with('error', 'Only scheduled SMS messages can be cancelled.');
-        }
-
-        try {
-            $smsMessage->update([
-                'status' => 'cancelled',
-                'metadata' => array_merge(
-                    json_decode($smsMessage->metadata, true) ?? [],
-                    [
-                        'cancelled_at' => now()->toISOString(),
-                        'cancelled_by' => Auth::id()
-                    ]
-                )
-            ]);
-
-            return redirect()->back()
-                ->with('success', 'SMS message cancelled successfully.');
-
-        } catch (\Exception $e) {
-            Log::error('SMS cancellation failed', [
-                'sms_id' => $smsMessage->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return redirect()->back()
-                ->with('error', 'Failed to cancel SMS message.');
-        }
-    }
-
-    /**
-     * Resend failed SMS
-     */
-    public function resend(SmsMessage $smsMessage)
-    {
-        if ($smsMessage->status !== 'failed') {
-            return redirect()->back()
-                ->with('error', 'Only failed SMS messages can be resent.');
-        }
-
-        try {
-            $response = $this->smsService->sendSms(
-                $smsMessage->phone_number,
-                $smsMessage->message
+            $result = $this->smsService->sendSms(
+                $sms->phone_number,
+                $sms->message,
+                $sms->contact_id,
+                $sms->sms_provider_id
             );
 
-            $smsMessage->update([
-                'status' => $response['success'] ? 'sent' : 'failed',
-                'provider_message_id' => $response['message_id'] ?? null,
-                'sent_at' => $response['success'] ? now() : $smsMessage->sent_at,
-                'error_message' => $response['error'] ?? null,
-                'cost' => ($smsMessage->cost ?? 0) + ($response['cost'] ?? 0),
-                'metadata' => array_merge(
-                    json_decode($smsMessage->metadata, true) ?? [],
-                    [
-                        'resent_at' => now()->toISOString(),
-                        'resent_by' => Auth::id()
-                    ]
-                )
-            ]);
-
-            $message = $response['success'] ? 'SMS resent successfully.' : 'Failed to resend SMS: ' . ($response['error'] ?? 'Unknown error');
-            $type = $response['success'] ? 'success' : 'error';
-
-            return redirect()->back()->with($type, $message);
+            if ($result['success']) {
+                return back()->with('success', 'SMS message resent successfully.');
+            } else {
+                return back()->withErrors(['error' => 'Failed to resend SMS: ' . ($result['error'] ?? 'Unknown error')]);
+            }
 
         } catch (\Exception $e) {
-            Log::error('SMS resend failed', [
-                'sms_id' => $smsMessage->id,
-                'error' => $e->getMessage()
-            ]);
-
-            return redirect()->back()
-                ->with('error', 'Failed to resend SMS: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'An error occurred while resending SMS: ' . $e->getMessage()]);
         }
     }
 
     /**
-     * Get SMS statistics for dashboard
+     * Show SMS statistics and reports
      */
-    private function getSmsStatistics()
+    public function stats(Request $request)
     {
-        $today = Carbon::today();
-        $thisMonth = Carbon::now()->startOfMonth();
-        
-        return [
-            'total_sent' => SmsMessage::where('status', 'sent')->count(),
-            'total_failed' => SmsMessage::where('status', 'failed')->count(),
-            'total_scheduled' => SmsMessage::where('status', 'scheduled')->count(),
-            'today_sent' => SmsMessage::where('status', 'sent')
-                ->whereDate('sent_at', $today)->count(),
-            'this_month_sent' => SmsMessage::where('status', 'sent')
-                ->where('sent_at', '>=', $thisMonth)->count(),
-            'total_cost' => SmsMessage::sum('cost'),
-            'this_month_cost' => SmsMessage::where('sent_at', '>=', $thisMonth)
-                ->sum('cost'),
-            'delivery_rate' => $this->calculateDeliveryRate(),
-            'providers_stats' => $this->getProviderStats(),
-            'recent_activity' => $this->getRecentActivity()
-        ];
-    }
+        $dateFrom = $request->input('date_from', now()->subDays(30)->format('Y-m-d'));
+        $dateTo = $request->input('date_to', now()->format('Y-m-d'));
 
-    /**
-     * Calculate SMS delivery rate
-     */
-    private function calculateDeliveryRate()
-    {
-        $total = SmsMessage::whereIn('status', ['sent', 'failed', 'delivered'])->count();
-        $delivered = SmsMessage::whereIn('status', ['sent', 'delivered'])->count();
-        
-        return $total > 0 ? round(($delivered / $total) * 100, 2) : 0;
-    }
-
-    /**
-     * Get provider statistics
-     */
-    private function getProviderStats()
-    {
-        return SmsMessage::select('provider', DB::raw('count(*) as count'), DB::raw('sum(cost) as total_cost'))
-            ->whereNotNull('provider')
-            ->groupBy('provider')
-            ->orderByDesc('count')
+        // Daily SMS statistics
+        $dailyStats = SmsMessage::selectRaw('DATE(created_at) as date, 
+                                             COUNT(*) as total,
+                                             SUM(CASE WHEN status = "delivered" THEN 1 ELSE 0 END) as delivered,
+                                             SUM(CASE WHEN status = "failed" THEN 1 ELSE 0 END) as failed,
+                                             SUM(cost) as total_cost')
+            ->whereBetween('created_at', [$dateFrom, $dateTo])
+            ->groupBy('date')
+            ->orderBy('date')
             ->get();
-    }
 
-    /**
-     * Get recent SMS activity
-     */
-    private function getRecentActivity()
-    {
-        return SmsMessage::with(['contact', 'user'])
-            ->latest()
-            ->limit(10)
+        // Provider statistics
+        $providerStats = SmsMessage::with('smsProvider')
+            ->selectRaw('sms_provider_id, 
+                         COUNT(*) as total,
+                         SUM(CASE WHEN status = "delivered" THEN 1 ELSE 0 END) as delivered,
+                         SUM(CASE WHEN status = "failed" THEN 1 ELSE 0 END) as failed,
+                         SUM(cost) as total_cost')
+            ->whereBetween('created_at', [$dateFrom, $dateTo])
+            ->groupBy('sms_provider_id')
             ->get();
+
+        // Overall statistics
+        $overallStats = [
+            'total_messages' => SmsMessage::whereBetween('created_at', [$dateFrom, $dateTo])->count(),
+            'delivered_messages' => SmsMessage::where('status', 'delivered')
+                ->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
+            'failed_messages' => SmsMessage::where('status', 'failed')
+                ->whereBetween('created_at', [$dateFrom, $dateTo])->count(),
+            'total_cost' => SmsMessage::whereBetween('created_at', [$dateFrom, $dateTo])->sum('cost'),
+            'average_cost' => SmsMessage::whereBetween('created_at', [$dateFrom, $dateTo])->avg('cost'),
+        ];
+
+        $overallStats['delivery_rate'] = $overallStats['total_messages'] > 0 ? 
+            round(($overallStats['delivered_messages'] / $overallStats['total_messages']) * 100, 2) : 0;
+
+        return view('sms.stats', compact('dailyStats', 'providerStats', 'overallStats', 'dateFrom', 'dateTo'));
     }
 
     /**
-     * Personalize SMS message with contact data
+     * Handle webhook for SMS delivery status updates
      */
-    private function personalizeMessage($message, $contact)
+    public function webhook(Request $request, $provider = null)
     {
-        $replacements = [
-            '{name}' => $contact->name,
-            '{first_name}' => $contact->first_name ?? $contact->name,
-            '{last_name}' => $contact->last_name ?? '',
-            '{email}' => $contact->email,
-            '{phone}' => $contact->phone,
-            '{company}' => $contact->company ?? '',
-        ];
+        try {
+            $result = $this->smsService->handleWebhook($request->all(), $provider);
+            
+            if ($result['success']) {
+                return response()->json(['status' => 'success'], 200);
+            } else {
+                return response()->json(['status' => 'error', 'message' => $result['error']], 400);
+            }
 
-        return str_replace(array_keys($replacements), array_values($replacements), $message);
+        } catch (\Exception $e) {
+            \Log::error('SMS webhook error: ' . $e->getMessage());
+            return response()->json(['status' => 'error', 'message' => 'Internal server error'], 500);
+        }
     }
 
     /**
-     * Get SMS templates
+     * Get contacts based on send type
      */
-    private function getSmsTemplates()
+    private function getContactsBasedOnSendType(Request $request)
     {
-        return [
-            [
-                'name' => 'Welcome Message',
-                'content' => 'Welcome {name}! Thanks for joining us. We\'re excited to have you on board!'
-            ],
-            [
-                'name' => 'Appointment Reminder',
-                'content' => 'Hi {name}, this is a reminder about your appointment scheduled for today. See you soon!'
-            ],
-            [
-                'name' => 'Thank You',
-                'content' => 'Thank you {name} for your business. We appreciate your trust in our services.'
-            ],
-            [
-                'name' => 'Follow Up',
-                'content' => 'Hi {name}, we wanted to follow up with you. Please let us know if you need any assistance.'
-            ],
-            [
-                'name' => 'Promotional',
-                'content' => 'Hi {name}! Don\'t miss our special offer. Limited time only. Contact us for details!'
-            ]
-        ];
+        switch ($request->send_type) {
+            case 'individual':
+                return Contact::where('id', $request->contact_id)
+                    ->where('phone', '!=', null)
+                    ->get();
+
+            case 'bulk':
+                return Contact::whereIn('id', $request->contact_ids)
+                    ->where('phone', '!=', null)
+                    ->get();
+
+            case 'segment':
+                $segment = ContactSegment::with('contacts')->find($request->segment_id);
+                return $segment ? $segment->contacts()->where('phone', '!=', null)->get() : collect();
+
+            default:
+                return collect();
+        }
+    }
+
+    /**
+     * Schedule SMS message for later sending
+     */
+    private function scheduleMessage($contact, $message, $scheduleAt, $providerId = null)
+    {
+        SmsMessage::create([
+            'contact_id' => $contact->id,
+            'user_id' => Auth::id(),
+            'sms_provider_id' => $providerId,
+            'phone_number' => $contact->phone,
+            'message' => $message,
+            'status' => 'scheduled',
+            'scheduled_at' => $scheduleAt,
+            'created_at' => now(),
+        ]);
     }
 }

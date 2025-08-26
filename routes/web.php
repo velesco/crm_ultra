@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ContactController;
@@ -264,6 +265,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Export reports
         Route::post('/export', [ReportController::class, 'export'])->name('export');
+    });
+
+    // Profile
+
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/{profile}/edit', [ProfileController::class, 'edit'])->name('edit');
     });
 
     // Settings
