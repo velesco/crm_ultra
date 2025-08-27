@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
@@ -322,6 +323,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/team/invite', [SettingsController::class, 'inviteTeamMember'])->name('team.invite');
         Route::delete('/team/{user}', [SettingsController::class, 'removeTeamMember'])->name('team.remove');
         Route::post('/team/{user}/permissions', [SettingsController::class, 'updatePermissions'])->name('team.permissions');
+    });
+
+    // Admin routes - Restricted to super_admin and admin roles
+    Route::prefix('admin')->name('admin.')->middleware(['role:super_admin|admin'])->group(function () {
+        // Main admin dashboard
+        Route::get('/', [AdminController::class, 'index'])->name('dashboard');
+        
+        // System management
+        Route::get('/stats', [AdminController::class, 'getStats'])->name('stats');
+        Route::get('/health', [AdminController::class, 'getHealthCheck'])->name('health');
+        Route::get('/activity', [AdminController::class, 'getRecentActivity'])->name('activity');
+        Route::get('/alerts', [AdminController::class, 'getSystemAlerts'])->name('alerts');
+        Route::post('/alerts/dismiss', [AdminController::class, 'dismissAlert'])->name('alerts.dismiss');
+        
+        // System actions
+        Route::post('/maintenance/toggle', [AdminController::class, 'toggleMaintenance'])->name('toggle-maintenance');
+        Route::post('/caches/clear', [AdminController::class, 'clearCaches'])->name('clear-caches');
+        Route::post('/optimize', [AdminController::class, 'optimize'])->name('optimize');
+        Route::post('/export', [AdminController::class, 'exportSystemData'])->name('export-data');
+        Route::get('/system-info', [AdminController::class, 'getSystemInfo'])->name('system-info');
     });
 
     // API Routes for AJAX requests
