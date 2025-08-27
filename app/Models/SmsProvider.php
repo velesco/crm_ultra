@@ -98,4 +98,5 @@ class SmsProvider extends Model
         // Implementation will be added in SMS service
         return app('sms.service')->send($this, $to, $message);
     }
+
 }

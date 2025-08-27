@@ -34,8 +34,7 @@ Route::get('/email/track/open/{tracking_id}', [EmailCampaignController::class, '
 Route::get('/email/track/click/{tracking_id}', [EmailCampaignController::class, 'trackClick'])->name('email.track.click');
 Route::get('/email/unsubscribe/{tracking_id}', [EmailCampaignController::class, 'unsubscribe'])->name('email.unsubscribe');
 
-// WhatsApp webhook (public)
-Route::post('/webhook/whatsapp/{session?}', [WhatsAppController::class, 'webhook'])->name('whatsapp.webhook');
+// WhatsApp webhook (public) - Uses API route: /api/whatsapp/webhook
 
 // SMS webhooks (public)
 Route::post('/webhook/sms/twilio', [SmsController::class, 'twilioWebhook'])->name('sms.webhook.twilio');

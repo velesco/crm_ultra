@@ -34,13 +34,13 @@ class WhatsAppService
             
             // Create session in our database
             $session = WhatsAppSession::create([
-                'session_name' => $sessionId,
-                'api_endpoint' => $this->serverUrl,
-                'webhook_url' => config('app.url') . '/api/whatsapp/webhook',
-                'settings' => $data['settings'] ?? [],
-                'status' => 'initializing',
-                'is_active' => true,
-                'created_by' => auth()->id(),
+            'session_name' => $sessionId,
+            'api_endpoint' => $this->serverUrl,
+            'webhook_url' => config('app.url') . '/api/whatsapp/webhook',
+            'settings' => $data['settings'] ?? [],
+            'status' => 'initializing',
+            'is_active' => true,
+            'created_by' => auth()->id(),
             ]);
 
             // Create session in WhatsApp server

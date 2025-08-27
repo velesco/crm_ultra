@@ -102,9 +102,19 @@ cp .env deployment/laravel-updates/laravel.env
 
 print_success "Deployment package created in ./deployment/"
 
-echo ""
-echo "🔧 Step 3: Production Optimizations..."
-echo "===================================="
+echo "🔧 Step 3: Production Optimizations & Route Fix..."
+echo "===================================================="
+
+# Fix route conflicts first
+print_status "Fixing route conflicts..."
+if [ -f "fix-routes.sh" ]; then
+    ./fix-routes.sh
+else
+    print_warning "Route fix script not found, clearing caches manually"
+    php artisan config:clear
+    php artisan route:clear
+    php artisan cache:clear
+fi
 
 # Optimize Laravel for production
 print_status "Optimizing Laravel for production..."

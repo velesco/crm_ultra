@@ -685,4 +685,65 @@ class DashboardController extends Controller
 
         return response()->json($actions);
     }
+
+    /**
+     * Calculate email open rate for a specific user
+     */
+    private function calculateEmailOpenRate($userId)
+    {
+        $emailStats = EmailLog::join('contacts', 'email_logs.contact_id', '=', 'contacts.id')
+            ->where('contacts.created_by', $userId)
+            ->selectRaw('
+                COUNT(*) as total_sent,
+                COUNT(CASE WHEN email_logs.opened_at IS NOT NULL THEN 1 END) as opened
+            ')
+            ->first();
+            
+        return $emailStats && $emailStats->total_sent > 0 ? 
+            round(($emailStats->opened / $emailStats->total_sent) * 100, 1) : 0;
+    }
+
+    /**
+     * Calculate SMS delivery rate for a specific user
+     */
+    private function calculateSmsDeliveryRate($userId)
+    {
+        $smsStats = SmsMessage::whereHas('contact', function($query) use ($userId) {
+                $query->where('created_by', $userId)
+                      ->orWhere('assigned_to', $userId);
+            })
+            ->selectRaw('
+                COUNT(*) as total_sent,
+                COUNT(CASE WHEN status = "delivered" THEN 1 END) as delivered
+            ')
+            ->first();
+            
+        return $smsStats && $smsStats->total_sent > 0 ? 
+            round(($smsStats->delivered / $smsStats->total_sent) * 100, 1) : 0;
+    }
+
+    /**
+     * Get dashboard statistics (cached version)
+     */
+    public function getDashboardStats(Request $request)
+    {
+        $user = auth()->user();
+        $cacheKey = "dashboard_stats_{$user->id}";
+        
+        // Clear cache if requested
+        if ($request->boolean('refresh')) {
+            Cache::forget($cacheKey);
+        }
+        
+        $stats = Cache::remember($cacheKey, 300, function() use ($user) { // Cache for 5 minutes
+            return $this->calculateStats($user);
+        });
+        
+        return response()->json([
+            'success' => true,
+            'stats' => $stats,
+            'cached' => !$request->boolean('refresh'),
+            'timestamp' => now()->toISOString()
+        ]);
+    }
 }

@@ -20,7 +20,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 // WhatsApp API Routes
 Route::prefix('whatsapp')->group(function () {
-    Route::post('/webhook', [App\Http\Controllers\WhatsAppController::class, 'webhook'])->name('whatsapp.webhook');
+    Route::post('/webhook', [App\Http\Controllers\WhatsAppController::class, 'webhook'])->name('api.whatsapp.webhook');
 });
 
 // Dashboard API Routes

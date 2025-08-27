@@ -96,12 +96,12 @@ class SmtpConfig extends Model
     public function incrementSent()
     {
         $now = now();
-        
+
         // Reset counters if needed
         if ($this->last_reset_date->format('Y-m-d') !== $now->format('Y-m-d')) {
             $this->sent_today = 0;
         }
-        
+
         if ($this->updated_at->format('Y-m-d H') !== $now->format('Y-m-d H')) {
             $this->sent_this_hour = 0;
         }
@@ -120,10 +120,11 @@ class SmtpConfig extends Model
 
             $mailer = \Swift_Mailer::newInstance($transport);
             $mailer->getTransport()->start();
-            
+
             return ['success' => true, 'message' => 'Connection successful'];
         } catch (\Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
+
 }
