@@ -81,6 +81,11 @@ class Contact extends Model
         return trim($this->first_name . ' ' . $this->last_name);
     }
 
+    public function getLastActivityAtAttribute()
+    {
+        return $this->communications()->latest()->first()?->created_at;
+    }
+
     // Methods
     public function addTag($tag)
     {

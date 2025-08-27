@@ -196,10 +196,13 @@ class ContactController extends Controller
             ->latest()
             ->paginate(20);
         
-        // Get activity timeline (communications + contact updates)
-        $activities = $this->getContactActivities($contact);
+        // Get recent activity (last 10 activities)
+        $recentActivity = $this->getContactActivities($contact)->take(10);
         
-        return view('contacts.show', compact('contact', 'communications', 'activities'));
+        // Get contact statistics
+        $stats = $this->getContactStats($contact);
+        
+        return view('contacts.show', compact('contact', 'communications', 'recentActivity', 'stats'));
     }
 
     public function edit(Contact $contact)
@@ -312,17 +315,16 @@ class ContactController extends Controller
         // Get communications
         $communications = Communication::where('contact_id', $contact->id)
             ->with('user')
+            ->latest()
             ->get();
 
-        // Get contact history (you might want to implement an audit log)
-        // For now, we'll just return communications
+        // Transform communications into activity format
         return $communications->map(function($comm) {
-            return [
+            return (object)[
                 'id' => $comm->id,
-                'type' => 'communication',
-                'action' => $comm->type,
+                'type' => $comm->type, // email, sms, whatsapp
                 'description' => $this->getCommunicationDescription($comm),
-                'user' => $comm->user->name,
+                'user' => $comm->user ? $comm->user->name : 'System',
                 'created_at' => $comm->created_at,
                 'metadata' => [
                     'direction' => $comm->direction,
@@ -330,7 +332,7 @@ class ContactController extends Controller
                     'subject' => $comm->subject
                 ]
             ];
-        })->sortByDesc('created_at');
+        });
     }
 
     private function getCommunicationDescription(Communication $communication)
@@ -491,5 +493,44 @@ class ContactController extends Controller
             ->each(function($segment) {
                 $segment->refreshDynamicContacts();
             });
+    }
+
+    /**
+     * Get contact statistics
+     */
+    private function getContactStats(Contact $contact)
+    {
+        $stats = [
+            'emails_sent' => 0,
+            'emails_opened' => 0,
+            'sms_sent' => 0,
+            'whatsapp_messages' => 0
+        ];
+
+        // Get email statistics
+        if (class_exists('\App\Models\EmailLog')) {
+            $emailStats = \App\Models\EmailLog::where('contact_id', $contact->id)
+                ->selectRaw('COUNT(*) as sent, SUM(CASE WHEN opened_at IS NOT NULL THEN 1 ELSE 0 END) as opened')
+                ->first();
+            
+            if ($emailStats) {
+                $stats['emails_sent'] = $emailStats->sent;
+                $stats['emails_opened'] = $emailStats->opened;
+            }
+        }
+
+        // Get SMS statistics
+        if (class_exists('\App\Models\SmsMessage')) {
+            $stats['sms_sent'] = \App\Models\SmsMessage::where('contact_id', $contact->id)
+                ->where('status', 'sent')
+                ->count();
+        }
+
+        // Get WhatsApp statistics
+        $stats['whatsapp_messages'] = Communication::where('contact_id', $contact->id)
+            ->where('type', 'whatsapp')
+            ->count();
+
+        return $stats;
     }
 }

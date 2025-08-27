@@ -230,15 +230,15 @@
                                         <div class="relative flex space-x-3">
                                             <div>
                                                 <span class="h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white dark:ring-gray-800
-                                                    @if($activity['type'] === 'email') bg-blue-500
-                                                    @elseif($activity['type'] === 'sms') bg-green-500
-                                                    @elseif($activity['type'] === 'whatsapp') bg-green-400
+                                                    @if($activity->type === 'email') bg-blue-500
+                                                    @elseif($activity->type === 'sms') bg-green-500
+                                                    @elseif($activity->type === 'whatsapp') bg-green-400
                                                     @else bg-gray-400 @endif">
-                                                    @if($activity['type'] === 'email')
+                                                    @if($activity->type === 'email')
                                                         <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                                                         </svg>
-                                                    @elseif($activity['type'] === 'sms' || $activity['type'] === 'whatsapp')
+                                                    @elseif($activity->type === 'sms' || $activity->type === 'whatsapp')
                                                         <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                                                         </svg>
@@ -252,11 +252,11 @@
                                             <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
                                                 <div>
                                                     <p class="text-sm text-gray-500 dark:text-gray-400">
-                                                        {{ $activity['description'] }}
+                                                        {{ $activity->description }}
                                                     </p>
                                                 </div>
                                                 <div class="text-right text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                                    {{ $activity['created_at']->diffForHumans() }}
+                                                    {{ $activity->created_at->diffForHumans() }}
                                                 </div>
                                             </div>
                                         </div>
@@ -328,7 +328,7 @@
                                     @endif
                                 </div>
                                 <span class="inline-flex px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 rounded">
-                                    {{ ucfirst($segment->type) }}
+                                    {{ $segment->is_dynamic ? 'Dynamic' : 'Static' }}
                                 </span>
                             </div>
                         @endforeach
