@@ -137,6 +137,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{email_template}/duplicate', [EmailTemplateController::class, 'duplicate'])->name('duplicate');
     });
 
+    // Test route for SMTP debugging
+    Route::get('/smtp-test', function () {
+        return view('email.smtp.test.simple-form');
+    })->name('smtp.test');
+
     // SMTP Configurations
     Route::resource('smtp-configs', SmtpConfigController::class)->names([
         'index' => 'smtp-configs.index',
