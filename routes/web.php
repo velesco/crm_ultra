@@ -344,3 +344,13 @@ Route::get('/health', function () {
         'version' => config('app.version', '1.0.0')
     ]);
 })->name('health');
+
+// Test Horizon status
+Route::get('/horizon-test', function () {
+    return response()->json([
+        'horizon_installed' => class_exists('Laravel\\Horizon\\Horizon'),
+        'horizon_config' => config('horizon.path'),
+        'queue_connection' => config('queue.default'),
+        'redis_config' => config('database.redis.default')
+    ]);
+})->name('horizon.test');

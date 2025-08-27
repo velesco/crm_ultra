@@ -15,9 +15,12 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
     {
         parent::boot();
 
-        // Horizon::routeSmsNotificationsTo('15556667777');
-        // Horizon::routeMailNotificationsTo('example@example.com');
-        // Horizon::routeSlackNotificationsTo('slack-webhook-url', '#channel');
+        // Forțează înregistrarea rutelor Horizon
+        if (class_exists('Laravel\\Horizon\\Horizon')) {
+            Horizon::routeSmsNotificationsTo('15556667777');
+            Horizon::routeMailNotificationsTo('example@example.com');
+            // Horizon::routeSlackNotificationsTo('slack-webhook-url', '#channel');
+        }
     }
 
     /**
