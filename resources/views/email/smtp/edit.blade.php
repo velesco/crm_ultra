@@ -182,7 +182,8 @@
                                        name="password" 
                                        id="password" 
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                                       placeholder="Leave blank to keep current password">
+                                       placeholder="Leave blank to keep current password"
+                                       autocomplete="new-password">
                                 @error('password')
                                     <p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ $message }}</p>
                                 @enderror

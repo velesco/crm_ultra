@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('username');
             $table->text('password'); // Encrypted
             $table->enum('encryption', ['tls', 'ssl', 'none'])->default('tls');
-            $table->string('from_address');
+            $table->string('from_email');
             $table->string('from_name');
             $table->boolean('is_active')->default(true);
             $table->integer('daily_limit')->nullable();

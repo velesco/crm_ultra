@@ -16,7 +16,7 @@ class SmtpConfig extends Model
         'username',
         'password',
         'encryption',
-        'from_address',
+        'from_email',
         'from_name',
         'is_active',
         'daily_limit',
@@ -42,6 +42,23 @@ class SmtpConfig extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    // Mutators and Accessors
+    public function setPasswordAttribute($value)
+    {
+        if (!empty($value)) {
+            $this->attributes['password'] = encrypt($value);
+        }
+    }
+
+    public function getPasswordAttribute($value)
+    {
+        try {
+            return decrypt($value);
+        } catch (\Exception $e) {
+            return $value;
+        }
     }
 
     public function emailCampaigns()
@@ -114,16 +131,20 @@ class SmtpConfig extends Model
     public function testConnection()
     {
         try {
+            // Get decrypted password
+            $password = $this->password;
+            
             $transport = \Swift_SmtpTransport::newInstance($this->host, $this->port, $this->encryption)
                 ->setUsername($this->username)
-                ->setPassword($this->password);
+                ->setPassword($password);
 
             $mailer = \Swift_Mailer::newInstance($transport);
             $mailer->getTransport()->start();
 
-            return ['success' => true, 'message' => 'Connection successful'];
+            return true;
         } catch (\Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+            \Log::error('SMTP Test Connection Error: ' . $e->getMessage());
+            return false;
         }
     }
 

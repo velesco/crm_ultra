@@ -4,9 +4,13 @@
 
 CRM Ultra este un sistem CRM modern și complet bazat pe Laravel 10, cu funcționalități avansate pentru gestionarea contactelor, campanii email, SMS, WhatsApp, și integrări cu Google Sheets. **Optimizat pentru deployment pe AWS cu Redis, Laravel Horizon și servicii cloud scalabile.** 
 
-🆕 **LATEST UPDATE**: Corectare completă a problemelor din ContactController - variabila `$recentActivity` undefined și accesul la proprietăți segmente au fost rezolvate!
+🆕 **LATEST UPDATE**: Rezolvată problema cu salvarea configurațiilor SMTP - discordanța între `from_address` și `from_email` în baza de date a fost corectată!
 
 ### ✅ **Ultimele Corectări - August 27, 2025** 🔧
+- ✅ **SMTP Configuration Fixed**: Rezolvată problema cu salvarea configurațiilor SMTP prin corectarea discordanței `from_address` vs `from_email`
+- ✅ **Database Column Rename**: Migrație adăugată pentru redenumirea coloanei `from_address` în `from_email` în tabela `smtp_configs`
+- ✅ **Password Encryption**: Implementat mutator/accessor automat pentru criptarea/decriptarea parolei în modelul `SmtpConfig`
+- ✅ **Model-Database Alignment**: Toate referințele la `from_address` schimbate în `from_email` pentru consistența bazei de date
 - ✅ **ContactController Fixed**: Rezolvată eroarea `Undefined variable $recentActivity` prin corectarea metodei `show()`
 - ✅ **Contact Statistics**: Adăugată metoda `getContactStats()` pentru calcularea statisticilor (emails, SMS, WhatsApp)
 - ✅ **Activity Data Format**: Corectată formatarea datelor pentru `$recentActivity` din array în obiecte

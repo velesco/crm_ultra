@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\SmtpConfig;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Validation\Rule;
 
 class SmtpConfigController extends Controller
@@ -78,8 +77,7 @@ class SmtpConfigController extends Controller
             'priority' => 'required|integer|min:1|max:100',
         ]);
 
-        // Encrypt sensitive data
-        $validated['password'] = Crypt::encrypt($validated['password']);
+        // Password will be encrypted by model mutator
         $validated['is_active'] = $request->has('is_active');
 
         SmtpConfig::create($validated);
@@ -128,10 +126,8 @@ class SmtpConfigController extends Controller
             'priority' => 'required|integer|min:1|max:100',
         ]);
 
-        // Only update password if provided
-        if ($request->filled('password')) {
-            $validated['password'] = Crypt::encrypt($request->password);
-        } else {
+        // Only update password if provided - will be encrypted by model mutator
+        if (!$request->filled('password')) {
             unset($validated['password']);
         }
 
