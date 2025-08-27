@@ -3,144 +3,161 @@
 @section('title', 'Import Contacts')
 
 @section('content')
-<div class="max-w-4xl mx-auto space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Import Contacts</h1>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Import contacts from CSV or Excel files
-            </p>
-        </div>
-        <a href="{{ route('contacts.index') }}" 
-           class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 transition ease-in-out duration-150">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-            </svg>
-            Back to Contacts
-        </a>
-    </div>
-
-    <!-- Import Steps -->
-    <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg">
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <div class="flex items-center justify-between">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Import Process</h3>
-                <div class="flex space-x-2">
-                    <a href="{{ route('data.template', 'contacts') }}" 
-                       class="inline-flex items-center px-3 py-1 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 transition ease-in-out duration-150">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        Download Template
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-upload me-2"></i>Import Contacts
+                    </h5>
+                    <a href="{{ route('contacts.index') }}" class="btn btn-light btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Contacts
                     </a>
                 </div>
-            </div>
-        </div>
-        <div class="px-6 py-4">
-            <!-- Steps Navigation -->
-            <nav aria-label="Progress" class="mb-8">
-                <ol class="flex items-center">
-                    <li class="relative pr-8 sm:pr-20">
-                        <div class="absolute inset-0 flex items-center" aria-hidden="true">
-                            <div class="h-0.5 w-full bg-gray-200 dark:bg-gray-600"></div>
-                        </div>
-                        <a href="#" class="relative w-8 h-8 flex items-center justify-center bg-indigo-600 rounded-full hover:bg-indigo-900 transition duration-150" id="step1-indicator">
-                            <span class="text-white text-sm font-medium" id="step1-number">1</span>
-                        </a>
-                        <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">Upload File</p>
-                    </li>
-
-                    <li class="relative pr-8 sm:pr-20">
-                        <div class="absolute inset-0 flex items-center" aria-hidden="true">
-                            <div class="h-0.5 w-full bg-gray-200 dark:bg-gray-600"></div>
-                        </div>
-                        <a href="#" class="relative w-8 h-8 flex items-center justify-center bg-gray-300 dark:bg-gray-600 rounded-full transition duration-150" id="step2-indicator">
-                            <span class="text-gray-700 dark:text-gray-300 text-sm font-medium" id="step2-number">2</span>
-                        </a>
-                        <p class="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">Map Fields</p>
-                    </li>
-
-                    <li class="relative">
-                        <a href="#" class="relative w-8 h-8 flex items-center justify-center bg-gray-300 dark:bg-gray-600 rounded-full transition duration-150" id="step3-indicator">
-                            <span class="text-gray-700 dark:text-gray-300 text-sm font-medium" id="step3-number">3</span>
-                        </a>
-                        <p class="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">Review & Import</p>
-                    </li>
-                </ol>
-            </nav>
-
-            <!-- Step 1: Upload File -->
-            <div id="step1" class="step-content">
-                <form id="upload-form" enctype="multipart/form-data">
-                    @csrf
-                    <div class="space-y-6">
-                        <!-- File Upload -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Select File to Import
-                            </label>
-                            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md">
-                                <div class="space-y-1 text-center">
-                                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 48 48">
-                                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                    <div class="flex text-sm text-gray-600 dark:text-gray-400">
-                                        <label for="file-upload" class="relative cursor-pointer bg-white dark:bg-gray-700 rounded-md font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
-                                            <span>Upload a file</span>
-                                            <input id="file-upload" name="file" type="file" class="sr-only" accept=".csv,.xlsx,.xls" required>
-                                        </label>
-                                        <p class="pl-1">or drag and drop</p>
+                <div class="card-body">
+                    <div id="importWizard">
+                        <!-- Step 1: File Upload -->
+                        <div class="step active" id="step1">
+                            <h6 class="mb-3">Step 1: Upload Your File</h6>
+                            <form id="uploadForm" enctype="multipart/form-data">
+                                @csrf
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="mb-3">
+                                            <label for="file" class="form-label">Choose CSV or Excel File</label>
+                                            <input type="file" class="form-control" id="file" name="file" 
+                                                   accept=".csv,.xlsx,.xls" required>
+                                            <div class="form-text">
+                                                Supported formats: CSV, Excel (.xlsx, .xls). Maximum file size: 10MB
+                                            </div>
+                                        </div>
                                     </div>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                                        CSV, XLSX, XLS up to 10MB
-                                    </p>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="segment_id" class="form-label">Add to Segment (Optional)</label>
+                                            <select class="form-select" id="segment_id" name="segment_id">
+                                                <option value="">None</option>
+                                                @foreach($segments as $segment)
+                                                    <option value="{{ $segment->id }}">{{ $segment->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div id="file-info" class="mt-2 hidden">
-                                <p class="text-sm text-gray-600 dark:text-gray-400">
-                                    Selected: <span id="file-name" class="font-medium"></span>
-                                    (<span id="file-size"></span>)
-                                </p>
-                            </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="skip_duplicates" 
+                                                   name="skip_duplicates" checked>
+                                            <label class="form-check-label" for="skip_duplicates">
+                                                Skip Duplicates (based on email)
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="update_existing" 
+                                                   name="update_existing">
+                                            <label class="form-check-label" for="update_existing">
+                                                Update Existing Contacts
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-primary" onclick="analyzeFile()">
+                                        <i class="fas fa-analyze me-1"></i> Analyze File
+                                    </button>
+                                </div>
+                            </form>
                         </div>
 
-                        <div class="flex justify-end">
-                            <button type="submit" 
-                                    class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
-                                </svg>
-                                Upload & Analyze
-                            </button>
+                        <!-- Step 2: Column Mapping -->
+                        <div class="step" id="step2" style="display: none;">
+                            <h6 class="mb-3">Step 2: Map Columns</h6>
+                            <p class="text-muted">Map the columns from your file to contact fields:</p>
+                            
+                            <form id="mappingForm" method="POST" action="{{ route('contacts.import.process') }}">
+                                @csrf
+                                <input type="hidden" id="fileInput" name="file_data">
+                                <input type="hidden" id="segmentInput" name="segment_id">
+                                <input type="hidden" id="skipDuplicatesInput" name="skip_duplicates">
+                                <input type="hidden" id="updateExistingInput" name="update_existing">
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>File Column</th>
+                                                <th>Sample Data</th>
+                                                <th>Map to Contact Field</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="columnMapping">
+                                            <!-- Dynamic content -->
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="mt-4">
+                                    <button type="button" class="btn btn-light me-2" onclick="previousStep()">
+                                        <i class="fas fa-arrow-left me-1"></i> Previous
+                                    </button>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-upload me-1"></i> Start Import
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
-                </form>
-            </div>
-
-            <!-- Import Progress -->
-            <div id="import-progress" class="step-content hidden">
-                <div class="text-center py-12">
-                    <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-                    <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">Processing Import...</h3>
-                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Please wait while we import your contacts.</p>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Import Results -->
-            <div id="import-results" class="step-content hidden">
-                <div id="results-content">
-                    <!-- Results will be loaded dynamically -->
+    <!-- Sample Format Modal -->
+    <div class="modal fade" id="sampleModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sample CSV Format</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                
-                <div class="mt-6 flex justify-center">
-                    <a href="{{ route('contacts.index') }}" 
-                       class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 transition ease-in-out duration-150">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                        </svg>
-                        View All Contacts
-                    </a>
+                <div class="modal-body">
+                    <p>Your CSV file should have headers in the first row. Here's an example:</p>
+                    <pre>first_name,last_name,email,phone,company,position
+John,Doe,john@example.com,+1234567890,Acme Corp,Manager
+Jane,Smith,jane@example.com,+0987654321,Tech Inc,Developer</pre>
+                    
+                    <h6 class="mt-3">Supported Fields:</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled small">
+                                <li><strong>first_name</strong> - First Name</li>
+                                <li><strong>last_name</strong> - Last Name</li>
+                                <li><strong>email</strong> - Email Address</li>
+                                <li><strong>phone</strong> - Phone Number</li>
+                                <li><strong>company</strong> - Company Name</li>
+                                <li><strong>position</strong> - Job Position</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled small">
+                                <li><strong>address</strong> - Street Address</li>
+                                <li><strong>city</strong> - City</li>
+                                <li><strong>country</strong> - Country</li>
+                                <li><strong>source</strong> - Lead Source</li>
+                                <li><strong>tags</strong> - Tags (comma separated)</li>
+                                <li><strong>notes</strong> - Notes</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -149,96 +166,181 @@
 
 @push('scripts')
 <script>
-// File upload handling
-document.getElementById('file-upload').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        document.getElementById('file-name').textContent = file.name;
-        document.getElementById('file-size').textContent = formatFileSize(file.size);
-        document.getElementById('file-info').classList.remove('hidden');
-    }
-});
+let currentStep = 1;
+let fileData = null;
 
-function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-// Form submission
-document.getElementById('upload-form').addEventListener('submit', function(e) {
-    e.preventDefault();
+function analyzeFile() {
+    const form = document.getElementById('uploadForm');
+    const formData = new FormData(form);
     
-    const fileInput = document.getElementById('file-upload');
-    if (!fileInput.files[0]) {
-        alert('Please select a file to upload.');
+    if (!formData.get('file')) {
+        alert('Please select a file first.');
         return;
     }
     
-    // Show progress
-    document.getElementById('step1').classList.add('hidden');
-    document.getElementById('import-progress').classList.remove('hidden');
-    
-    // Simulate import process (replace with actual import)
+    // Here you would send the file to be analyzed
+    // For now, we'll simulate the analysis
     setTimeout(() => {
-        showImportResults({
-            success: true,
-            imported: 150,
-            updated: 25,
-            skipped: 5
-        });
-    }, 3000);
-});
+        // Simulate file analysis response
+        const mockData = {
+            headers: ['first_name', 'last_name', 'email', 'phone', 'company'],
+            sample: ['John', 'Doe', 'john@example.com', '+1234567890', 'Acme Corp'],
+            total_rows: 150
+        };
+        
+        showMappingStep(mockData);
+    }, 1000);
+}
 
-function showImportResults(results) {
-    document.getElementById('import-progress').classList.add('hidden');
+function showMappingStep(data) {
+    document.getElementById('step1').style.display = 'none';
+    document.getElementById('step2').style.display = 'block';
+    currentStep = 2;
     
-    let resultsHtml = '';
+    // Populate mapping table
+    const tbody = document.getElementById('columnMapping');
+    tbody.innerHTML = '';
     
-    if (results.success) {
-        resultsHtml = `
-            <div class="text-center py-12">
-                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 dark:bg-green-900">
-                    <svg class="h-6 w-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                </div>
-                <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">Import Successful!</h3>
-                <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-green-600">${results.imported || 0}</div>
-                        <div class="text-sm text-gray-500 dark:text-gray-400">Contacts Imported</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-yellow-600">${results.updated || 0}</div>
-                        <div class="text-sm text-gray-500 dark:text-gray-400">Contacts Updated</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-gray-600">${results.skipped || 0}</div>
-                        <div class="text-sm text-gray-500 dark:text-gray-400">Duplicates Skipped</div>
-                    </div>
-                </div>
-            </div>
+    const contactFields = [
+        { value: '', text: '-- Skip this column --' },
+        { value: 'first_name', text: 'First Name' },
+        { value: 'last_name', text: 'Last Name' },
+        { value: 'email', text: 'Email Address' },
+        { value: 'phone', text: 'Phone Number' },
+        { value: 'company', text: 'Company Name' },
+        { value: 'position', text: 'Position/Title' },
+        { value: 'address', text: 'Address' },
+        { value: 'city', text: 'City' },
+        { value: 'country', text: 'Country' },
+        { value: 'source', text: 'Source' },
+        { value: 'tags', text: 'Tags' },
+        { value: 'notes', text: 'Notes' }
+    ];
+    
+    data.headers.forEach((header, index) => {
+        const row = document.createElement('tr');
+        
+        // Guess the field mapping
+        const guessedField = guessFieldMapping(header);
+        
+        row.innerHTML = `
+            <td><strong>${header}</strong></td>
+            <td class="text-muted">${data.sample[index] || 'N/A'}</td>
+            <td>
+                <select class="form-select" name="mapping[${header}]">
+                    ${contactFields.map(field => 
+                        `<option value="${field.value}" ${field.value === guessedField ? 'selected' : ''}>${field.text}</option>`
+                    ).join('')}
+                </select>
+            </td>
         `;
-    } else {
-        resultsHtml = `
-            <div class="text-center py-12">
-                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900">
-                    <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </div>
-                <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">Import Failed</h3>
-                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">${results.message}</p>
-            </div>
-        `;
+        
+        tbody.appendChild(row);
+    });
+    
+    // Store form data
+    const form1 = document.getElementById('uploadForm');
+    const formData = new FormData(form1);
+    
+    document.getElementById('segmentInput').value = formData.get('segment_id') || '';
+    document.getElementById('skipDuplicatesInput').value = formData.get('skip_duplicates') ? '1' : '0';
+    document.getElementById('updateExistingInput').value = formData.get('update_existing') ? '1' : '0';
+}
+
+function guessFieldMapping(header) {
+    const headerLower = header.toLowerCase().replace(/[^a-z]/g, '');
+    
+    const mappings = {
+        'firstname': 'first_name',
+        'fname': 'first_name',
+        'givenname': 'first_name',
+        'lastname': 'last_name',
+        'lname': 'last_name',
+        'surname': 'last_name',
+        'familyname': 'last_name',
+        'email': 'email',
+        'emailaddress': 'email',
+        'mail': 'email',
+        'phone': 'phone',
+        'phonenumber': 'phone',
+        'mobile': 'phone',
+        'tel': 'phone',
+        'company': 'company',
+        'companyname': 'company',
+        'organization': 'company',
+        'position': 'position',
+        'title': 'position',
+        'jobtitle': 'position',
+        'address': 'address',
+        'streetaddress': 'address',
+        'city': 'city',
+        'country': 'country',
+        'source': 'source',
+        'leadsource': 'source',
+        'tags': 'tags',
+        'notes': 'notes',
+        'comments': 'notes'
+    };
+    
+    return mappings[headerLower] || '';
+}
+
+function previousStep() {
+    if (currentStep > 1) {
+        document.getElementById(`step${currentStep}`).style.display = 'none';
+        currentStep--;
+        document.getElementById(`step${currentStep}`).style.display = 'block';
+    }
+}
+
+// Handle form submission
+document.getElementById('mappingForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Create a new form with file
+    const originalForm = document.getElementById('uploadForm');
+    const newForm = new FormData();
+    
+    // Add file
+    const fileInput = originalForm.querySelector('#file');
+    if (fileInput.files[0]) {
+        newForm.append('file', fileInput.files[0]);
     }
     
-    document.getElementById('results-content').innerHTML = resultsHtml;
-    document.getElementById('import-results').classList.remove('hidden');
-}
+    // Add other form data
+    const formData = new FormData(this);
+    for (let pair of formData.entries()) {
+        newForm.append(pair[0], pair[1]);
+    }
+    
+    // Submit
+    fetch(this.action, {
+        method: 'POST',
+        body: newForm,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(response => {
+        if (response.redirected) {
+            window.location.href = response.url;
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            window.location.href = data.redirect;
+        } else {
+            alert(data.error || 'Import failed');
+        }
+    })
+    .catch(error => {
+        console.error('Import error:', error);
+        alert('Import failed. Please try again.');
+    });
+});
 </script>
 @endpush
+
 @endsection

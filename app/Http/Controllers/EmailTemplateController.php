@@ -42,7 +42,7 @@ class EmailTemplateController extends Controller
         }
 
         $templates = $query->paginate(15);
-        
+
         // Get filter options
         $categories = EmailTemplate::distinct()->pluck('category')->filter()->sort();
         $creators = User::whereHas('emailTemplates')->get(['id', 'name']);
@@ -62,7 +62,7 @@ class EmailTemplateController extends Controller
     {
         $categories = EmailTemplate::distinct()->pluck('category')->filter()->sort();
         $predefinedCategories = ['Newsletter', 'Promotional', 'Welcome', 'Transactional', 'Follow-up', 'Event'];
-        
+
         return view('email.templates.create', compact('categories', 'predefinedCategories'));
     }
 
@@ -83,12 +83,12 @@ class EmailTemplateController extends Controller
         // Extract variables from content and subject
         $template = new EmailTemplate($validated);
         $extractedVariables = $template->extractVariables();
-        
+
         // Merge with custom variables
         if (!empty($validated['variables'])) {
             $extractedVariables = array_unique(array_merge($extractedVariables, $validated['variables']));
         }
-        
+
         $validated['variables'] = $extractedVariables;
 
         $template = EmailTemplate::create($validated);
@@ -100,7 +100,7 @@ class EmailTemplateController extends Controller
     public function show(EmailTemplate $emailTemplate)
     {
         $emailTemplate->load('creator', 'emailCampaigns');
-        
+
         // Get usage statistics
         $stats = [
             'campaigns_used' => $emailTemplate->emailCampaigns->count(),
@@ -119,7 +119,7 @@ class EmailTemplateController extends Controller
     {
         $categories = EmailTemplate::distinct()->pluck('category')->filter()->sort();
         $predefinedCategories = ['Newsletter', 'Promotional', 'Welcome', 'Transactional', 'Follow-up', 'Event'];
-        
+
         return view('email.templates.edit', compact('emailTemplate', 'categories', 'predefinedCategories'));
     }
 
@@ -139,12 +139,12 @@ class EmailTemplateController extends Controller
         // Extract variables from content and subject
         $tempTemplate = new EmailTemplate($validated);
         $extractedVariables = $tempTemplate->extractVariables();
-        
+
         // Merge with custom variables
         if (!empty($validated['variables'])) {
             $extractedVariables = array_unique(array_merge($extractedVariables, $validated['variables']));
         }
-        
+
         $validated['variables'] = $extractedVariables;
 
         $emailTemplate->update($validated);
@@ -173,7 +173,7 @@ class EmailTemplateController extends Controller
     public function preview(Request $request, EmailTemplate $emailTemplate)
     {
         $variables = $request->get('variables', []);
-        
+
         // If no variables provided, use sample data
         if (empty($variables)) {
             $variables = $this->getSampleData($emailTemplate->variables ?? []);
@@ -191,19 +191,6 @@ class EmailTemplateController extends Controller
         return view('email.templates.preview', compact('emailTemplate', 'preview', 'variables'));
     }
 
-    public function duplicate(EmailTemplate $emailTemplate)
-    {
-        $newTemplate = $emailTemplate->replicate();
-        $newTemplate->name = $emailTemplate->name . ' (Copy)';
-        $newTemplate->created_by = Auth::id();
-        $newTemplate->is_active = false;
-        $newTemplate->created_at = now();
-        $newTemplate->updated_at = now();
-        $newTemplate->save();
-
-        return redirect()->route('email.templates.edit', $newTemplate)
-            ->with('success', 'Template duplicated successfully! You can now edit the copy.');
-    }
 
     public function searchTemplates(Request $request)
     {
@@ -264,13 +251,13 @@ class EmailTemplateController extends Controller
                 $templateData['created_by'] = Auth::id();
                 $templateData['created_at'] = now();
                 $templateData['updated_at'] = now();
-                
+
                 // Check if template name already exists
                 $existingCount = EmailTemplate::where('name', $templateData['name'])->count();
                 if ($existingCount > 0) {
                     $templateData['name'] = $templateData['name'] . ' (' . ($existingCount + 1) . ')';
                 }
-                
+
                 EmailTemplate::create($templateData);
                 $imported++;
             } catch (\Exception $e) {
@@ -292,7 +279,7 @@ class EmailTemplateController extends Controller
     public function export(Request $request)
     {
         $templateIds = $request->get('templates', []);
-        
+
         if (empty($templateIds)) {
             return back()->with('error', 'Please select templates to export.');
         }
@@ -302,7 +289,7 @@ class EmailTemplateController extends Controller
             ->get();
 
         $filename = 'email_templates_' . date('Y-m-d_H-i-s') . '.json';
-        
+
         return response()->json($templates)
             ->header('Content-Type', 'application/json')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
@@ -314,7 +301,7 @@ class EmailTemplateController extends Controller
     private function getSampleData(array $variables): array
     {
         $sampleData = [];
-        
+
         foreach ($variables as $variable) {
             switch (strtolower($variable)) {
                 case 'name':
@@ -366,12 +353,29 @@ class EmailTemplateController extends Controller
         ]);
 
         $status = $emailTemplate->is_active ? 'activated' : 'deactivated';
-        
+
         return response()->json([
             'success' => true,
             'message' => "Template {$status} successfully!",
             'is_active' => $emailTemplate->is_active
         ]);
+    }
+
+    /**
+     * Duplicate template
+     */
+    public function duplicate(EmailTemplate $emailTemplate)
+    {
+        $newTemplate = $emailTemplate->replicate();
+        $newTemplate->name = $emailTemplate->name . ' (Copy)';
+        $newTemplate->created_by = Auth::id();
+        $newTemplate->is_active = false;
+        $newTemplate->created_at = now();
+        $newTemplate->updated_at = now();
+        $newTemplate->save();
+
+        return redirect()->route('email.templates.edit', $newTemplate)
+            ->with('success', 'Template duplicated successfully! You can now edit the copy.');
     }
 
     /**

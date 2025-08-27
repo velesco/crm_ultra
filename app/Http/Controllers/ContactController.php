@@ -342,6 +342,148 @@ class ContactController extends Controller
         return "{$action} {$direction}{$subject}";
     }
 
+    /**
+     * Show import form
+     */
+    public function import()
+    {
+        $segments = ContactSegment::where('created_by', auth()->id())->get();
+        
+        return view('contacts.import', compact('segments'));
+    }
+
+    /**
+     * Process contact import
+     */
+    public function processImport(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt,xlsx|max:10240', // Max 10MB
+            'segment_id' => 'nullable|exists:contact_segments,id',
+            'mapping' => 'required|array',
+            'skip_duplicates' => 'boolean',
+            'update_existing' => 'boolean'
+        ]);
+
+        try {
+            // Create import job
+            $import = \App\Models\DataImport::create([
+                'type' => 'contacts',
+                'status' => 'processing',
+                'file_path' => $request->file('file')->store('imports'),
+                'mapping' => $request->mapping,
+                'options' => [
+                    'segment_id' => $request->segment_id,
+                    'skip_duplicates' => $request->boolean('skip_duplicates'),
+                    'update_existing' => $request->boolean('update_existing'),
+                ],
+                'created_by' => auth()->id()
+            ]);
+
+            // Dispatch import job
+            \App\Jobs\ImportContactsJob::dispatch($import);
+
+            return redirect()->route('contacts.import.status', $import)
+                ->with('success', 'Import started successfully! You will be notified when it completes.');
+                
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to start import: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show import status
+     */
+    public function importStatus($importId)
+    {
+        $import = \App\Models\DataImport::findOrFail($importId);
+        
+        // Check if user owns this import
+        if ($import->created_by !== auth()->id()) {
+            abort(403);
+        }
+
+        return view('contacts.import-status', compact('import'));
+    }
+
+    /**
+     * Export contacts
+     */
+    public function export(Request $request)
+    {
+        $query = Contact::with(['creator', 'assignedUser', 'segments'])
+            ->where(function($q) {
+                $q->where('created_by', auth()->id())
+                  ->orWhere('assigned_to', auth()->id());
+            });
+
+        // Apply same filters as index
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function($q) use ($search) {
+                $q->where('first_name', 'LIKE', "%{$search}%")
+                  ->orWhere('last_name', 'LIKE', "%{$search}%")
+                  ->orWhere('email', 'LIKE', "%{$search}%")
+                  ->orWhere('phone', 'LIKE', "%{$search}%")
+                  ->orWhere('company', 'LIKE', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->get('status'));
+        }
+
+        if ($request->filled('segment')) {
+            $query->whereHas('segments', function($q) use ($request) {
+                $q->where('contact_segments.id', $request->get('segment'));
+            });
+        }
+
+        $contacts = $query->get();
+
+        $filename = 'contacts_export_' . now()->format('Y-m-d_H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($contacts) {
+            $file = fopen('php://output', 'w');
+            
+            // CSV headers
+            fputcsv($file, [
+                'First Name', 'Last Name', 'Email', 'Phone', 'Company', 
+                'Position', 'Status', 'Source', 'Tags', 'Address', 
+                'City', 'Country', 'Notes', 'Created At'
+            ]);
+
+            // CSV data
+            foreach ($contacts as $contact) {
+                fputcsv($file, [
+                    $contact->first_name,
+                    $contact->last_name,
+                    $contact->email,
+                    $contact->phone,
+                    $contact->company,
+                    $contact->position,
+                    $contact->status,
+                    $contact->source,
+                    is_array($contact->tags) ? implode(', ', $contact->tags) : $contact->tags,
+                    $contact->address,
+                    $contact->city,
+                    $contact->country,
+                    $contact->notes,
+                    $contact->created_at->format('Y-m-d H:i:s')
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
     private function refreshDynamicSegments()
     {
         ContactSegment::where('created_by', auth()->id())

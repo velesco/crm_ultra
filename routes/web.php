@@ -54,9 +54,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/api/dashboard/recent-activity', [DashboardController::class, 'getRecentActivity'])->name('dashboard.recent-activity');
-    Route::get('/api/dashboard/stats', [DashboardController::class, 'getStats'])->name('dashboard.stats');
-    Route::get('/api/dashboard/quick-actions', [DashboardController::class, 'quickActions'])->name('dashboard.quick-actions');
+    
+    // Dashboard API endpoints
+    Route::prefix('api/dashboard')->name('dashboard.')->group(function () {
+        Route::get('/stats', [DashboardController::class, 'getStats'])->name('stats');
+        Route::get('/recent-activity', [DashboardController::class, 'getRecentActivity'])->name('recent-activity');
+        Route::get('/system-status', [DashboardController::class, 'getSystemStatus'])->name('system-status');
+        Route::get('/chart-data', [DashboardController::class, 'getChartData'])->name('chart-data');
+        Route::get('/quick-actions', [DashboardController::class, 'quickActions'])->name('quick-actions');
+        Route::get('/stream', [DashboardController::class, 'streamUpdates'])->name('stream');
+    });
 
     // Contacts Management
     Route::resource('contacts', ContactController::class);
@@ -124,11 +131,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'edit' => 'email.templates.edit',
         'update' => 'email.templates.update',
         'destroy' => 'email.templates.destroy'
-    ]);
+    ])->parameters(['email-templates' => 'email_template']);
 
     Route::prefix('email-templates')->name('email.templates.')->group(function () {
-        Route::get('/{template}/preview', [EmailTemplateController::class, 'preview'])->name('preview');
-        Route::post('/{template}/duplicate', [EmailTemplateController::class, 'duplicate'])->name('duplicate');
+        Route::get('/{email_template}/preview', [EmailTemplateController::class, 'preview'])->name('preview');
+        Route::post('/{email_template}/duplicate', [EmailTemplateController::class, 'duplicate'])->name('duplicate');
     });
 
     // SMTP Configurations

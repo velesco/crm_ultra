@@ -21,6 +21,7 @@ class EmailLog extends Model
         'delivered_at',
         'opened_at',
         'clicked_at',
+        'read_at',
         'bounced_at',
         'error_message',
         'tracking_id',
@@ -34,6 +35,7 @@ class EmailLog extends Model
         'delivered_at' => 'datetime',
         'opened_at' => 'datetime',
         'clicked_at' => 'datetime',
+        'read_at' => 'datetime',
         'bounced_at' => 'datetime',
         'metadata' => 'array',
         'created_at' => 'datetime',
@@ -54,6 +56,16 @@ class EmailLog extends Model
     public function smtpConfig()
     {
         return $this->belongsTo(SmtpConfig::class);
+    }
+
+    public function scopeRead($query)
+    {
+        return $query->whereNotNull('read_at');
+    }
+
+    public function scopeUnread($query)
+    {
+        return $query->whereNull('read_at');
     }
 
     // Scopes
@@ -85,6 +97,17 @@ class EmailLog extends Model
     public function scopeFailed($query)
     {
         return $query->where('status', 'failed');
+    }
+
+    public function markAsRead($userAgent = null, $ipAddress = null)
+    {
+        if (!$this->read_at) {
+            $this->update([
+                'read_at' => now(),
+                'user_agent' => $userAgent,
+                'ip_address' => $ipAddress
+            ]);
+        }
     }
 
     // Methods

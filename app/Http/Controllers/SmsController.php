@@ -63,9 +63,9 @@ class SmsController extends Controller
 
         // Statistics for dashboard
         $stats = [
-            'total_sent' => SmsMessage::count(),
+            'total_messages' => SmsMessage::count(),
             'sent_today' => SmsMessage::whereDate('created_at', today())->count(),
-            'delivered' => SmsMessage::where('status', 'delivered')->count(),
+            'delivered_count' => SmsMessage::where('status', 'delivered')->count(),
             'failed' => SmsMessage::where('status', 'failed')->count(),
             'pending' => SmsMessage::where('status', 'pending')->count(),
             'delivery_rate' => SmsMessage::count() > 0 ? 
