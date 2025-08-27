@@ -251,6 +251,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Communications (unified inbox)
     Route::prefix('communications')->name('communications.')->group(function () {
         Route::get('/', [CommunicationController::class, 'index'])->name('index');
+        Route::post('/send', [CommunicationController::class, 'sendQuick'])->name('send');
+        Route::get('/{contact}/conversation', [CommunicationController::class, 'conversation'])->name('conversation');
         Route::get('/inbox', [CommunicationController::class, 'inbox'])->name('inbox');
         Route::get('/sent', [CommunicationController::class, 'sent'])->name('sent');
         Route::get('/scheduled', [CommunicationController::class, 'scheduled'])->name('scheduled');
@@ -335,6 +337,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/live/campaign-progress/{campaign}', [EmailCampaignController::class, 'getCampaignProgress'])->name('live.campaign.progress');
 
         // Form helpers
+        Route::get('/contacts', [ContactController::class, 'searchContacts'])->name('contacts');
         Route::get('/contact-segments', [ContactSegmentController::class, 'getSegments'])->name('contact-segments');
         Route::get('/smtp-configs', [SmtpConfigController::class, 'getConfigs'])->name('smtp-configs');
         Route::get('/sms-providers', [SmsProviderController::class, 'getProviders'])->name('sms-providers');

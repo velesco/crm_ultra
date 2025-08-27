@@ -43,7 +43,7 @@
                                 Unread Messages
                             </dt>
                             <dd class="text-lg font-medium text-gray-900 dark:text-white">
-                                {{ $stats['unread'] ?? 0 }}
+                                {{ $stats['unread_count'] ?? 0 }}
                             </dd>
                         </dl>
                     </div>
@@ -194,21 +194,21 @@
             </p>
         </div>
         
-        @if($conversations->count() > 0)
+        @if($communications->count() > 0)
             <ul class="divide-y divide-gray-200 dark:divide-gray-700">
-                @foreach($conversations as $conversation)
+                @foreach($communications as $communication)
                     <li class="px-4 py-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" 
-                        onclick="window.location='{{ route('communications.show', $conversation['contact_id']) }}'">
+                        onclick="window.location='{{ route('communications.conversation', $communication['contact'] ? $communication['contact']['id'] : '#') }}'">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center min-w-0 flex-1">
                                 <!-- Contact Avatar -->
                                 <div class="flex-shrink-0">
-                                    @if($conversation['contact']['avatar'])
-                                        <img class="h-10 w-10 rounded-full" src="{{ $conversation['contact']['avatar'] }}" alt="">
+                                    @if($communication['contact'] && $communication['contact']['avatar'])
+                                        <img class="h-10 w-10 rounded-full" src="{{ $communication['contact']['avatar'] }}" alt="">
                                     @else
                                         <div class="h-10 w-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
                                             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                {{ strtoupper(substr($conversation['contact']['first_name'] ?? 'U', 0, 1)) }}
+                                                {{ $communication['contact'] ? strtoupper(substr($communication['contact']['first_name'] ?? 'U', 0, 1)) : 'U' }}
                                             </span>
                                         </div>
                                     @endif
@@ -217,45 +217,52 @@
                                 <div class="ml-4 min-w-0 flex-1">
                                     <div class="flex items-center justify-between">
                                         <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                            {{ $conversation['contact']['first_name'] ?? 'Unknown' }} {{ $conversation['contact']['last_name'] ?? '' }}
+                                            @if($communication['contact'])
+                                                {{ $communication['contact']['first_name'] ?? 'Unknown' }} {{ $communication['contact']['last_name'] ?? '' }}
+                                            @else
+                                                Unknown Contact
+                                            @endif
                                         </p>
                                         <div class="ml-2 flex-shrink-0 flex items-center space-x-2">
                                             <!-- Channel Badge -->
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                                @if($conversation['last_channel'] == 'email') bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200
-                                                @elseif($conversation['last_channel'] == 'sms') bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200
-                                                @elseif($conversation['last_channel'] == 'whatsapp') bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200
+                                                @if($communication['type'] == 'email') bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200
+                                                @elseif($communication['type'] == 'sms') bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200
+                                                @elseif($communication['type'] == 'whatsapp') bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200
                                                 @else bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200 @endif">
-                                                @if($conversation['last_channel'] == 'email')
+                                                @if($communication['type'] == 'email')
                                                     <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                                                     </svg>
-                                                @elseif($conversation['last_channel'] == 'sms')
+                                                @elseif($communication['type'] == 'sms')
                                                     <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                                                     </svg>
-                                                @elseif($conversation['last_channel'] == 'whatsapp')
+                                                @elseif($communication['type'] == 'whatsapp')
                                                     <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                                                     </svg>
                                                 @endif
-                                                {{ ucfirst($conversation['last_channel']) }}
+                                                {{ ucfirst($communication['type']) }}
                                             </span>
                                             
-                                            @if($conversation['unread_count'] > 0)
+                                            @if(!$communication['read_at'])
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200">
-                                                    {{ $conversation['unread_count'] }}
+                                                    New
                                                 </span>
                                             @endif
                                         </div>
                                     </div>
                                     
                                     <div class="mt-1">
+                                        <p class="text-sm text-gray-900 dark:text-white font-medium">
+                                            {{ $communication['subject'] }}
+                                        </p>
                                         <p class="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                            {{ $conversation['last_message'] }}
+                                            {{ $communication['snippet'] }}
                                         </p>
                                         <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                                            {{ \Carbon\Carbon::parse($conversation['last_activity'])->diffForHumans() }}
+                                            {{ $communication['created_at']->diffForHumans() }}
                                         </p>
                                     </div>
                                 </div>
@@ -273,7 +280,7 @@
             
             <!-- Pagination -->
             <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
-                {{ $conversations->links() }}
+                {{ $communications->links() }}
             </div>
         @else
             <div class="text-center py-12">

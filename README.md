@@ -24,6 +24,11 @@ CRM Ultra este un sistem CRM modern și complet bazat pe Laravel 10, cu funcțio
 - ✅ **Column Names Corrected**: Corectat `phone_number` în `to_number` și `message` în `content`
 - ✅ **Search Queries Fixed**: Queries de căutare folosesc acum coloanele corecte pentru fiecare tabel
 - ✅ **WhatsApp Content Field**: Corectat de la `message` la `content` în toate referințele
+- ✅ **Communications View Fixed**: Rezolvată eroarea `Undefined variable $conversations` în index view
+- ✅ **Variable Naming Corrected**: Înlocuit `$conversations` cu `$communications` în view
+- ✅ **Statistics Keys Fixed**: Corectat cheia `unread` în `unread_count` pentru afisare corectă
+- ✅ **Missing Routes Added**: Adăugate rutele lipsă `communications.send` și `communications.conversation`
+- ✅ **API Endpoint Added**: Adaugată metoda `searchContacts()` pentru încărcarea contactelor via AJAX
 
 ## ✅ What's Already Implemented
 

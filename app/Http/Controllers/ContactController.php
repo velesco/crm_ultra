@@ -496,6 +496,36 @@ class ContactController extends Controller
     }
 
     /**
+     * Search contacts for API/AJAX requests
+     */
+    public function searchContacts(Request $request)
+    {
+        $query = Contact::where(function($q) {
+            $q->where('created_by', auth()->id())
+              ->orWhere('assigned_to', auth()->id());
+        });
+
+        // Search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('first_name', 'LIKE', "%{$search}%")
+                  ->orWhere('last_name', 'LIKE', "%{$search}%")
+                  ->orWhere('email', 'LIKE', "%{$search}%")
+                  ->orWhere('phone', 'LIKE', "%{$search}%")
+                  ->orWhere('company', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $contacts = $query->select('id', 'first_name', 'last_name', 'email', 'phone', 'whatsapp')
+            ->orderBy('first_name')
+            ->limit(50)
+            ->get();
+
+        return response()->json($contacts);
+    }
+
+    /**
      * Get contact statistics
      */
     private function getContactStats(Contact $contact)
