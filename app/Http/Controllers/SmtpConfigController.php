@@ -301,4 +301,17 @@ class SmtpConfigController extends Controller
 
         return response()->json($settings[$provider] ?? []);
     }
+
+    /**
+     * Get active SMTP configurations for API/AJAX
+     */
+    public function getConfigs(Request $request)
+    {
+        $configs = SmtpConfig::where('is_active', true)
+            ->select('id', 'name', 'from_email', 'provider')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json($configs);
+    }
 }

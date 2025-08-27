@@ -7,6 +7,8 @@ use App\Models\Communication;
 use App\Models\EmailLog;
 use App\Models\SmsMessage;
 use App\Models\WhatsAppMessage;
+use App\Models\SmtpConfig;
+use App\Models\EmailTemplate;
 use App\Services\EmailService;
 use App\Services\SmsService;
 use App\Services\WhatsAppService;
@@ -182,6 +184,7 @@ class CommunicationController extends Controller
             'subject' => 'required_if:channel,email|nullable|string|max:255',
             'message' => 'required|string|max:4096',
             'template_id' => 'nullable|exists:email_templates,id',
+            'smtp_config_id' => 'required_if:channel,email|nullable|exists:smtp_configs,id',
         ]);
 
         if ($validator->fails()) {
@@ -198,12 +201,28 @@ class CommunicationController extends Controller
                         return response()->json(['success' => false, 'message' => 'Contact has no email address'], 400);
                     }
                     
-                    $result = $this->emailService->sendEmail(
-                        $contact->email,
+                    if (!$request->smtp_config_id) {
+                        return response()->json(['success' => false, 'message' => 'SMTP configuration is required for email'], 400);
+                    }
+                    
+                    // Get SMTP configuration
+                    $smtpConfig = SmtpConfig::find($request->smtp_config_id);
+                    if (!$smtpConfig || !$smtpConfig->is_active) {
+                        return response()->json(['success' => false, 'message' => 'Invalid or inactive SMTP configuration'], 400);
+                    }
+                    
+                    // Get email template if provided
+                    $template = null;
+                    if ($request->template_id) {
+                        $template = EmailTemplate::find($request->template_id);
+                    }
+                    
+                    $result = $this->emailService->sendSingleEmail(
+                        $contact,
                         $request->subject,
                         $request->message,
-                        $contact->id,
-                        $request->template_id
+                        $smtpConfig,
+                        $template
                     );
                     break;
 
@@ -220,12 +239,12 @@ class CommunicationController extends Controller
                     break;
 
                 case 'whatsapp':
-                    if (!$contact->whatsapp_number) {
+                    if (!$contact->whatsapp) {
                         return response()->json(['success' => false, 'message' => 'Contact has no WhatsApp number'], 400);
                     }
                     
                     $result = $this->whatsappService->sendMessage(
-                        $contact->whatsapp_number,
+                        $contact->whatsapp,
                         $request->message
                     );
                     break;

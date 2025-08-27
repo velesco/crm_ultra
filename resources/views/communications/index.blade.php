@@ -342,6 +342,16 @@
                     </select>
                 </div>
 
+                <!-- SMTP Configuration (for email) -->
+                <div id="smtp_field" class="hidden">
+                    <label for="smtp_config_select" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Send From Email</label>
+                    <select id="smtp_config_select" name="smtp_config_id" 
+                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <option value="">Select Email Account</option>
+                        <!-- Options will be loaded via AJAX -->
+                    </select>
+                </div>
+
                 <!-- Contact Selection -->
                 <div>
                     <label for="contact_select" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Contact</label>
@@ -387,15 +397,18 @@
 function openQuickSendModal() {
     document.getElementById('quickSendModal').classList.remove('hidden');
     loadContacts();
+    loadSmtpConfigs();
 }
 
 function closeQuickSendModal() {
     document.getElementById('quickSendModal').classList.add('hidden');
     document.getElementById('channel_select').value = '';
     document.getElementById('contact_select').value = '';
+    document.getElementById('smtp_config_select').value = '';
     document.getElementById('subject').value = '';
     document.getElementById('message').value = '';
     document.getElementById('subject_field').classList.add('hidden');
+    document.getElementById('smtp_field').classList.add('hidden');
 }
 
 function loadContacts() {
@@ -416,13 +429,39 @@ function loadContacts() {
         });
 }
 
-// Show/hide subject field based on channel
+function loadSmtpConfigs() {
+    fetch('{{ route('api.smtp-configs') }}')
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('smtp_config_select');
+            select.innerHTML = '<option value="">Select Email Account</option>';
+            data.forEach(config => {
+                const option = document.createElement('option');
+                option.value = config.id;
+                option.textContent = `${config.name} (${config.from_email})`;
+                select.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading SMTP configs:', error);
+        });
+}
+
+// Show/hide fields based on channel selection
 document.getElementById('channel_select').addEventListener('change', function() {
     const subjectField = document.getElementById('subject_field');
+    const smtpField = document.getElementById('smtp_field');
+    
     if (this.value === 'email') {
         subjectField.classList.remove('hidden');
+        smtpField.classList.remove('hidden');
+        // Make SMTP config required for email
+        document.getElementById('smtp_config_select').required = true;
     } else {
         subjectField.classList.add('hidden');
+        smtpField.classList.add('hidden');
+        // Remove SMTP config requirement for other channels
+        document.getElementById('smtp_config_select').required = false;
     }
 });
 </script>
