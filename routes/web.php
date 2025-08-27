@@ -270,7 +270,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Profile
 
     Route::prefix('profile')->name('profile.')->group(function () {
-        Route::get('/{profile}/edit', [ProfileController::class, 'edit'])->name('edit');
+        Route::get('/edit', [ProfileController::class, 'edit'])->name('edit');
     });
 
     // Settings
