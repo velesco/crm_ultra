@@ -24,6 +24,7 @@ class UserSeeder extends Seeder
                 'is_active' => true,
                 'timezone' => 'UTC',
                 'language' => 'en',
+                'subscription_plan' => 'enterprise',
                 'settings' => [
                     'theme' => 'light',
                     'notifications' => [
@@ -159,25 +160,29 @@ class UserSeeder extends Seeder
                 'name' => 'John Smith',
                 'email' => 'john.smith@demo.com',
                 'role' => 'manager',
-                'plan' => 'pro'
+                'plan' => 'pro',
+                'timezone' => 'America/New_York'
             ],
             [
                 'name' => 'Sarah Johnson',
                 'email' => 'sarah.johnson@demo.com',
                 'role' => 'agent',
-                'plan' => 'basic'
+                'plan' => 'basic',
+                'timezone' => 'Europe/London'
             ],
             [
                 'name' => 'Mike Davis',
                 'email' => 'mike.davis@demo.com',
                 'role' => 'agent',
-                'plan' => 'basic'
+                'plan' => 'basic',
+                'timezone' => 'Asia/Tokyo'
             ],
             [
                 'name' => 'Emily Brown',
                 'email' => 'emily.brown@demo.com',
                 'role' => 'viewer',
-                'plan' => 'free'
+                'plan' => 'free',
+                'timezone' => 'Australia/Sydney'
             ]
         ];
 
@@ -189,24 +194,21 @@ class UserSeeder extends Seeder
                     'password' => Hash::make('Demo123!'),
                     'email_verified_at' => now(),
                     'is_active' => true,
-                    'timezone' => fake()->randomElement([
-                        'UTC', 'America/New_York', 'Europe/London', 
-                        'Asia/Tokyo', 'Australia/Sydney'
-                    ]),
+                    'timezone' => $userData['timezone'],
                     'language' => 'en',
                     'subscription_plan' => $userData['plan'],
-                    'last_login_at' => fake()->dateTimeBetween('-1 month', 'now'),
+                    'last_login_at' => now()->subDays(rand(1, 30)),
                     'settings' => [
-                        'theme' => fake()->randomElement(['light', 'dark']),
+                        'theme' => 'light',
                         'notifications' => [
-                            'email' => fake()->boolean(70),
-                            'browser' => fake()->boolean(80),
-                            'mobile' => fake()->boolean(40)
+                            'email' => true,
+                            'browser' => true,
+                            'mobile' => false
                         ],
                         'dashboard' => [
                             'quick_stats' => true,
-                            'recent_activity' => fake()->boolean(60),
-                            'charts' => fake()->boolean(80)
+                            'recent_activity' => true,
+                            'charts' => true
                         ]
                     ]
                 ]

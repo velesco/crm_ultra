@@ -134,63 +134,62 @@ class ContactSeeder extends Seeder
             $contact = Contact::create([
                 ...$contactData,
                 'created_by' => $adminUser->id,
-                'assigned_to' => fake()->randomElement([$adminUser->id, $managerUser->id, null]),
-                'created_at' => fake()->dateTimeBetween('-6 months', 'now'),
-                'updated_at' => fake()->dateTimeBetween('-1 month', 'now'),
+                'assigned_to' => $adminUser->id,
+                'created_at' => now()->subDays(30),
+                'updated_at' => now()->subDays(15),
             ]);
         }
 
-        // Create additional random contacts
-        for ($i = 0; $i < 45; $i++) {
-            $firstName = fake()->firstName();
-            $lastName = fake()->lastName();
-            $company = fake()->company();
-            $domain = strtolower(str_replace([' ', '\'', '.'], ['', '', ''], $company)) . '.com';
-            
+        // Create additional simple contacts without faker
+        $additionalContacts = [
+            ['first_name' => 'John', 'last_name' => 'Smith', 'email' => 'john.smith@example.com', 'company' => 'Example Corp', 'industry' => 'Technology'],
+            ['first_name' => 'Sarah', 'last_name' => 'Johnson', 'email' => 'sarah.johnson@demo.com', 'company' => 'Demo Inc', 'industry' => 'Marketing'],
+            ['first_name' => 'Mike', 'last_name' => 'Davis', 'email' => 'mike.davis@test.com', 'company' => 'Test LLC', 'industry' => 'Finance'],
+            ['first_name' => 'Emily', 'last_name' => 'Brown', 'email' => 'emily.brown@sample.com', 'company' => 'Sample Ltd', 'industry' => 'Healthcare'],
+            ['first_name' => 'Alex', 'last_name' => 'Wilson', 'email' => 'alex.wilson@business.com', 'company' => 'Business Co', 'industry' => 'Education'],
+            ['first_name' => 'Lisa', 'last_name' => 'Miller', 'email' => 'lisa.miller@corporate.com', 'company' => 'Corporate Group', 'industry' => 'Manufacturing'],
+            ['first_name' => 'Tom', 'last_name' => 'Anderson', 'email' => 'tom.anderson@firm.com', 'company' => 'Anderson Firm', 'industry' => 'Consulting'],
+            ['first_name' => 'Kate', 'last_name' => 'Taylor', 'email' => 'kate.taylor@agency.com', 'company' => 'Taylor Agency', 'industry' => 'Marketing'],
+            ['first_name' => 'Ryan', 'last_name' => 'White', 'email' => 'ryan.white@solutions.com', 'company' => 'White Solutions', 'industry' => 'Technology'],
+            ['first_name' => 'Anna', 'last_name' => 'Martin', 'email' => 'anna.martin@services.com', 'company' => 'Martin Services', 'industry' => 'Real Estate']
+        ];
+
+        $statuses = ['active', 'inactive', 'prospect'];
+        $sources = ['website', 'referral', 'google-ads', 'linkedin', 'conference'];
+        $companySizes = ['1-50', '50-200', '200-500', '500-1000', '1000+'];
+        $budgets = ['$1,000-5,000', '$5,000-25,000', '$25,000-50,000', '$50,000+'];
+        $interestLevels = ['low', 'medium', 'high'];
+        $tags = [['lead'], ['prospect'], ['customer'], ['newsletter-subscriber'], ['trial-user']];
+
+        foreach ($additionalContacts as $index => $contactData) {
             Contact::create([
-                'first_name' => $firstName,
-                'last_name' => $lastName,
-                'email' => strtolower($firstName . '.' . $lastName . '@' . $domain),
-                'phone' => '+1-555-' . fake()->numberBetween(1000, 9999),
-                'whatsapp' => fake()->boolean(60) ? ('+1-555-' . fake()->numberBetween(1000, 9999)) : null,
-                'company' => $company,
-                'position' => fake()->jobTitle(),
-                'address' => fake()->streetAddress(),
-                'city' => fake()->city(),
-                'country' => fake()->randomElement(['USA', 'Canada', 'UK', 'Germany', 'France', 'Australia']),
-                'tags' => fake()->randomElements([
-                    'lead', 'prospect', 'customer', 'vip', 'newsletter-subscriber',
-                    'webinar-attendee', 'trial-user', 'enterprise', 'small-business',
-                    'startup', 'agency', 'consultant', 'referral-source'
-                ], fake()->numberBetween(1, 4)),
-                'status' => fake()->randomElement(['active', 'inactive', 'prospect']),
-                'source' => fake()->randomElement([
-                    'website', 'referral', 'google-ads', 'facebook-ads', 'linkedin',
-                    'conference', 'webinar', 'cold-outreach', 'partner', 'organic'
-                ]),
-                'notes' => fake()->boolean(70) ? fake()->sentence(10) : null,
+                'first_name' => $contactData['first_name'],
+                'last_name' => $contactData['last_name'],
+                'email' => $contactData['email'],
+                'phone' => '+1-555-' . str_pad($index + 200, 4, '0', STR_PAD_LEFT),
+                'whatsapp' => ($index % 3 == 0) ? '+1-555-' . str_pad($index + 300, 4, '0', STR_PAD_LEFT) : null,
+                'company' => $contactData['company'],
+                'position' => 'Manager',
+                'address' => ($index + 100) . ' Business Street',
+                'city' => 'New York',
+                'country' => 'USA',
+                'tags' => $tags[$index % count($tags)],
+                'status' => $statuses[$index % count($statuses)],
+                'source' => $sources[$index % count($sources)],
+                'notes' => 'Sample contact for testing purposes.',
                 'custom_fields' => [
-                    'company_size' => fake()->randomElement(['1-50', '50-200', '200-500', '500-1000', '1000+']),
-                    'industry' => fake()->randomElement([
-                        'Technology', 'Marketing', 'E-commerce', 'Healthcare', 'Finance',
-                        'Education', 'Manufacturing', 'Consulting', 'Real Estate', 'Other'
-                    ]),
-                    'budget' => fake()->randomElement([
-                        '$1,000-5,000', '$5,000-25,000', '$25,000-50,000', '$50,000+', 'Not specified'
-                    ]),
-                    'interest_level' => fake()->randomElement(['low', 'medium', 'high'])
+                    'company_size' => $companySizes[$index % count($companySizes)],
+                    'industry' => $contactData['industry'],
+                    'budget' => $budgets[$index % count($budgets)],
+                    'interest_level' => $interestLevels[$index % count($interestLevels)]
                 ],
-                'created_by' => fake()->randomElement($users)->id,
-                'assigned_to' => fake()->randomElement([
-                    null, $adminUser->id, $managerUser->id,
-                    User::where('email', 'john.smith@demo.com')->first()?->id,
-                    User::where('email', 'sarah.johnson@demo.com')->first()?->id
-                ]),
-                'created_at' => fake()->dateTimeBetween('-1 year', 'now'),
-                'updated_at' => fake()->dateTimeBetween('-2 months', 'now'),
+                'created_by' => ($users->count() > 0) ? $users->random()->id : $adminUser->id,
+                'assigned_to' => ($index % 2 == 0) ? $adminUser->id : null,
+                'created_at' => now()->subDays(rand(1, 365)),
+                'updated_at' => now()->subDays(rand(1, 60)),
             ]);
         }
 
-        $this->command->info('Created 50 contacts successfully!');
+        $this->command->info('Created 15 contacts successfully!');
     }
 }
