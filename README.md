@@ -17,6 +17,9 @@ CRM Ultra este un sistem CRM modern și complet bazat pe Laravel 10, cu funcțio
 - ✅ **DataImportController Extended**: Adăugate metodele `exportContacts()` și `exportCommunications()` 
 - ✅ **Contact Export**: Funcționalitatea de export contact individual din pagina show funcționează complet
 - ✅ **CSV Export**: Export CSV complet cu toate câmpurile contactului, segmente și statistici
+- ✅ **SMS Direction Column Fixed**: Rezolvată eroarea `Unknown column 'direction'` din SmsMessage
+- ✅ **CommunicationController Fixed**: Metoda `getUnreadCount()` folosește acum tabelul `communications`
+- ✅ **Database Schema Alignment**: Toate queries sunt acum aliniate cu structura reală a tabelelor
 
 ## ✅ What's Already Implemented
 

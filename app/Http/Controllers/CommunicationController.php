@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Contact;
+use App\Models\Communication;
 use App\Models\EmailLog;
 use App\Models\SmsMessage;
 use App\Models\WhatsAppMessage;
@@ -460,11 +461,21 @@ class CommunicationController extends Controller
      */
     private function getUnreadCount()
     {
-        $emailUnread = EmailLog::whereNull('read_at')->count();
-        $smsUnread = SmsMessage::where('direction', 'inbound')->whereNull('read_at')->count();
-        $whatsappUnread = WhatsAppMessage::where('direction', 'inbound')->whereNull('read_at')->count();
+        // Use the communications table which has the direction column
+        // and covers all communication types in a unified way
+        $unreadCommunications = \App\Models\Communication::where('direction', 'inbound')
+            ->whereNull('read_at')
+            ->count();
 
-        return $emailUnread + $smsUnread + $whatsappUnread;
+        // Also check email logs directly as they might not be in communications
+        $emailUnread = EmailLog::whereNull('read_at')->count();
+        
+        // For WhatsApp, check both tables to be comprehensive
+        $whatsappUnread = WhatsAppMessage::where('direction', 'inbound')
+            ->whereNull('read_at')
+            ->count();
+
+        return $unreadCommunications + $emailUnread + $whatsappUnread;
     }
 
     /**
