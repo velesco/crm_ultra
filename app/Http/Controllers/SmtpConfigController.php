@@ -61,6 +61,8 @@ class SmtpConfigController extends Controller
      */
     public function store(Request $request)
     {
+        \Log::info('SMTP Store Request:', $request->all());
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:smtp_configs',
             'host' => 'required|string|max:255',
@@ -77,13 +79,25 @@ class SmtpConfigController extends Controller
             'priority' => 'required|integer|min:1|max:100',
         ]);
 
+        \Log::info('SMTP Validation Passed:', $validated);
+
         // Password will be encrypted by model mutator
         $validated['is_active'] = $request->has('is_active');
+        $validated['created_by'] = auth()->id();
 
-        SmtpConfig::create($validated);
-
-        return redirect()->route('smtp-configs.index')
-                        ->with('success', 'SMTP configuration created successfully.');
+        try {
+            $smtpConfig = SmtpConfig::create($validated);
+            \Log::info('SMTP Created:', ['id' => $smtpConfig->id]);
+            
+            return redirect()->route('smtp-configs.index')
+                            ->with('success', 'SMTP configuration created successfully.');
+        } catch (\Exception $e) {
+            \Log::error('SMTP Creation Error:', ['error' => $e->getMessage()]);
+            
+            return redirect()->back()
+                            ->with('error', 'Error creating SMTP configuration: ' . $e->getMessage())
+                            ->withInput();
+        }
     }
 
     /**

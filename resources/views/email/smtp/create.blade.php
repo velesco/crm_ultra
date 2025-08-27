@@ -22,6 +22,30 @@
         </div>
 
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm">
+            <!-- Display Errors and Success Messages -->
+            @if ($errors->any())
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-t-xl">
+                    <div class="font-medium">There were some problems with your input:</div>
+                    <ul class="mt-1 list-disc list-inside text-sm">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-t-xl">
+                    {{ session('error') }}
+                </div>
+            @endif
+
+            @if (session('success'))
+                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-t-xl">
+                    {{ session('success') }}
+                </div>
+            @endif
+            
             <form method="POST" action="{{ route('smtp-configs.store') }}" x-data="smtpForm()">
                 @csrf
                 
@@ -350,5 +374,31 @@ function smtpForm() {
         }
     }
 }
+
+// Debug form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            console.log('Form is being submitted...');
+            console.log('Form data:', new FormData(form));
+            
+            // Check if all required fields are filled
+            const requiredFields = form.querySelectorAll('[required]');
+            let hasEmptyRequired = false;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    console.log('Empty required field:', field.name || field.id);
+                    hasEmptyRequired = true;
+                }
+            });
+            
+            if (hasEmptyRequired) {
+                console.log('Form has empty required fields, submission may be blocked.');
+            }
+        });
+    }
+});
 </script>
 @endsection

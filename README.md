@@ -10,7 +10,9 @@ CRM Ultra este un sistem CRM modern și complet bazat pe Laravel 10, cu funcțio
 - ✅ **SMTP Configuration Fixed**: Rezolvată problema cu salvarea configurațiilor SMTP prin corectarea discordanței `from_address` vs `from_email`
 - ✅ **Database Column Rename**: Migrație adăugată pentru redenumirea coloanei `from_address` în `from_email` în tabela `smtp_configs`
 - ✅ **Password Encryption**: Implementat mutator/accessor automat pentru criptarea/decriptarea parolei în modelul `SmtpConfig`
-- ✅ **Model-Database Alignment**: Toate referințele la `from_address` schimbate în `from_email` pentru consistența bazei de date
+- ✅ **SMTP Form Debug**: Adăugat logging complet și debug JavaScript pentru form-ul SMTP ca să identificăm problema cu salvarea
+- ✅ **Error Display Enhancement**: Îmbunătățit afișarea erorilor în form-ul de creare SMTP cu mesaje de feedback vizibile
+- ✅ **Backend Logging**: Adăugat try-catch și logging detaliat în controller pentru debugging
 - ✅ **ContactController Fixed**: Rezolvată eroarea `Undefined variable $recentActivity` prin corectarea metodei `show()`
 - ✅ **Contact Statistics**: Adăugată metoda `getContactStats()` pentru calcularea statisticilor (emails, SMS, WhatsApp)
 - ✅ **Activity Data Format**: Corectată formatarea datelor pentru `$recentActivity` din array în obiecte
