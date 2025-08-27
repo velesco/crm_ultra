@@ -20,6 +20,10 @@ CRM Ultra este un sistem CRM modern și complet bazat pe Laravel 10, cu funcțio
 - ✅ **SMS Direction Column Fixed**: Rezolvată eroarea `Unknown column 'direction'` din SmsMessage
 - ✅ **CommunicationController Fixed**: Metoda `getUnreadCount()` folosește acum tabelul `communications`
 - ✅ **Database Schema Alignment**: Toate queries sunt acum aliniate cu structura reală a tabelelor
+- ✅ **SMS Read Tracking Fixed**: Eliminată logica de `read_at` pentru SMS (nu au suport pentru tracking)
+- ✅ **Column Names Corrected**: Corectat `phone_number` în `to_number` și `message` în `content`
+- ✅ **Search Queries Fixed**: Queries de căutare folosesc acum coloanele corecte pentru fiecare tabel
+- ✅ **WhatsApp Content Field**: Corectat de la `message` la `content` în toate referințele
 
 ## ✅ What's Already Implemented
 

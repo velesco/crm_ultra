@@ -59,7 +59,7 @@ class CommunicationController extends Controller
             ],
             'sms' => [
                 'total' => SmsMessage::count(),
-                'unread' => SmsMessage::where('direction', 'inbound')->whereNull('read_at')->count(),
+                'unread' => 0, // SMS messages don't have direction/read_at - they're typically outbound only
                 'today' => SmsMessage::whereDate('created_at', today())->count(),
             ],
             'whatsapp' => [
@@ -140,7 +140,7 @@ class CommunicationController extends Controller
                     'id' => $whatsapp->id,
                     'type' => 'whatsapp',
                     'direction' => $whatsapp->direction,
-                    'content' => $whatsapp->message,
+                    'content' => $whatsapp->content,
                     'status' => $whatsapp->status,
                     'created_at' => $whatsapp->created_at,
                     'read_at' => $whatsapp->read_at,
@@ -277,9 +277,8 @@ class CommunicationController extends Controller
 
                 case 'sms':
                     $communication = SmsMessage::find($request->id);
-                    if ($communication && !$communication->read_at) {
-                        $communication->update(['read_at' => now()]);
-                    }
+                    // SMS messages don't have read_at column - they're typically outbound
+                    // and don't need read tracking like inbound messages
                     break;
 
                 case 'whatsapp':
@@ -322,11 +321,11 @@ class CommunicationController extends Controller
         $status = $request->input('status', 'all');
         if ($status === 'unread') {
             if ($includeEmail) $emailQuery->whereNull('read_at');
-            if ($includeSms) $smsQuery->whereNull('read_at');
+            // SMS messages don't support read_at filtering - skip this filter for SMS
             if ($includeWhatsapp) $whatsappQuery->where('direction', 'inbound')->whereNull('read_at');
         } elseif ($status === 'read') {
             if ($includeEmail) $emailQuery->whereNotNull('read_at');
-            if ($includeSms) $smsQuery->whereNotNull('read_at');
+            // SMS messages don't support read_at filtering - skip this filter for SMS
             if ($includeWhatsapp) $whatsappQuery->whereNotNull('read_at');
         }
 
@@ -361,7 +360,7 @@ class CommunicationController extends Controller
             if ($includeSms) {
                 $smsQuery->where(function($q) use ($search) {
                     $q->where('message', 'like', "%{$search}%")
-                      ->orWhere('phone_number', 'like', "%{$search}%")
+                      ->orWhere('to_number', 'like', "%{$search}%")
                       ->orWhereHas('contact', function($cq) use ($search) {
                           $cq->where('first_name', 'like', "%{$search}%")
                             ->orWhere('last_name', 'like', "%{$search}%")
@@ -372,12 +371,13 @@ class CommunicationController extends Controller
 
             if ($includeWhatsapp) {
                 $whatsappQuery->where(function($q) use ($search) {
-                    $q->where('message', 'like', "%{$search}%")
-                      ->orWhere('phone_number', 'like', "%{$search}%")
+                    $q->where('content', 'like', "%{$search}%")
+                      ->orWhere('from_number', 'like', "%{$search}%")
+                      ->orWhere('to_number', 'like', "%{$search}%")
                       ->orWhereHas('contact', function($cq) use ($search) {
                           $cq->where('first_name', 'like', "%{$search}%")
                             ->orWhere('last_name', 'like', "%{$search}%")
-                            ->orWhere('whatsapp_number', 'like', "%{$search}%");
+                            ->orWhere('whatsapp', 'like', "%{$search}%");
                       });
                 });
             }
@@ -427,7 +427,7 @@ class CommunicationController extends Controller
                     'type' => 'whatsapp',
                     'contact' => $whatsapp->contact,
                     'subject' => 'WhatsApp Message',
-                    'snippet' => substr($whatsapp->message, 0, 100),
+                    'snippet' => substr($whatsapp->content, 0, 100),
                     'status' => $whatsapp->status,
                     'direction' => $whatsapp->direction,
                     'created_at' => $whatsapp->created_at,
