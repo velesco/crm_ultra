@@ -394,10 +394,9 @@ function exportContact() {
     // Create a temporary form to export this contact
     const form = document.createElement('form');
     form.method = 'POST';
-    form.action = '{{ route("data.export") }}';
+    form.action = '{{ route("data.export.contacts") }}';
     form.innerHTML = `
         @csrf
-        <input type="hidden" name="type" value="contacts">
         <input type="hidden" name="contact_ids[]" value="{{ $contact->id }}">
         <input type="hidden" name="format" value="csv">
     `;

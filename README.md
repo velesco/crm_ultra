@@ -13,6 +13,10 @@ CRM Ultra este un sistem CRM modern și complet bazat pe Laravel 10, cu funcțio
 - ✅ **Segment Properties**: Înlocuită proprietatea inexistentă `$segment->type` cu `$segment->is_dynamic`
 - ✅ **Last Activity Accessor**: Adăugat accessor `getLastActivityAtAttribute()` în modelul Contact
 - ✅ **View Compatibility**: Toate view-urile contactelor sunt acum compatibile cu datele din controller
+- ✅ **Export Route Fixed**: Rezolvată eroarea `Route [data.export] not defined` prin adăugarea metodelor lipsă
+- ✅ **DataImportController Extended**: Adăugate metodele `exportContacts()` și `exportCommunications()` 
+- ✅ **Contact Export**: Funcționalitatea de export contact individual din pagina show funcționează complet
+- ✅ **CSV Export**: Export CSV complet cu toate câmpurile contactului, segmente și statistici
 
 ## ✅ What's Already Implemented
 
