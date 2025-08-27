@@ -23,7 +23,7 @@ return new class extends Migration
             $table->json('tags')->nullable();
             $table->text('notes')->nullable();
             $table->json('custom_fields')->nullable();
-            $table->enum('status', ['active', 'inactive', 'blocked'])->default('active');
+            $table->enum('status', ['active', 'inactive', 'blocked', 'prospect', 'customer'])->default('active');
             $table->string('source')->nullable(); // web, import, api, manual
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('assigned_to')->nullable()->constrained('users');
