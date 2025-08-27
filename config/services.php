@@ -37,4 +37,11 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI', env('APP_URL') . '/auth/google/callback'),
     ],
 
+    'whatsapp' => [
+        'server_url' => env('WHATSAPP_SERVER_URL', 'http://localhost:3001'),
+        'api_token' => env('WHATSAPP_API_TOKEN', ''),
+        'webhook_secret' => env('WHATSAPP_WEBHOOK_SECRET', ''),
+        'timeout' => env('WHATSAPP_TIMEOUT', 30),
+    ],
+
 ];

@@ -107,13 +107,16 @@ class WhatsAppController extends Controller
 
             $contact = Contact::find($request->contact_id);
             
-            if (!$contact->whatsapp_number) {
-                return response()->json(['success' => false, 'message' => 'Contact does not have WhatsApp number'], 400);
+            if (!$contact->whatsapp_number && !$contact->phone) {
+            return response()->json(['success' => false, 'message' => 'Contact does not have WhatsApp number or phone'], 400);
             }
+                
+                // Use WhatsApp number or fallback to phone
+                $phoneNumber = $contact->whatsapp_number ?: $contact->phone;
 
             // Send message through WhatsApp service
             $result = $this->whatsappService->sendMessage(
-                $contact->whatsapp_number,
+                $phoneNumber,
                 $request->message,
                 $request->message_type ?? 'text',
                 $request->media_url
@@ -125,7 +128,7 @@ class WhatsAppController extends Controller
                     'whats_app_session_id' => $session->id,
                     'contact_id' => $contact->id,
                     'user_id' => Auth::id(),
-                    'phone_number' => $contact->whatsapp_number,
+                    'phone_number' => $phoneNumber,
                     'message' => $request->message,
                     'message_type' => $request->message_type ?? 'text',
                     'media_url' => $request->media_url,
@@ -344,12 +347,18 @@ class WhatsAppController extends Controller
     public function webhook(Request $request)
     {
         try {
+            // Validate webhook signature if configured
+            $signature = $request->header('X-Webhook-Secret');
+            if (!$this->whatsappService->validateWebhookSignature($request->all(), $signature)) {
+                return response()->json(['status' => 'error', 'message' => 'Invalid signature'], 403);
+            }
+            
             $result = $this->whatsappService->handleWebhook($request->all());
             
             if ($result['success']) {
                 return response()->json(['status' => 'success'], 200);
             } else {
-                return response()->json(['status' => 'error', 'message' => $result['error']], 400);
+                return response()->json(['status' => 'error', 'message' => $result['message']], 400);
             }
 
         } catch (\Exception $e) {
@@ -369,8 +378,9 @@ class WhatsAppController extends Controller
             if ($result['success']) {
                 return response()->json([
                     'success' => true,
-                    'qr_code' => $result['qr_code'],
-                    'session_status' => $result['session_status'] ?? 'disconnected'
+                    'qr_code' => $result['qr_code'] ?? null,
+                    'session_status' => $result['session_status'] ?? 'disconnected',
+                    'is_ready' => $result['is_ready'] ?? false
                 ]);
             } else {
                 return response()->json(['success' => false, 'message' => $result['error']], 400);
@@ -389,11 +399,15 @@ class WhatsAppController extends Controller
         try {
             $result = $this->whatsappService->getSessionStatus();
             
-            return response()->json([
-                'success' => true,
-                'status' => $result['status'] ?? 'disconnected',
-                'info' => $result['info'] ?? null
-            ]);
+            if ($result['success']) {
+                return response()->json([
+                    'success' => true,
+                    'status' => $result['status'] ?? 'disconnected',
+                    'info' => $result['info'] ?? null
+                ]);
+            } else {
+                return response()->json(['success' => false, 'message' => $result['error']], 400);
+            }
 
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Failed to get session status'], 500);
@@ -409,13 +423,6 @@ class WhatsAppController extends Controller
             $result = $this->whatsappService->disconnect();
             
             if ($result['success']) {
-                // Update session status in database
-                WhatsAppSession::where('is_active', true)->update([
-                    'is_active' => false,
-                    'status' => 'disconnected',
-                    'disconnected_at' => now(),
-                ]);
-
                 return redirect()->route('whatsapp.index')
                     ->with('success', 'WhatsApp session disconnected successfully.');
             } else {

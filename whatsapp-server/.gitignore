@@ -1,0 +1,21 @@
+# WhatsApp Server Files
+node_modules/
+.env
+sessions/
+uploads/
+logs/
+*.log
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary Files
+tmp/
+temp/
