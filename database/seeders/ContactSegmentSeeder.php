@@ -22,7 +22,7 @@ class ContactSegmentSeeder extends Seeder
             [
                 'name' => 'VIP Customers',
                 'description' => 'High-value customers with premium accounts and significant purchase history.',
-                'type' => 'static',
+                'is_dynamic' => false,
                 'conditions' => [
                     'rules' => [
                         ['field' => 'tags', 'operator' => 'contains', 'value' => 'vip'],
@@ -30,13 +30,12 @@ class ContactSegmentSeeder extends Seeder
                     ],
                     'logic' => 'AND'
                 ],
-                'color' => '#e74c3c',
-                'is_active' => true
+                'color' => '#e74c3c'
             ],
             [
                 'name' => 'Tech Industry Leads',
                 'description' => 'Contacts from technology companies and startups.',
-                'type' => 'dynamic',
+                'is_dynamic' => true,
                 'conditions' => [
                     'rules' => [
                         ['field' => 'custom_fields.industry', 'operator' => '=', 'value' => 'Technology'],
@@ -44,14 +43,12 @@ class ContactSegmentSeeder extends Seeder
                     ],
                     'logic' => 'AND'
                 ],
-                'color' => '#3498db',
-                'is_active' => true,
-                'auto_update' => true
+                'color' => '#3498db'
             ],
             [
                 'name' => 'High-Value Prospects',
                 'description' => 'Prospects with high budget potential and decision-making authority.',
-                'type' => 'dynamic',
+                'is_dynamic' => true,
                 'conditions' => [
                     'rules' => [
                         ['field' => 'custom_fields.budget', 'operator' => 'in', 'value' => '$25,000-50,000,$50,000+'],
@@ -59,14 +56,38 @@ class ContactSegmentSeeder extends Seeder
                     ],
                     'logic' => 'AND'
                 ],
-                'color' => '#f39c12',
-                'is_active' => true,
-                'auto_update' => true
+                'color' => '#9b59b6'
+            ],
+            [
+                'name' => 'Small Business Owners',
+                'description' => 'Small business contacts who could benefit from our SMB solutions.',
+                'is_dynamic' => true,
+                'conditions' => [
+                    'rules' => [
+                        ['field' => 'custom_fields.company_size', 'operator' => 'in', 'value' => '1-10,11-50'],
+                        ['field' => 'tags', 'operator' => 'contains', 'value' => 'small-business']
+                    ],
+                    'logic' => 'AND'
+                ],
+                'color' => '#f39c12'
+            ],
+            [
+                'name' => 'Enterprise Clients',
+                'description' => 'Large enterprise contacts with complex requirements.',
+                'is_dynamic' => true,
+                'conditions' => [
+                    'rules' => [
+                        ['field' => 'custom_fields.company_size', 'operator' => 'in', 'value' => '501-1000,1000+'],
+                        ['field' => 'tags', 'operator' => 'contains', 'value' => 'enterprise']
+                    ],
+                    'logic' => 'AND'
+                ],
+                'color' => '#2c3e50'
             ],
             [
                 'name' => 'Newsletter Subscribers',
                 'description' => 'Contacts who have subscribed to our newsletter.',
-                'type' => 'static',
+                'is_dynamic' => false,
                 'conditions' => [
                     'rules' => [
                         ['field' => 'tags', 'operator' => 'contains', 'value' => 'newsletter-subscriber'],
@@ -74,58 +95,12 @@ class ContactSegmentSeeder extends Seeder
                     ],
                     'logic' => 'AND'
                 ],
-                'color' => '#9b59b6',
-                'is_active' => true
-            ],
-            [
-                'name' => 'Small Business Owners',
-                'description' => 'Contacts from small businesses (1-50 employees).',
-                'type' => 'dynamic',
-                'conditions' => [
-                    'rules' => [
-                        ['field' => 'custom_fields.company_size', 'operator' => '=', 'value' => '1-50'],
-                        ['field' => 'status', 'operator' => '=', 'value' => 'active']
-                    ],
-                    'logic' => 'AND'
-                ],
-                'color' => '#27ae60',
-                'is_active' => true,
-                'auto_update' => true
-            ],
-            [
-                'name' => 'Enterprise Contacts',
-                'description' => 'Contacts from large enterprise companies (500+ employees).',
-                'type' => 'dynamic',
-                'conditions' => [
-                    'rules' => [
-                        ['field' => 'custom_fields.company_size', 'operator' => 'in', 'value' => '500-1000,1000+'],
-                        ['field' => 'tags', 'operator' => 'contains', 'value' => 'enterprise']
-                    ],
-                    'logic' => 'AND'
-                ],
-                'color' => '#34495e',
-                'is_active' => true,
-                'auto_update' => true
-            ],
-            [
-                'name' => 'Marketing Agencies',
-                'description' => 'Contacts from marketing and advertising agencies.',
-                'type' => 'dynamic',
-                'conditions' => [
-                    'rules' => [
-                        ['field' => 'custom_fields.industry', 'operator' => '=', 'value' => 'Marketing'],
-                        ['field' => 'tags', 'operator' => 'contains', 'value' => 'agency']
-                    ],
-                    'logic' => 'AND'
-                ],
-                'color' => '#e67e22',
-                'is_active' => true,
-                'auto_update' => true
+                'color' => '#16a085'
             ],
             [
                 'name' => 'High Interest Leads',
-                'description' => 'Leads showing high interest level in our products.',
-                'type' => 'dynamic',
+                'description' => 'Leads with high interest level and engagement.',
+                'is_dynamic' => true,
                 'conditions' => [
                     'rules' => [
                         ['field' => 'custom_fields.interest_level', 'operator' => '=', 'value' => 'high'],
@@ -133,44 +108,24 @@ class ContactSegmentSeeder extends Seeder
                     ],
                     'logic' => 'AND'
                 ],
-                'color' => '#c0392b',
-                'is_active' => true,
-                'auto_update' => true
-            ],
-            [
-                'name' => 'US Contacts',
-                'description' => 'All contacts located in the United States.',
-                'type' => 'dynamic',
-                'conditions' => [
-                    'rules' => [
-                        ['field' => 'country', 'operator' => '=', 'value' => 'USA'],
-                        ['field' => 'status', 'operator' => '=', 'value' => 'active']
-                    ],
-                    'logic' => 'AND'
-                ],
-                'color' => '#2980b9',
-                'is_active' => true,
-                'auto_update' => true
+                'color' => '#e67e22'
             ],
             [
                 'name' => 'Inactive Contacts',
-                'description' => 'Contacts that haven\'t been engaged recently and may need re-activation.',
-                'type' => 'dynamic',
+                'description' => 'Contacts who have been inactive and need re-engagement.',
+                'is_dynamic' => true,
                 'conditions' => [
                     'rules' => [
-                        ['field' => 'status', 'operator' => '=', 'value' => 'inactive'],
-                        ['field' => 'updated_at', 'operator' => '<', 'value' => '30 days ago']
+                        ['field' => 'status', 'operator' => '=', 'value' => 'inactive']
                     ],
                     'logic' => 'AND'
                 ],
-                'color' => '#95a5a6',
-                'is_active' => true,
-                'auto_update' => true
+                'color' => '#95a5a6'
             ],
             [
                 'name' => 'Referral Sources',
                 'description' => 'Contacts who can provide referrals to new prospects.',
-                'type' => 'static',
+                'is_dynamic' => false,
                 'conditions' => [
                     'rules' => [
                         ['field' => 'tags', 'operator' => 'contains', 'value' => 'referral-source'],
@@ -178,13 +133,12 @@ class ContactSegmentSeeder extends Seeder
                     ],
                     'logic' => 'AND'
                 ],
-                'color' => '#8e44ad',
-                'is_active' => true
+                'color' => '#8e44ad'
             ],
             [
                 'name' => 'Recent Contacts',
                 'description' => 'Contacts added in the last 30 days.',
-                'type' => 'dynamic',
+                'is_dynamic' => true,
                 'conditions' => [
                     'rules' => [
                         ['field' => 'created_at', 'operator' => '>=', 'value' => '30 days ago'],
@@ -192,9 +146,7 @@ class ContactSegmentSeeder extends Seeder
                     ],
                     'logic' => 'AND'
                 ],
-                'color' => '#16a085',
-                'is_active' => true,
-                'auto_update' => true
+                'color' => '#27ae60'
             ]
         ];
 
@@ -207,7 +159,7 @@ class ContactSegmentSeeder extends Seeder
             ]);
 
             // For static segments, manually assign some contacts
-            if ($segment->type === 'static') {
+            if (!$segment->is_dynamic) {
                 $this->assignContactsToStaticSegment($segment);
             }
         }
@@ -260,9 +212,8 @@ class ContactSegmentSeeder extends Seeder
                 break;
         }
 
-        if (!empty($contactsToAssign)) {
+        if (!empty($contactsToAssign) && $segment->contacts()) {
             $segment->contacts()->sync($contactsToAssign);
-            $segment->update(['contacts_count' => count($contactsToAssign)]);
         }
     }
 }

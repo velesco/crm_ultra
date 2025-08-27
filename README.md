@@ -282,17 +282,52 @@ This is a private project. All development should follow Laravel best practices 
 
 Private - All rights reserved.
 
+### ✅ **Deploy Fix - ContactSegmentSeeder** (Latest)
+- 🔧 **Column Mapping Fixed**: Corrected to use 'is_dynamic' instead of 'type'
+- 🔧 **Error Resolved**: Fixes "Unknown column 'type' in 'field list'" during segment seeding
+- 🔧 **Removed Invalid Columns**: Eliminated 'is_active' and 'auto_update' (not in migration)
+- 🔧 **Database Schema Match**: Aligned with create_contact_segments_table migration columns
+- 📊 **10 Segments Created**: VIP, Tech Leads, High-Value, SMB, Enterprise, Newsletter, High Interest, Inactive, Referral, Recent
+- 🎨 **Dynamic Segments**: Auto-updating segments based on conditions
+- ⚙️ **Correct Columns**: `name`, `description`, `is_dynamic`, `conditions`, `color`, `created_by`
+- 📅 **Updated**: August 27, 2025
+
 ---
 
 ## 🔧 **Recent Fixes & Updates**
 
-### ✅ **Deploy Fix - Contact Status ENUM** (Latest)
-- 🔧 **Fixed Contact Migration ENUM**: Updated contact status ENUM to support all required values
-- 🔧 **Status Values Updated**: ENUM now supports ['active', 'inactive', 'blocked', 'prospect', 'customer']
-- 🔧 **Seeder Compatibility**: Fixed ContactSeeder using 'prospect' and ContactFactory using 'customer'
-- 🔧 **Deploy Error Resolved**: Fixes SQLSTATE[01000] data truncation during database seeding
+### ✅ **Deploy Fix - Contact Status ENUM** (Latest) ✅ **RESOLVED**
+- ✅ **Fixed Contact Migration ENUM**: Updated contact status ENUM to support all required values
+- ✅ **Status Values Updated**: ENUM now supports ['active', 'inactive', 'blocked', 'prospect', 'customer']
+- ✅ **Seeder Compatibility**: Fixed ContactSeeder using 'prospect' and ContactFactory using 'customer'
+- ✅ **Deploy Error Resolved**: Fixes SQLSTATE[01000] data truncation during database seeding
 - ⚙️ **Files Modified**: 
-  - `database/migrations/2024_01_15_000002_create_contacts_table.php`
+  - `database/migrations/2024_01_15_000002_create_contacts_table.php` (for fresh deployments)
+  - `database/migrations/2025_08_27_094846_modify_contacts_status_enum.php` (for existing databases) 🆕
+- 🔄 **Migration Strategy**: 
+  - Fresh deploys: Uses updated create_contacts_table migration
+  - Existing databases: Uses new modify_contacts_status_enum migration to alter existing column
+  - Both approaches ensure ENUM supports all required status values
+- 📅 **Updated**: August 27, 2025
+
+### ✅ **Deploy Fix - Spatie Permissions** (Latest) ✅ **RESOLVED**
+- ✅ **Fixed Missing Permission Tables**: Published Spatie Permission migrations
+- ✅ **Error Resolved**: Fixes "Table 'laravel.permissions' doesn't exist" during seeding
+- ⚙️ **Command Used**: `php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider"`
+- 📝 **Migration Created**: `2025_08_27_095132_create_permission_tables.php`
+- ✅ **Solution**: Run `migrate:fresh --seed` after publishing permissions
+- 📅 **Updated**: August 27, 2025
+
+### ✅ **Deploy Fix - EmailTemplateSeeder** (Latest) ✅ **RESOLVED**
+- ✅ **Created Missing Seeder**: Generated EmailTemplateSeeder.php with 10 professional templates
+- ✅ **Error Resolved**: Fixes "Target class [EmailTemplateSeeder] does not exist"
+- ✅ **Column Mapping Fixed**: Corrected to use 'content' instead of 'body', 'category' instead of 'type'
+- ✅ **Database Schema Match**: Aligned with create_email_templates_table migration columns
+- 🎆 **Templates Created**: Welcome, Demo, Follow-up, Newsletter, Event, Thank You, Proposal, Survey, Re-engagement, Monthly Report
+- 🎨 **Design**: Professional HTML email templates with gradients and responsive design
+- ⚙️ **Commands Used**: 
+  - `php artisan make:seeder EmailTemplateSeeder`
+  - Fixed column names: `content`, `category`, `variables`, `is_active`, `created_by`
 - 📅 **Updated**: August 27, 2025
 
 ---
