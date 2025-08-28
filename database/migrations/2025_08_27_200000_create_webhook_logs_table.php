@@ -45,7 +45,6 @@ return new class extends Migration
                 $table->index(['status', 'created_at']);
                 $table->index(['event_type', 'created_at']);
                 $table->index(['reference_type', 'reference_id']);
-                $table->index(['webhook_received_at']);
                 $table->index(['next_retry_at']);
                 $table->index(['attempts', 'status']);
             });

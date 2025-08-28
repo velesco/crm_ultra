@@ -9,7 +9,7 @@ use App\Models\SmtpConfig;
 use App\Models\User;
 use App\Services\EmailService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 class EmailServiceTest extends TestCase
 {
@@ -20,7 +20,7 @@ class EmailServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->emailService = new EmailService;
+        $this->emailService = app(EmailService::class);
     }
 
     public function test_can_create_email_campaign()
@@ -103,7 +103,7 @@ class EmailServiceTest extends TestCase
         $method = $reflection->getMethod('personalizeContent');
         $method->setAccessible(true);
 
-        $result = $method->invoke($this->emailService, $content);
+        $result = $method->invoke($this->emailService, $content, $contact);
 
         $this->assertEquals('Hello John Doe from Test Company!', $result);
     }
