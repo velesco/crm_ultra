@@ -3,11 +3,9 @@
 namespace App\Events;
 
 use App\Models\Contact;
-use App\Models\EmailLog;
 use App\Models\EmailCampaign;
-use Illuminate\Broadcasting\Channel;
+use App\Models\EmailLog;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -18,8 +16,11 @@ class EmailOpened implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public EmailLog $emailLog;
+
     public Contact $contact;
+
     public ?EmailCampaign $campaign;
+
     public array $trackingData;
 
     /**
@@ -42,8 +43,8 @@ class EmailOpened implements ShouldBroadcast
     {
         return [
             new PrivateChannel('email-tracking'),
-            new PrivateChannel('contact.' . $this->contact->id),
-            new PrivateChannel('campaign.' . ($this->campaign ? $this->campaign->id : 'single')),
+            new PrivateChannel('contact.'.$this->contact->id),
+            new PrivateChannel('campaign.'.($this->campaign ? $this->campaign->id : 'single')),
         ];
     }
 

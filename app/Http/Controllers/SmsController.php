@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SmsMessage;
-use App\Models\SmsProvider;
 use App\Models\Contact;
 use App\Models\ContactSegment;
+use App\Models\SmsMessage;
+use App\Models\SmsProvider;
 use App\Services\SmsService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class SmsController extends Controller
 {
@@ -49,13 +49,13 @@ class SmsController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('message', 'like', "%{$search}%")
-                  ->orWhere('phone_number', 'like', "%{$search}%")
-                  ->orWhereHas('contact', function($cq) use ($search) {
-                      $cq->where('first_name', 'like', "%{$search}%")
-                        ->orWhere('last_name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('phone_number', 'like', "%{$search}%")
+                    ->orWhereHas('contact', function ($cq) use ($search) {
+                        $cq->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -68,7 +68,7 @@ class SmsController extends Controller
             'delivered_count' => SmsMessage::where('status', 'delivered')->count(),
             'failed' => SmsMessage::where('status', 'failed')->count(),
             'pending' => SmsMessage::where('status', 'pending')->count(),
-            'delivery_rate' => SmsMessage::count() > 0 ? 
+            'delivery_rate' => SmsMessage::count() > 0 ?
                 round((SmsMessage::where('status', 'delivered')->count() / SmsMessage::count()) * 100, 2) : 0,
         ];
 
@@ -128,8 +128,9 @@ class SmsController extends Controller
             $failedCount = 0;
 
             foreach ($contacts as $contact) {
-                if (!$contact->phone) {
+                if (! $contact->phone) {
                     $failedCount++;
+
                     continue;
                 }
 
@@ -144,7 +145,7 @@ class SmsController extends Controller
                             $contact->id,
                             $providerId
                         );
-                        
+
                         if ($result['success']) {
                             $sentCount++;
                         } else {
@@ -153,22 +154,23 @@ class SmsController extends Controller
                     }
                 } catch (\Exception $e) {
                     $failedCount++;
-                    \Log::error('SMS send error: ' . $e->getMessage());
+                    \Log::error('SMS send error: '.$e->getMessage());
                 }
             }
 
             $totalContacts = $contacts->count();
-            
+
             if ($scheduleAt) {
                 return redirect()->route('sms.index')
-                    ->with('success', "SMS scheduled successfully for {$totalContacts} contacts on " . $scheduleAt->format('d/m/Y H:i'));
+                    ->with('success', "SMS scheduled successfully for {$totalContacts} contacts on ".$scheduleAt->format('d/m/Y H:i'));
             } else {
                 $message = "SMS sending completed. Sent: {$sentCount}, Failed: {$failedCount} out of {$totalContacts} contacts.";
+
                 return redirect()->route('sms.index')->with('success', $message);
             }
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'An error occurred while processing SMS: ' . $e->getMessage()])->withInput();
+            return back()->withErrors(['error' => 'An error occurred while processing SMS: '.$e->getMessage()])->withInput();
         }
     }
 
@@ -178,7 +180,7 @@ class SmsController extends Controller
     public function show(SmsMessage $sms)
     {
         $sms->load(['contact', 'smsProvider', 'user']);
-        
+
         return view('sms.show', compact('sms'));
     }
 
@@ -188,7 +190,7 @@ class SmsController extends Controller
     public function edit(SmsMessage $sms)
     {
         // Only allow editing of failed or scheduled messages
-        if (!in_array($sms->status, ['failed', 'scheduled'])) {
+        if (! in_array($sms->status, ['failed', 'scheduled'])) {
             return redirect()->route('sms.show', $sms)
                 ->withErrors(['error' => 'Only failed or scheduled SMS messages can be edited.']);
         }
@@ -209,7 +211,7 @@ class SmsController extends Controller
     public function update(Request $request, SmsMessage $sms)
     {
         // Only allow updating of failed or scheduled messages
-        if (!in_array($sms->status, ['failed', 'scheduled'])) {
+        if (! in_array($sms->status, ['failed', 'scheduled'])) {
             return redirect()->route('sms.show', $sms)
                 ->withErrors(['error' => 'Only failed or scheduled SMS messages can be updated.']);
         }
@@ -238,7 +240,7 @@ class SmsController extends Controller
                 ->with('success', 'SMS message updated successfully.');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'An error occurred while updating SMS: ' . $e->getMessage()])->withInput();
+            return back()->withErrors(['error' => 'An error occurred while updating SMS: '.$e->getMessage()])->withInput();
         }
     }
 
@@ -249,12 +251,12 @@ class SmsController extends Controller
     {
         try {
             $sms->delete();
-            
+
             return redirect()->route('sms.index')
                 ->with('success', 'SMS message deleted successfully.');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'An error occurred while deleting SMS: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'An error occurred while deleting SMS: '.$e->getMessage()]);
         }
     }
 
@@ -278,11 +280,11 @@ class SmsController extends Controller
             if ($result['success']) {
                 return back()->with('success', 'SMS message resent successfully.');
             } else {
-                return back()->withErrors(['error' => 'Failed to resend SMS: ' . ($result['error'] ?? 'Unknown error')]);
+                return back()->withErrors(['error' => 'Failed to resend SMS: '.($result['error'] ?? 'Unknown error')]);
             }
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'An error occurred while resending SMS: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'An error occurred while resending SMS: '.$e->getMessage()]);
         }
     }
 
@@ -327,7 +329,7 @@ class SmsController extends Controller
             'average_cost' => SmsMessage::whereBetween('created_at', [$dateFrom, $dateTo])->avg('cost'),
         ];
 
-        $overallStats['delivery_rate'] = $overallStats['total_messages'] > 0 ? 
+        $overallStats['delivery_rate'] = $overallStats['total_messages'] > 0 ?
             round(($overallStats['delivered_messages'] / $overallStats['total_messages']) * 100, 2) : 0;
 
         return view('sms.stats', compact('dailyStats', 'providerStats', 'overallStats', 'dateFrom', 'dateTo'));
@@ -340,7 +342,7 @@ class SmsController extends Controller
     {
         try {
             $result = $this->smsService->handleWebhook($request->all(), $provider);
-            
+
             if ($result['success']) {
                 return response()->json(['status' => 'success'], 200);
             } else {
@@ -348,7 +350,8 @@ class SmsController extends Controller
             }
 
         } catch (\Exception $e) {
-            \Log::error('SMS webhook error: ' . $e->getMessage());
+            \Log::error('SMS webhook error: '.$e->getMessage());
+
             return response()->json(['status' => 'error', 'message' => 'Internal server error'], 500);
         }
     }
@@ -371,6 +374,7 @@ class SmsController extends Controller
 
             case 'segment':
                 $segment = ContactSegment::with('contacts')->find($request->segment_id);
+
                 return $segment ? $segment->contacts()->where('phone', '!=', null)->get() : collect();
 
             default:

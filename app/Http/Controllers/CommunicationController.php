@@ -2,25 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Contact;
 use App\Models\Communication;
+use App\Models\Contact;
 use App\Models\EmailLog;
-use App\Models\SmsMessage;
-use App\Models\WhatsAppMessage;
-use App\Models\SmtpConfig;
 use App\Models\EmailTemplate;
+use App\Models\SmsMessage;
+use App\Models\SmtpConfig;
+use App\Models\WhatsAppMessage;
 use App\Services\EmailService;
 use App\Services\SmsService;
 use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 
 class CommunicationController extends Controller
 {
     protected $emailService;
+
     protected $smsService;
+
     protected $whatsappService;
 
     public function __construct(
@@ -76,7 +76,7 @@ class CommunicationController extends Controller
             'all' => 'All Channels',
             'email' => 'Email',
             'sms' => 'SMS',
-            'whatsapp' => 'WhatsApp'
+            'whatsapp' => 'WhatsApp',
         ];
 
         $statuses = [
@@ -84,7 +84,7 @@ class CommunicationController extends Controller
             'unread' => 'Unread',
             'read' => 'Read',
             'pending' => 'Pending Response',
-            'responded' => 'Responded'
+            'responded' => 'Responded',
         ];
 
         return view('communications.index', compact(
@@ -105,7 +105,7 @@ class CommunicationController extends Controller
         $emails = EmailLog::where('contact_id', $contact->id)
             ->orderBy('created_at')
             ->get()
-            ->map(function($email) {
+            ->map(function ($email) {
                 return [
                     'id' => $email->id,
                     'type' => 'email',
@@ -114,14 +114,14 @@ class CommunicationController extends Controller
                     'status' => $email->status,
                     'created_at' => $email->created_at,
                     'read_at' => $email->read_at,
-                    'data' => $email
+                    'data' => $email,
                 ];
             });
 
         $smsMessages = SmsMessage::where('contact_id', $contact->id)
             ->orderBy('created_at')
             ->get()
-            ->map(function($sms) {
+            ->map(function ($sms) {
                 return [
                     'id' => $sms->id,
                     'type' => 'sms',
@@ -130,14 +130,14 @@ class CommunicationController extends Controller
                     'status' => $sms->status,
                     'created_at' => $sms->created_at,
                     'read_at' => $sms->delivered_at,
-                    'data' => $sms
+                    'data' => $sms,
                 ];
             });
 
         $whatsappMessages = WhatsAppMessage::where('contact_id', $contact->id)
             ->orderBy('created_at')
             ->get()
-            ->map(function($whatsapp) {
+            ->map(function ($whatsapp) {
                 return [
                     'id' => $whatsapp->id,
                     'type' => 'whatsapp',
@@ -146,7 +146,7 @@ class CommunicationController extends Controller
                     'status' => $whatsapp->status,
                     'created_at' => $whatsapp->created_at,
                     'read_at' => $whatsapp->read_at,
-                    'data' => $whatsapp
+                    'data' => $whatsapp,
                 ];
             });
 
@@ -197,26 +197,26 @@ class CommunicationController extends Controller
 
             switch ($request->channel) {
                 case 'email':
-                    if (!$contact->email) {
+                    if (! $contact->email) {
                         return response()->json(['success' => false, 'message' => 'Contact has no email address'], 400);
                     }
-                    
-                    if (!$request->smtp_config_id) {
+
+                    if (! $request->smtp_config_id) {
                         return response()->json(['success' => false, 'message' => 'SMTP configuration is required for email'], 400);
                     }
-                    
+
                     // Get SMTP configuration
                     $smtpConfig = SmtpConfig::find($request->smtp_config_id);
-                    if (!$smtpConfig || !$smtpConfig->is_active) {
+                    if (! $smtpConfig || ! $smtpConfig->is_active) {
                         return response()->json(['success' => false, 'message' => 'Invalid or inactive SMTP configuration'], 400);
                     }
-                    
+
                     // Get email template if provided
                     $template = null;
                     if ($request->template_id) {
                         $template = EmailTemplate::find($request->template_id);
                     }
-                    
+
                     $result = $this->emailService->sendSingleEmail(
                         $contact,
                         $request->subject,
@@ -227,10 +227,10 @@ class CommunicationController extends Controller
                     break;
 
                 case 'sms':
-                    if (!$contact->phone) {
+                    if (! $contact->phone) {
                         return response()->json(['success' => false, 'message' => 'Contact has no phone number'], 400);
                     }
-                    
+
                     $result = $this->smsService->sendSms(
                         $contact->phone,
                         $request->message,
@@ -239,10 +239,10 @@ class CommunicationController extends Controller
                     break;
 
                 case 'whatsapp':
-                    if (!$contact->whatsapp) {
+                    if (! $contact->whatsapp) {
                         return response()->json(['success' => false, 'message' => 'Contact has no WhatsApp number'], 400);
                     }
-                    
+
                     $result = $this->whatsappService->sendMessage(
                         $contact->whatsapp,
                         $request->message
@@ -253,20 +253,20 @@ class CommunicationController extends Controller
             if ($result && $result['success']) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Message sent successfully via ' . strtoupper($request->channel),
-                    'data' => $result
+                    'message' => 'Message sent successfully via '.strtoupper($request->channel),
+                    'data' => $result,
                 ]);
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to send message: ' . ($result['error'] ?? 'Unknown error')
+                    'message' => 'Failed to send message: '.($result['error'] ?? 'Unknown error'),
                 ], 400);
             }
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred while sending message: ' . $e->getMessage()
+                'message' => 'An error occurred while sending message: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -289,7 +289,7 @@ class CommunicationController extends Controller
             switch ($request->type) {
                 case 'email':
                     $communication = EmailLog::find($request->id);
-                    if ($communication && !$communication->read_at) {
+                    if ($communication && ! $communication->read_at) {
                         $communication->update(['read_at' => now()]);
                     }
                     break;
@@ -302,7 +302,7 @@ class CommunicationController extends Controller
 
                 case 'whatsapp':
                     $communication = WhatsAppMessage::find($request->id);
-                    if ($communication && !$communication->read_at && $communication->direction === 'inbound') {
+                    if ($communication && ! $communication->read_at && $communication->direction === 'inbound') {
                         $communication->update(['read_at' => now()]);
                     }
                     break;
@@ -313,7 +313,7 @@ class CommunicationController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to mark as read: ' . $e->getMessage()
+                'message' => 'Failed to mark as read: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -339,13 +339,21 @@ class CommunicationController extends Controller
         // Apply status filters
         $status = $request->input('status', 'all');
         if ($status === 'unread') {
-            if ($includeEmail) $emailQuery->whereNull('read_at');
+            if ($includeEmail) {
+                $emailQuery->whereNull('read_at');
+            }
             // SMS messages don't support read_at filtering - skip this filter for SMS
-            if ($includeWhatsapp) $whatsappQuery->where('direction', 'inbound')->whereNull('read_at');
+            if ($includeWhatsapp) {
+                $whatsappQuery->where('direction', 'inbound')->whereNull('read_at');
+            }
         } elseif ($status === 'read') {
-            if ($includeEmail) $emailQuery->whereNotNull('read_at');
+            if ($includeEmail) {
+                $emailQuery->whereNotNull('read_at');
+            }
             // SMS messages don't support read_at filtering - skip this filter for SMS
-            if ($includeWhatsapp) $whatsappQuery->whereNotNull('read_at');
+            if ($includeWhatsapp) {
+                $whatsappQuery->whereNotNull('read_at');
+            }
         }
 
         // Apply date filters
@@ -364,49 +372,49 @@ class CommunicationController extends Controller
         // Apply search filter
         if ($request->filled('search')) {
             $search = $request->search;
-            
+
             if ($includeEmail) {
-                $emailQuery->where(function($q) use ($search) {
+                $emailQuery->where(function ($q) use ($search) {
                     $q->where('subject', 'like', "%{$search}%")
-                      ->orWhereHas('contact', function($cq) use ($search) {
-                          $cq->where('first_name', 'like', "%{$search}%")
-                            ->orWhere('last_name', 'like', "%{$search}%")
-                            ->orWhere('email', 'like', "%{$search}%");
-                      });
+                        ->orWhereHas('contact', function ($cq) use ($search) {
+                            $cq->where('first_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
+                        });
                 });
             }
 
             if ($includeSms) {
-                $smsQuery->where(function($q) use ($search) {
+                $smsQuery->where(function ($q) use ($search) {
                     $q->where('message', 'like', "%{$search}%")
-                      ->orWhere('to_number', 'like', "%{$search}%")
-                      ->orWhereHas('contact', function($cq) use ($search) {
-                          $cq->where('first_name', 'like', "%{$search}%")
-                            ->orWhere('last_name', 'like', "%{$search}%")
-                            ->orWhere('phone', 'like', "%{$search}%");
-                      });
+                        ->orWhere('to_number', 'like', "%{$search}%")
+                        ->orWhereHas('contact', function ($cq) use ($search) {
+                            $cq->where('first_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%")
+                                ->orWhere('phone', 'like', "%{$search}%");
+                        });
                 });
             }
 
             if ($includeWhatsapp) {
-                $whatsappQuery->where(function($q) use ($search) {
+                $whatsappQuery->where(function ($q) use ($search) {
                     $q->where('content', 'like', "%{$search}%")
-                      ->orWhere('from_number', 'like', "%{$search}%")
-                      ->orWhere('to_number', 'like', "%{$search}%")
-                      ->orWhereHas('contact', function($cq) use ($search) {
-                          $cq->where('first_name', 'like', "%{$search}%")
-                            ->orWhere('last_name', 'like', "%{$search}%")
-                            ->orWhere('whatsapp', 'like', "%{$search}%");
-                      });
+                        ->orWhere('from_number', 'like', "%{$search}%")
+                        ->orWhere('to_number', 'like', "%{$search}%")
+                        ->orWhereHas('contact', function ($cq) use ($search) {
+                            $cq->where('first_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%")
+                                ->orWhere('whatsapp', 'like', "%{$search}%");
+                        });
                 });
             }
         }
 
         // Get limited results from each channel (for performance)
         $limit = 50;
-        
+
         if ($includeEmail) {
-            $emails = $emailQuery->limit($limit)->get()->map(function($email) {
+            $emails = $emailQuery->limit($limit)->get()->map(function ($email) {
                 return [
                     'id' => $email->id,
                     'type' => 'email',
@@ -416,14 +424,14 @@ class CommunicationController extends Controller
                     'status' => $email->status,
                     'created_at' => $email->created_at,
                     'read_at' => $email->read_at,
-                    'data' => $email
+                    'data' => $email,
                 ];
             });
             $communications = $communications->concat($emails);
         }
 
         if ($includeSms) {
-            $sms = $smsQuery->limit($limit)->get()->map(function($sms) {
+            $sms = $smsQuery->limit($limit)->get()->map(function ($sms) {
                 return [
                     'id' => $sms->id,
                     'type' => 'sms',
@@ -433,14 +441,14 @@ class CommunicationController extends Controller
                     'status' => $sms->status,
                     'created_at' => $sms->created_at,
                     'read_at' => $sms->delivered_at,
-                    'data' => $sms
+                    'data' => $sms,
                 ];
             });
             $communications = $communications->concat($sms);
         }
 
         if ($includeWhatsapp) {
-            $whatsapp = $whatsappQuery->limit($limit)->get()->map(function($whatsapp) {
+            $whatsapp = $whatsappQuery->limit($limit)->get()->map(function ($whatsapp) {
                 return [
                     'id' => $whatsapp->id,
                     'type' => 'whatsapp',
@@ -451,7 +459,7 @@ class CommunicationController extends Controller
                     'direction' => $whatsapp->direction,
                     'created_at' => $whatsapp->created_at,
                     'read_at' => $whatsapp->read_at,
-                    'data' => $whatsapp
+                    'data' => $whatsapp,
                 ];
             });
             $communications = $communications->concat($whatsapp);
@@ -459,7 +467,7 @@ class CommunicationController extends Controller
 
         // Sort by date and paginate
         $communications = $communications->sortByDesc('created_at');
-        
+
         // Manual pagination
         $page = $request->input('page', 1);
         $perPage = 20;
@@ -488,7 +496,7 @@ class CommunicationController extends Controller
 
         // Also check email logs directly as they might not be in communications
         $emailUnread = EmailLog::whereNull('read_at')->count();
-        
+
         // For WhatsApp, check both tables to be comprehensive
         $whatsappUnread = WhatsAppMessage::where('direction', 'inbound')
             ->whereNull('read_at')

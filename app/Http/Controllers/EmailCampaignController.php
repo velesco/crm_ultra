@@ -2,17 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use App\Models\Contact;
+use App\Models\ContactSegment;
 use App\Models\EmailCampaign;
 use App\Models\EmailTemplate;
 use App\Models\SmtpConfig;
-use App\Models\Contact;
-use App\Models\ContactSegment;
 use App\Services\EmailService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Gate;
 
 class EmailCampaignController extends Controller
 {
@@ -39,9 +36,9 @@ class EmailCampaignController extends Controller
 
         // Search by name or subject
         if ($request->has('search') && $request->search) {
-            $query->where(function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('subject', 'like', '%' . $request->search . '%');
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%'.$request->search.'%')
+                    ->orWhere('subject', 'like', '%'.$request->search.'%');
             });
         }
 
@@ -100,7 +97,7 @@ class EmailCampaignController extends Controller
 
             // Add recipients based on type
             $contactIds = $this->getRecipientsFromRequest($request);
-            if (!empty($contactIds)) {
+            if (! empty($contactIds)) {
                 $this->emailService->addContactsToCampaign($campaign, $contactIds);
             }
 
@@ -109,7 +106,7 @@ class EmailCampaignController extends Controller
 
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to create campaign: ' . $e->getMessage())
+                ->with('error', 'Failed to create campaign: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -183,8 +180,8 @@ class EmailCampaignController extends Controller
 
         try {
             $emailCampaign->update($request->only([
-                'name', 'subject', 'content', 'smtp_config_id', 
-                'template_id', 'scheduled_at'
+                'name', 'subject', 'content', 'smtp_config_id',
+                'template_id', 'scheduled_at',
             ]));
 
             return redirect()->route('email.campaigns.show', $emailCampaign)
@@ -192,7 +189,7 @@ class EmailCampaignController extends Controller
 
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to update campaign: ' . $e->getMessage())
+                ->with('error', 'Failed to update campaign: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -216,7 +213,7 @@ class EmailCampaignController extends Controller
 
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to delete campaign: ' . $e->getMessage());
+                ->with('error', 'Failed to delete campaign: '.$e->getMessage());
         }
     }
 
@@ -225,7 +222,7 @@ class EmailCampaignController extends Controller
      */
     public function send(EmailCampaign $emailCampaign)
     {
-        if (!in_array($emailCampaign->status, ['draft', 'scheduled'])) {
+        if (! in_array($emailCampaign->status, ['draft', 'scheduled'])) {
             return redirect()->route('email.campaigns.show', $emailCampaign)
                 ->with('error', 'Campaign cannot be sent in its current status.');
         }
@@ -243,7 +240,7 @@ class EmailCampaignController extends Controller
 
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to send campaign: ' . $e->getMessage());
+                ->with('error', 'Failed to send campaign: '.$e->getMessage());
         }
     }
 
@@ -265,7 +262,7 @@ class EmailCampaignController extends Controller
 
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to pause campaign: ' . $e->getMessage());
+                ->with('error', 'Failed to pause campaign: '.$e->getMessage());
         }
     }
 
@@ -287,7 +284,7 @@ class EmailCampaignController extends Controller
 
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to resume campaign: ' . $e->getMessage());
+                ->with('error', 'Failed to resume campaign: '.$e->getMessage());
         }
     }
 
@@ -313,7 +310,7 @@ class EmailCampaignController extends Controller
         try {
             $emailCampaign->update([
                 'scheduled_at' => $request->scheduled_at,
-                'status' => 'scheduled'
+                'status' => 'scheduled',
             ]);
 
             return redirect()->route('email.campaigns.show', $emailCampaign)
@@ -321,7 +318,7 @@ class EmailCampaignController extends Controller
 
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to schedule campaign: ' . $e->getMessage());
+                ->with('error', 'Failed to schedule campaign: '.$e->getMessage());
         }
     }
 
@@ -352,7 +349,7 @@ class EmailCampaignController extends Controller
 
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to duplicate campaign: ' . $e->getMessage());
+                ->with('error', 'Failed to duplicate campaign: '.$e->getMessage());
         }
     }
 
@@ -364,21 +361,21 @@ class EmailCampaignController extends Controller
         $contactId = $request->get('contact_id');
         $contact = $contactId ? Contact::find($contactId) : Contact::first();
 
-        if (!$contact) {
+        if (! $contact) {
             return response()->json(['error' => 'No contact available for preview'], 404);
         }
 
         try {
             $previewContent = $this->emailService->generatePreview($emailCampaign, $contact);
-            
+
             return response()->json([
                 'subject' => $previewContent['subject'],
                 'content' => $previewContent['content'],
-                'contact' => $contact->only(['first_name', 'last_name', 'email'])
+                'contact' => $contact->only(['first_name', 'last_name', 'email']),
             ]);
 
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to generate preview: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Failed to generate preview: '.$e->getMessage()], 500);
         }
     }
 
@@ -393,15 +390,15 @@ class EmailCampaignController extends Controller
             case 'all':
                 $contactIds = Contact::pluck('id')->toArray();
                 break;
-                
+
             case 'segments':
                 if ($request->segment_ids) {
-                    $contactIds = Contact::whereHas('segments', function($query) use ($request) {
+                    $contactIds = Contact::whereHas('segments', function ($query) use ($request) {
                         $query->whereIn('contact_segments.id', $request->segment_ids);
                     })->pluck('id')->toArray();
                 }
                 break;
-                
+
             case 'manual':
                 $contactIds = $request->contact_ids ?? [];
                 break;

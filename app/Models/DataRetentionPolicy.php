@@ -23,7 +23,7 @@ class DataRetentionPolicy extends Model
         'last_executed_at',
         'created_by',
         'updated_by',
-        'notes'
+        'notes',
     ];
 
     protected $casts = [
@@ -31,19 +31,28 @@ class DataRetentionPolicy extends Model
         'exceptions' => 'array',
         'auto_delete' => 'boolean',
         'is_active' => 'boolean',
-        'last_executed_at' => 'datetime'
+        'last_executed_at' => 'datetime',
     ];
 
     // Data types
     const DATA_TYPE_CONTACTS = 'contacts';
+
     const DATA_TYPE_EMAIL_LOGS = 'email_logs';
+
     const DATA_TYPE_SMS_LOGS = 'sms_logs';
+
     const DATA_TYPE_WHATSAPP_LOGS = 'whatsapp_logs';
+
     const DATA_TYPE_SYSTEM_LOGS = 'system_logs';
+
     const DATA_TYPE_LOGIN_ATTEMPTS = 'login_attempts';
+
     const DATA_TYPE_CONSENT_LOGS = 'consent_logs';
+
     const DATA_TYPE_DATA_REQUESTS = 'data_requests';
+
     const DATA_TYPE_BACKUP_FILES = 'backup_files';
+
     const DATA_TYPE_EXPORT_FILES = 'export_files';
 
     /**
@@ -93,9 +102,9 @@ class DataRetentionPolicy extends Model
     {
         return $query->where('is_active', true)
             ->where('auto_delete', true)
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereNull('last_executed_at')
-                  ->orWhere('last_executed_at', '<', now()->subWeek());
+                    ->orWhere('last_executed_at', '<', now()->subWeek());
             });
     }
 
@@ -114,7 +123,7 @@ class DataRetentionPolicy extends Model
             self::DATA_TYPE_CONSENT_LOGS => 'Consent Logs',
             self::DATA_TYPE_DATA_REQUESTS => 'Data Requests',
             self::DATA_TYPE_BACKUP_FILES => 'Backup Files',
-            self::DATA_TYPE_EXPORT_FILES => 'Export Files'
+            self::DATA_TYPE_EXPORT_FILES => 'Export Files',
         ];
     }
 
@@ -143,7 +152,7 @@ class DataRetentionPolicy extends Model
      */
     public function shouldExecute()
     {
-        if (!$this->is_active || !$this->auto_delete) {
+        if (! $this->is_active || ! $this->auto_delete) {
             return false;
         }
 
@@ -161,18 +170,20 @@ class DataRetentionPolicy extends Model
     public function getRetentionPeriodHuman()
     {
         $days = $this->retention_period_days;
-        
+
         if ($days >= 365) {
             $years = floor($days / 365);
-            return $years . ' year' . ($years > 1 ? 's' : '');
+
+            return $years.' year'.($years > 1 ? 's' : '');
         }
-        
+
         if ($days >= 30) {
             $months = floor($days / 30);
-            return $months . ' month' . ($months > 1 ? 's' : '');
+
+            return $months.' month'.($months > 1 ? 's' : '');
         }
-        
-        return $days . ' day' . ($days > 1 ? 's' : '');
+
+        return $days.' day'.($days > 1 ? 's' : '');
     }
 
     /**
@@ -180,11 +191,11 @@ class DataRetentionPolicy extends Model
      */
     public function getNextExecutionTime()
     {
-        if (!$this->is_active || !$this->auto_delete) {
+        if (! $this->is_active || ! $this->auto_delete) {
             return null;
         }
 
-        if (!$this->last_executed_at) {
+        if (! $this->last_executed_at) {
             return now(); // Ready to execute
         }
 
@@ -196,7 +207,7 @@ class DataRetentionPolicy extends Model
      */
     public function execute()
     {
-        if (!$this->shouldExecute()) {
+        if (! $this->shouldExecute()) {
             return false;
         }
 
@@ -207,39 +218,39 @@ class DataRetentionPolicy extends Model
             case self::DATA_TYPE_CONTACTS:
                 $deletedCount = $this->executeContactsPolicy($cutoffDate);
                 break;
-                
+
             case self::DATA_TYPE_EMAIL_LOGS:
                 $deletedCount = $this->executeEmailLogsPolicy($cutoffDate);
                 break;
-                
+
             case self::DATA_TYPE_SMS_LOGS:
                 $deletedCount = $this->executeSmsLogsPolicy($cutoffDate);
                 break;
-                
+
             case self::DATA_TYPE_WHATSAPP_LOGS:
                 $deletedCount = $this->executeWhatsAppLogsPolicy($cutoffDate);
                 break;
-                
+
             case self::DATA_TYPE_SYSTEM_LOGS:
                 $deletedCount = $this->executeSystemLogsPolicy($cutoffDate);
                 break;
-                
+
             case self::DATA_TYPE_LOGIN_ATTEMPTS:
                 $deletedCount = $this->executeLoginAttemptsPolicy($cutoffDate);
                 break;
-                
+
             case self::DATA_TYPE_CONSENT_LOGS:
                 $deletedCount = $this->executeConsentLogsPolicy($cutoffDate);
                 break;
-                
+
             case self::DATA_TYPE_DATA_REQUESTS:
                 $deletedCount = $this->executeDataRequestsPolicy($cutoffDate);
                 break;
-                
+
             case self::DATA_TYPE_BACKUP_FILES:
                 $deletedCount = $this->executeBackupFilesPolicy($cutoffDate);
                 break;
-                
+
             case self::DATA_TYPE_EXPORT_FILES:
                 $deletedCount = $this->executeExportFilesPolicy($cutoffDate);
                 break;
@@ -258,14 +269,14 @@ class DataRetentionPolicy extends Model
     private function executeContactsPolicy($cutoffDate)
     {
         $query = Contact::where('created_at', '<', $cutoffDate);
-        
+
         // Apply criteria if specified
-        if (!empty($this->criteria)) {
+        if (! empty($this->criteria)) {
             foreach ($this->criteria as $criterion) {
                 $query->where($criterion['field'], $criterion['operator'], $criterion['value']);
             }
         }
-        
+
         return $query->delete();
     }
 
@@ -332,17 +343,17 @@ class DataRetentionPolicy extends Model
     {
         $backups = SystemBackup::where('created_at', '<', $cutoffDate)->get();
         $deletedCount = 0;
-        
+
         foreach ($backups as $backup) {
             // Delete physical file
-            if ($backup->file_path && file_exists(storage_path('app/' . $backup->file_path))) {
-                unlink(storage_path('app/' . $backup->file_path));
+            if ($backup->file_path && file_exists(storage_path('app/'.$backup->file_path))) {
+                unlink(storage_path('app/'.$backup->file_path));
             }
-            
+
             $backup->delete();
             $deletedCount++;
         }
-        
+
         return $deletedCount;
     }
 
@@ -353,17 +364,17 @@ class DataRetentionPolicy extends Model
     {
         $exports = ExportRequest::where('created_at', '<', $cutoffDate)->get();
         $deletedCount = 0;
-        
+
         foreach ($exports as $export) {
             // Delete physical file
-            if ($export->file_path && file_exists(storage_path('app/' . $export->file_path))) {
-                unlink(storage_path('app/' . $export->file_path));
+            if ($export->file_path && file_exists(storage_path('app/'.$export->file_path))) {
+                unlink(storage_path('app/'.$export->file_path));
             }
-            
+
             $export->delete();
             $deletedCount++;
         }
-        
+
         return $deletedCount;
     }
 
@@ -372,7 +383,7 @@ class DataRetentionPolicy extends Model
      */
     public function getAffectedRecordsCount()
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return 0;
         }
 
@@ -381,40 +392,41 @@ class DataRetentionPolicy extends Model
         switch ($this->data_type) {
             case self::DATA_TYPE_CONTACTS:
                 $query = Contact::where('created_at', '<', $cutoffDate);
-                if (!empty($this->criteria)) {
+                if (! empty($this->criteria)) {
                     foreach ($this->criteria as $criterion) {
                         $query->where($criterion['field'], $criterion['operator'], $criterion['value']);
                     }
                 }
+
                 return $query->count();
-                
+
             case self::DATA_TYPE_EMAIL_LOGS:
                 return EmailLog::where('created_at', '<', $cutoffDate)->count();
-                
+
             case self::DATA_TYPE_SMS_LOGS:
                 return SmsMessage::where('created_at', '<', $cutoffDate)->count();
-                
+
             case self::DATA_TYPE_WHATSAPP_LOGS:
                 return WhatsAppMessage::where('created_at', '<', $cutoffDate)->count();
-                
+
             case self::DATA_TYPE_SYSTEM_LOGS:
                 return SystemLog::where('created_at', '<', $cutoffDate)->count();
-                
+
             case self::DATA_TYPE_LOGIN_ATTEMPTS:
                 return LoginAttempt::where('created_at', '<', $cutoffDate)->count();
-                
+
             case self::DATA_TYPE_CONSENT_LOGS:
                 return ConsentLog::where('created_at', '<', $cutoffDate)->count();
-                
+
             case self::DATA_TYPE_DATA_REQUESTS:
                 return DataRequest::where('created_at', '<', $cutoffDate)->count();
-                
+
             case self::DATA_TYPE_BACKUP_FILES:
                 return SystemBackup::where('created_at', '<', $cutoffDate)->count();
-                
+
             case self::DATA_TYPE_EXPORT_FILES:
                 return ExportRequest::where('created_at', '<', $cutoffDate)->count();
-                
+
             default:
                 return 0;
         }

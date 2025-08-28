@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\GoogleSheetsIntegration;
+use App\Models\SmsProvider;
+use App\Models\SmtpConfig;
+use App\Models\User;
+use App\Models\WhatsAppSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
-use App\Models\User;
-use App\Models\SmtpConfig;
-use App\Models\SmsProvider;
-use App\Models\WhatsAppSession;
-use App\Models\GoogleSheetsIntegration;
 
 class SettingsController extends Controller
 {
@@ -29,7 +29,7 @@ class SettingsController extends Controller
     public function index()
     {
         $user = Auth::user();
-        
+
         // Get system overview
         $systemStats = [
             'total_contacts' => \App\Models\Contact::count(),
@@ -129,7 +129,7 @@ class SettingsController extends Controller
         ];
 
         foreach ($settings as $key => $value) {
-            Cache::forever('settings.' . $key, $value);
+            Cache::forever('settings.'.$key, $value);
         }
 
         return redirect()->back()->with('success', 'General settings updated successfully.');
@@ -141,7 +141,7 @@ class SettingsController extends Controller
     public function profile()
     {
         $user = Auth::user();
-        
+
         // Get user activity stats
         $userStats = [
             'campaigns_created' => \App\Models\EmailCampaign::where('created_by', $user->id)->count(),
@@ -174,7 +174,7 @@ class SettingsController extends Controller
         $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
             'phone' => 'nullable|string|max:20',
             'company' => 'nullable|string|max:255',
             'job_title' => 'nullable|string|max:255',
@@ -202,7 +202,7 @@ class SettingsController extends Controller
                 'notifications_email' => $request->boolean('notifications_email'),
                 'notifications_browser' => $request->boolean('notifications_browser'),
                 'dashboard_layout' => $request->dashboard_layout,
-            ])
+            ]),
         ]);
 
         return redirect()->back()->with('success', 'Profile updated successfully.');
@@ -220,12 +220,12 @@ class SettingsController extends Controller
         $user = Auth::user();
 
         // Delete old avatar if exists
-        if ($user->avatar && Storage::exists('public/avatars/' . $user->avatar)) {
-            Storage::delete('public/avatars/' . $user->avatar);
+        if ($user->avatar && Storage::exists('public/avatars/'.$user->avatar)) {
+            Storage::delete('public/avatars/'.$user->avatar);
         }
 
         // Store new avatar
-        $fileName = $user->id . '_' . time() . '.' . $request->avatar->extension();
+        $fileName = $user->id.'_'.time().'.'.$request->avatar->extension();
         $request->avatar->storeAs('public/avatars', $fileName);
 
         $user->update(['avatar' => $fileName]);
@@ -240,8 +240,8 @@ class SettingsController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->avatar && Storage::exists('public/avatars/' . $user->avatar)) {
-            Storage::delete('public/avatars/' . $user->avatar);
+        if ($user->avatar && Storage::exists('public/avatars/'.$user->avatar)) {
+            Storage::delete('public/avatars/'.$user->avatar);
         }
 
         $user->update(['avatar' => null]);
@@ -255,7 +255,7 @@ class SettingsController extends Controller
     public function security()
     {
         $user = Auth::user();
-        
+
         // Get security info
         $securityInfo = [
             'password_changed_at' => $user->password_changed_at ?? $user->created_at,
@@ -294,10 +294,10 @@ class SettingsController extends Controller
     public function enableTwoFactor(Request $request)
     {
         $user = Auth::user();
-        
+
         // Generate 2FA secret
         $secret = Str::random(32);
-        
+
         $user->update([
             'two_factor_secret' => $secret,
             'two_factor_recovery_codes' => json_encode($this->generateRecoveryCodes()),
@@ -334,7 +334,7 @@ class SettingsController extends Controller
     public function notifications()
     {
         $user = Auth::user();
-        
+
         $notificationSettings = $user->notification_preferences ?? [
             'email_campaigns' => true,
             'sms_delivery' => true,
@@ -355,7 +355,7 @@ class SettingsController extends Controller
     public function updateNotifications(Request $request)
     {
         $user = Auth::user();
-        
+
         $settings = [
             'email_campaigns' => $request->boolean('email_campaigns'),
             'sms_delivery' => $request->boolean('sms_delivery'),
@@ -407,7 +407,7 @@ class SettingsController extends Controller
                 'status' => config('crm.integrations.zapier.enabled') ? 'available' : 'disabled',
                 'features' => ['Automation', 'Third-party Connections'],
                 'webhooks' => 0, // Would come from webhooks table
-            ]
+            ],
         ];
 
         return view('settings.integrations', compact('integrations'));
@@ -419,16 +419,16 @@ class SettingsController extends Controller
     public function apiKeys()
     {
         $user = Auth::user();
-        
+
         // Get user's API keys (would need an api_keys table)
         $apiKeys = collect([
             [
                 'id' => 1,
                 'name' => 'CRM API Key',
-                'key' => 'crm_' . Str::random(40),
+                'key' => 'crm_'.Str::random(40),
                 'last_used' => now()->subDays(2),
                 'created_at' => now()->subDays(30),
-            ]
+            ],
         ]); // This would come from a database table
 
         $permissions = [
@@ -457,7 +457,7 @@ class SettingsController extends Controller
 
         $apiKey = [
             'name' => $request->name,
-            'key' => 'crm_' . Str::random(40),
+            'key' => 'crm_'.Str::random(40),
             'permissions' => $request->permissions,
             'expires_at' => $request->expires_at,
             'user_id' => Auth::id(),
@@ -465,7 +465,7 @@ class SettingsController extends Controller
         ];
 
         // In a real implementation, this would be saved to database
-        
+
         return redirect()->back()->with('success', 'API key created successfully.');
     }
 
@@ -475,7 +475,7 @@ class SettingsController extends Controller
     public function deleteApiKey($keyId)
     {
         // In a real implementation, this would delete from database
-        
+
         return redirect()->back()->with('success', 'API key deleted successfully.');
     }
 
@@ -485,7 +485,7 @@ class SettingsController extends Controller
     public function team()
     {
         $teamMembers = User::with('roles')->get();
-        
+
         $availableRoles = [
             'admin' => 'Administrator',
             'manager' => 'Manager',
@@ -517,7 +517,7 @@ class SettingsController extends Controller
 
         // In a real implementation, this would send an invitation email
         // and create a pending invitation record
-        
+
         return redirect()->back()->with('success', 'Team member invitation sent successfully.');
     }
 
@@ -532,7 +532,7 @@ class SettingsController extends Controller
 
         // In a real implementation, this would deactivate or delete the user
         // after handling data ownership transfer
-        
+
         return redirect()->back()->with('success', 'Team member removed successfully.');
     }
 
@@ -547,7 +547,7 @@ class SettingsController extends Controller
         ]);
 
         // In a real implementation, this would update user roles and permissions
-        
+
         return redirect()->back()->with('success', 'Permissions updated successfully.');
     }
 
@@ -565,7 +565,7 @@ class SettingsController extends Controller
                     'description' => "Email campaign '{$campaign->name}' was created",
                     'timestamp' => $campaign->created_at,
                     'icon' => 'mail',
-                    'color' => 'blue'
+                    'color' => 'blue',
                 ];
             });
 
@@ -577,7 +577,7 @@ class SettingsController extends Controller
                     'description' => "New contact '{$contact->first_name} {$contact->last_name}' was added",
                     'timestamp' => $contact->created_at,
                     'icon' => 'user-plus',
-                    'color' => 'green'
+                    'color' => 'green',
                 ];
             });
 
@@ -589,7 +589,7 @@ class SettingsController extends Controller
                     'description' => "SMS sent to {$sms->to_number}",
                     'timestamp' => $sms->created_at,
                     'icon' => 'message-circle',
-                    'color' => 'purple'
+                    'color' => 'purple',
                 ];
             });
 
@@ -618,7 +618,7 @@ class SettingsController extends Controller
         $storageSpace = disk_free_space(storage_path());
         $health['storage'] = [
             'status' => $storageSpace > 1000000000 ? 'healthy' : 'warning', // 1GB threshold
-            'message' => 'Free space: ' . formatBytes($storageSpace)
+            'message' => 'Free space: '.formatBytes($storageSpace),
         ];
 
         // Check queue connection
@@ -632,21 +632,21 @@ class SettingsController extends Controller
         $activeSmtp = SmtpConfig::where('is_active', true)->count();
         $health['smtp'] = [
             'status' => $activeSmtp > 0 ? 'healthy' : 'warning',
-            'message' => "{$activeSmtp} active SMTP configuration(s)"
+            'message' => "{$activeSmtp} active SMTP configuration(s)",
         ];
 
         // Check SMS providers
         $activeSms = SmsProvider::where('is_active', true)->count();
         $health['sms'] = [
             'status' => $activeSms > 0 ? 'healthy' : 'warning',
-            'message' => "{$activeSms} active SMS provider(s)"
+            'message' => "{$activeSms} active SMS provider(s)",
         ];
 
         // Check WhatsApp sessions
         $activeWhatsApp = WhatsAppSession::where('status', 'connected')->count();
         $health['whatsapp'] = [
             'status' => $activeWhatsApp > 0 ? 'healthy' : 'info',
-            'message' => "{$activeWhatsApp} active WhatsApp session(s)"
+            'message' => "{$activeWhatsApp} active WhatsApp session(s)",
         ];
 
         return $health;
@@ -666,12 +666,12 @@ class SettingsController extends Controller
         // In a real implementation, this would query active sessions
         return [
             [
-                'id' => 'sess_' . Str::random(10),
+                'id' => 'sess_'.Str::random(10),
                 'ip_address' => '192.168.1.1',
                 'user_agent' => 'Chrome/91.0 (Windows NT 10.0)',
                 'last_activity' => now()->subMinutes(5),
-                'current' => true
-            ]
+                'current' => true,
+            ],
         ];
     }
 
@@ -679,15 +679,16 @@ class SettingsController extends Controller
     {
         $codes = [];
         for ($i = 0; $i < 8; $i++) {
-            $codes[] = strtoupper(Str::random(4) . '-' . Str::random(4));
+            $codes[] = strtoupper(Str::random(4).'-'.Str::random(4));
         }
+
         return $codes;
     }
 
     private function generateQrCodeUrl($email, $secret)
     {
         $appName = config('app.name');
+
         return "otpauth://totp/{$appName}:{$email}?secret={$secret}&issuer={$appName}";
     }
-
 }

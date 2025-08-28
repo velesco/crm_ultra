@@ -27,7 +27,7 @@ return new class extends Migration
             $table->json('context')->nullable(); // Request context (route, parameters, etc.)
             $table->timestamp('occurred_at')->index(); // When the event actually occurred
             $table->timestamps();
-            
+
             // Indexes for performance
             $table->index(['level', 'occurred_at']);
             $table->index(['category', 'occurred_at']);

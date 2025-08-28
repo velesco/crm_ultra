@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\Contact;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class ContactSeeder extends Seeder
 {
@@ -39,8 +38,8 @@ class ContactSeeder extends Seeder
                     'company_size' => '200-500',
                     'industry' => 'Technology',
                     'budget' => '$50,000+',
-                    'interest_level' => 'high'
-                ]
+                    'interest_level' => 'high',
+                ],
             ],
             [
                 'first_name' => 'Maria',
@@ -61,8 +60,8 @@ class ContactSeeder extends Seeder
                     'company_size' => '50-200',
                     'industry' => 'Marketing',
                     'budget' => '$10,000-50,000',
-                    'interest_level' => 'medium'
-                ]
+                    'interest_level' => 'medium',
+                ],
             ],
             [
                 'first_name' => 'David',
@@ -82,8 +81,8 @@ class ContactSeeder extends Seeder
                     'company_size' => '1-50',
                     'industry' => 'E-commerce',
                     'budget' => '$1,000-5,000',
-                    'interest_level' => 'high'
-                ]
+                    'interest_level' => 'high',
+                ],
             ],
             [
                 'first_name' => 'Sophie',
@@ -104,8 +103,8 @@ class ContactSeeder extends Seeder
                     'company_size' => '50-200',
                     'industry' => 'Startup/Incubator',
                     'budget' => '$5,000-25,000',
-                    'interest_level' => 'medium'
-                ]
+                    'interest_level' => 'medium',
+                ],
             ],
             [
                 'first_name' => 'Robert',
@@ -125,9 +124,9 @@ class ContactSeeder extends Seeder
                     'company_size' => '10-50',
                     'industry' => 'Consulting',
                     'budget' => '$15,000-75,000',
-                    'interest_level' => 'low'
-                ]
-            ]
+                    'interest_level' => 'low',
+                ],
+            ],
         ];
 
         foreach ($contacts as $contactData) {
@@ -151,7 +150,7 @@ class ContactSeeder extends Seeder
             ['first_name' => 'Tom', 'last_name' => 'Anderson', 'email' => 'tom.anderson@firm.com', 'company' => 'Anderson Firm', 'industry' => 'Consulting'],
             ['first_name' => 'Kate', 'last_name' => 'Taylor', 'email' => 'kate.taylor@agency.com', 'company' => 'Taylor Agency', 'industry' => 'Marketing'],
             ['first_name' => 'Ryan', 'last_name' => 'White', 'email' => 'ryan.white@solutions.com', 'company' => 'White Solutions', 'industry' => 'Technology'],
-            ['first_name' => 'Anna', 'last_name' => 'Martin', 'email' => 'anna.martin@services.com', 'company' => 'Martin Services', 'industry' => 'Real Estate']
+            ['first_name' => 'Anna', 'last_name' => 'Martin', 'email' => 'anna.martin@services.com', 'company' => 'Martin Services', 'industry' => 'Real Estate'],
         ];
 
         $statuses = ['active', 'inactive', 'prospect'];
@@ -166,11 +165,11 @@ class ContactSeeder extends Seeder
                 'first_name' => $contactData['first_name'],
                 'last_name' => $contactData['last_name'],
                 'email' => $contactData['email'],
-                'phone' => '+1-555-' . str_pad($index + 200, 4, '0', STR_PAD_LEFT),
-                'whatsapp' => ($index % 3 == 0) ? '+1-555-' . str_pad($index + 300, 4, '0', STR_PAD_LEFT) : null,
+                'phone' => '+1-555-'.str_pad($index + 200, 4, '0', STR_PAD_LEFT),
+                'whatsapp' => ($index % 3 == 0) ? '+1-555-'.str_pad($index + 300, 4, '0', STR_PAD_LEFT) : null,
                 'company' => $contactData['company'],
                 'position' => 'Manager',
-                'address' => ($index + 100) . ' Business Street',
+                'address' => ($index + 100).' Business Street',
                 'city' => 'New York',
                 'country' => 'USA',
                 'tags' => $tags[$index % count($tags)],
@@ -181,7 +180,7 @@ class ContactSeeder extends Seeder
                     'company_size' => $companySizes[$index % count($companySizes)],
                     'industry' => $contactData['industry'],
                     'budget' => $budgets[$index % count($budgets)],
-                    'interest_level' => $interestLevels[$index % count($interestLevels)]
+                    'interest_level' => $interestLevels[$index % count($interestLevels)],
                 ],
                 'created_by' => ($users->count() > 0) ? $users->random()->id : $adminUser->id,
                 'assigned_to' => ($index % 2 == 0) ? $adminUser->id : null,

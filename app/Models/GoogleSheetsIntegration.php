@@ -25,7 +25,7 @@ class GoogleSheetsIntegration extends Model
         'sync_status',
         'field_mapping',
         'settings',
-        'created_by'
+        'created_by',
     ];
 
     protected $casts = [
@@ -39,7 +39,7 @@ class GoogleSheetsIntegration extends Model
 
     protected $hidden = [
         'access_token',
-        'refresh_token'
+        'refresh_token',
     ];
 
     // Relationships
@@ -79,15 +79,15 @@ class GoogleSheetsIntegration extends Model
 
     public function shouldSync()
     {
-        if (!$this->auto_sync) {
+        if (! $this->auto_sync) {
             return false;
         }
 
-        if (!$this->last_sync_at) {
+        if (! $this->last_sync_at) {
             return true;
         }
 
-        $interval = match($this->sync_frequency) {
+        $interval = match ($this->sync_frequency) {
             'hourly' => 1,
             'daily' => 24,
             'weekly' => 168,

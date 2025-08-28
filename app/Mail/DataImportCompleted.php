@@ -30,8 +30,8 @@ class DataImportCompleted extends Mailable implements ShouldQueue
     {
         $hasErrors = $this->emailData['has_errors'] ?? false;
         $fileName = $this->emailData['file_name'] ?? 'Unknown file';
-        
-        $subject = $hasErrors 
+
+        $subject = $hasErrors
             ? "Import Completed with Errors - {$fileName}"
             : "Import Completed Successfully - {$fileName}";
 

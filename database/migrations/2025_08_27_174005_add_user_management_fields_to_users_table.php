@@ -19,7 +19,7 @@ return new class extends Migration
             $table->integer('login_count')->default(0)->after('last_login_at');
             $table->unsignedBigInteger('created_by')->nullable()->after('notes');
             $table->unsignedBigInteger('updated_by')->nullable()->after('created_by');
-            
+
             // Foreign key constraints
             $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
             $table->foreign('updated_by')->references('id')->on('users')->onDelete('set null');

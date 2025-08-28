@@ -16,7 +16,7 @@ class EmailTemplate extends Model
         'variables',
         'is_active',
         'category',
-        'created_by'
+        'created_by',
     ];
 
     protected $casts = [
@@ -55,21 +55,21 @@ class EmailTemplate extends Model
         $subject = $this->subject;
 
         foreach ($variables as $key => $value) {
-            $content = str_replace('{{' . $key . '}}', $value, $content);
-            $subject = str_replace('{{' . $key . '}}', $value, $subject);
+            $content = str_replace('{{'.$key.'}}', $value, $content);
+            $subject = str_replace('{{'.$key.'}}', $value, $subject);
         }
 
         return [
             'subject' => $subject,
-            'content' => $content
+            'content' => $content,
         ];
     }
 
     public function extractVariables()
     {
-        $content = $this->content . ' ' . $this->subject;
+        $content = $this->content.' '.$this->subject;
         preg_match_all('/\{\{([^}]+)\}\}/', $content, $matches);
-        
+
         return array_unique($matches[1]);
     }
 
@@ -77,11 +77,11 @@ class EmailTemplate extends Model
     {
         $variables = $this->extractVariables();
         $previewData = [];
-        
+
         foreach ($variables as $variable) {
             $previewData[$variable] = $sampleData[$variable] ?? "[{$variable}]";
         }
-        
+
         return $this->render($previewData);
     }
 }

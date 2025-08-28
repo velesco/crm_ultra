@@ -32,7 +32,7 @@ return new class extends Migration
             $table->foreignId('updated_by')->nullable()->constrained('users')->cascadeOnDelete();
             $table->json('metadata')->nullable(); // Additional configuration
             $table->timestamps();
-            
+
             // Indexes
             $table->index(['status', 'expires_at']);
             $table->index(['created_by']);

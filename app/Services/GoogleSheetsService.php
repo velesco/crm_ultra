@@ -2,23 +2,24 @@
 
 namespace App\Services;
 
+use App\Models\Contact;
 use App\Models\GoogleSheetsIntegration;
 use App\Models\GoogleSheetsSyncLog;
-use App\Models\Contact;
+use Carbon\Carbon;
 use Google_Client;
 use Google_Service_Sheets;
 use Google_Service_Sheets_ValueRange;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class GoogleSheetsService
 {
     protected $client;
+
     protected $service;
 
     public function __construct()
     {
-        $this->client = new Google_Client();
+        $this->client = new Google_Client;
         $this->client->setApplicationName(config('app.name'));
         $this->client->setScopes([Google_Service_Sheets::SPREADSHEETS]);
         $this->client->setAccessType('offline');
@@ -34,11 +35,11 @@ class GoogleSheetsService
     {
         try {
             $accessToken = $this->client->fetchAccessTokenWithAuthCode($authCode);
-            
+
             if (isset($accessToken['error'])) {
                 return [
                     'success' => false,
-                    'message' => 'Authentication failed: ' . $accessToken['error_description']
+                    'message' => 'Authentication failed: '.$accessToken['error_description'],
                 ];
             }
 
@@ -46,15 +47,15 @@ class GoogleSheetsService
                 'success' => true,
                 'access_token' => $accessToken['access_token'],
                 'refresh_token' => $accessToken['refresh_token'] ?? null,
-                'expires_at' => Carbon::now()->addSeconds($accessToken['expires_in'])
+                'expires_at' => Carbon::now()->addSeconds($accessToken['expires_in']),
             ];
 
         } catch (\Exception $e) {
-            Log::error('Google Sheets authentication error: ' . $e->getMessage());
-            
+            Log::error('Google Sheets authentication error: '.$e->getMessage());
+
             return [
                 'success' => false,
-                'message' => 'Authentication error: ' . $e->getMessage()
+                'message' => 'Authentication error: '.$e->getMessage(),
             ];
         }
     }
@@ -73,7 +74,7 @@ class GoogleSheetsService
             'sync_frequency' => $data['sync_frequency'] ?? 'daily',
             'field_mapping' => $data['field_mapping'] ?? [],
             'settings' => $data['settings'] ?? [],
-            'created_by' => auth()->id()
+            'created_by' => auth()->id(),
         ]);
     }
 
@@ -85,20 +86,20 @@ class GoogleSheetsService
 
             // Try to get spreadsheet metadata
             $spreadsheet = $this->service->spreadsheets->get($integration->spreadsheet_id);
-            
+
             return [
                 'success' => true,
                 'message' => 'Connection successful',
                 'spreadsheet_title' => $spreadsheet->getProperties()->getTitle(),
-                'sheet_count' => count($spreadsheet->getSheets())
+                'sheet_count' => count($spreadsheet->getSheets()),
             ];
 
         } catch (\Exception $e) {
-            Log::error('Google Sheets test connection error: ' . $e->getMessage());
-            
+            Log::error('Google Sheets test connection error: '.$e->getMessage());
+
             return [
                 'success' => false,
-                'message' => 'Connection failed: ' . $e->getMessage()
+                'message' => 'Connection failed: '.$e->getMessage(),
             ];
         }
     }
@@ -109,14 +110,14 @@ class GoogleSheetsService
             'integration_id' => $integration->id,
             'action' => 'sync',
             'status' => 'success',
-            'started_at' => now()
+            'started_at' => now(),
         ]);
 
         try {
             $this->setClientCredentials($integration);
             $this->service = new Google_Service_Sheets($this->client);
 
-            $result = match($integration->sync_direction) {
+            $result = match ($integration->sync_direction) {
                 'import' => $this->importFromSheet($integration),
                 'export' => $this->exportToSheet($integration),
                 'bidirectional' => $this->bidirectionalSync($integration),
@@ -130,7 +131,7 @@ class GoogleSheetsService
                 'records_failed' => $result['failed_count'] ?? 0,
                 'message' => $result['message'] ?? null,
                 'error_log' => $result['errors'] ?? null,
-                'completed_at' => now()
+                'completed_at' => now(),
             ]);
 
             $integration->update(['last_sync_at' => now()]);
@@ -138,17 +139,17 @@ class GoogleSheetsService
             return $result;
 
         } catch (\Exception $e) {
-            Log::error('Google Sheets sync error: ' . $e->getMessage());
+            Log::error('Google Sheets sync error: '.$e->getMessage());
 
             $syncLog->update([
                 'status' => 'failed',
                 'message' => $e->getMessage(),
-                'completed_at' => now()
+                'completed_at' => now(),
             ]);
 
             return [
                 'success' => false,
-                'message' => 'Sync failed: ' . $e->getMessage()
+                'message' => 'Sync failed: '.$e->getMessage(),
             ];
         }
     }
@@ -156,7 +157,7 @@ class GoogleSheetsService
     protected function importFromSheet(GoogleSheetsIntegration $integration)
     {
         try {
-            $range = $integration->sheet_name . '!' . $integration->range;
+            $range = $integration->sheet_name.'!'.$integration->range;
             $response = $this->service->spreadsheets_values->get($integration->spreadsheet_id, $range);
             $values = $response->getValues();
 
@@ -166,13 +167,13 @@ class GoogleSheetsService
                     'message' => 'No data found in sheet',
                     'processed' => 0,
                     'success_count' => 0,
-                    'failed_count' => 0
+                    'failed_count' => 0,
                 ];
             }
 
             $headers = array_shift($values); // First row as headers
             $fieldMapping = $integration->field_mapping;
-            
+
             $processed = 0;
             $successCount = 0;
             $failedCount = 0;
@@ -180,20 +181,21 @@ class GoogleSheetsService
 
             foreach ($values as $rowIndex => $row) {
                 $processed++;
-                
+
                 try {
                     $contactData = $this->mapRowToContact($row, $headers, $fieldMapping);
-                    
+
                     if (empty($contactData['first_name']) && empty($contactData['email'])) {
                         $failedCount++;
                         $errors[] = "Row {$rowIndex}: Missing required fields (first_name or email)";
+
                         continue;
                     }
 
                     // Check if contact exists
                     $existingContact = Contact::where('email', $contactData['email'])
-                        ->orWhere(function($q) use ($contactData) {
-                            if (!empty($contactData['phone'])) {
+                        ->orWhere(function ($q) use ($contactData) {
+                            if (! empty($contactData['phone'])) {
                                 $q->where('phone', $contactData['phone']);
                             }
                         })
@@ -213,7 +215,7 @@ class GoogleSheetsService
 
                 } catch (\Exception $e) {
                     $failedCount++;
-                    $errors[] = "Row {$rowIndex}: " . $e->getMessage();
+                    $errors[] = "Row {$rowIndex}: ".$e->getMessage();
                 }
             }
 
@@ -223,13 +225,13 @@ class GoogleSheetsService
                 'processed' => $processed,
                 'success_count' => $successCount,
                 'failed_count' => $failedCount,
-                'errors' => $errors
+                'errors' => $errors,
             ];
 
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Import failed: ' . $e->getMessage()
+                'message' => 'Import failed: '.$e->getMessage(),
             ];
         }
     }
@@ -248,7 +250,7 @@ class GoogleSheetsService
                     'message' => 'No contacts found to export',
                     'processed' => 0,
                     'success_count' => 0,
-                    'failed_count' => 0
+                    'failed_count' => 0,
                 ];
             }
 
@@ -265,19 +267,19 @@ class GoogleSheetsService
             }
 
             // Clear existing data and write new data
-            $range = $integration->sheet_name . '!' . $integration->range;
-            
+            $range = $integration->sheet_name.'!'.$integration->range;
+
             // Clear the range first
-            $clear = new \Google_Service_Sheets_ClearValuesRequest();
+            $clear = new \Google_Service_Sheets_ClearValuesRequest;
             $this->service->spreadsheets_values->clear($integration->spreadsheet_id, $range, $clear);
 
             // Write new data
             $body = new Google_Service_Sheets_ValueRange([
-                'values' => $values
+                'values' => $values,
             ]);
 
             $params = [
-                'valueInputOption' => 'RAW'
+                'valueInputOption' => 'RAW',
             ];
 
             $this->service->spreadsheets_values->update(
@@ -292,13 +294,13 @@ class GoogleSheetsService
                 'message' => 'Export completed successfully',
                 'processed' => count($contacts),
                 'success_count' => count($contacts),
-                'failed_count' => 0
+                'failed_count' => 0,
             ];
 
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Export failed: ' . $e->getMessage()
+                'message' => 'Export failed: '.$e->getMessage(),
             ];
         }
     }
@@ -307,8 +309,8 @@ class GoogleSheetsService
     {
         // First import from sheet
         $importResult = $this->importFromSheet($integration);
-        
-        if (!$importResult['success']) {
+
+        if (! $importResult['success']) {
             return $importResult;
         }
 
@@ -317,11 +319,11 @@ class GoogleSheetsService
 
         return [
             'success' => $importResult['success'] && $exportResult['success'],
-            'message' => 'Bidirectional sync completed. ' . $importResult['message'] . ' ' . $exportResult['message'],
+            'message' => 'Bidirectional sync completed. '.$importResult['message'].' '.$exportResult['message'],
             'processed' => $importResult['processed'] + $exportResult['processed'],
             'success_count' => $importResult['success_count'] + $exportResult['success_count'],
             'failed_count' => $importResult['failed_count'] + $exportResult['failed_count'],
-            'errors' => array_merge($importResult['errors'] ?? [], $exportResult['errors'] ?? [])
+            'errors' => array_merge($importResult['errors'] ?? [], $exportResult['errors'] ?? []),
         ];
     }
 
@@ -331,11 +333,11 @@ class GoogleSheetsService
 
         foreach ($fieldMapping as $sheetColumn => $contactField) {
             $columnIndex = array_search($sheetColumn, $headers);
-            
+
             if ($columnIndex !== false && isset($row[$columnIndex])) {
                 $value = trim($row[$columnIndex]);
-                
-                if (!empty($value)) {
+
+                if (! empty($value)) {
                     if ($contactField === 'tags' || $contactField === 'custom_fields') {
                         $contactData[$contactField] = is_string($value) ? json_decode($value, true) : $value;
                     } else {
@@ -368,7 +370,7 @@ class GoogleSheetsService
             'access_token' => decrypt($integration->access_token),
             'refresh_token' => decrypt($integration->refresh_token),
             'expires_in' => 3600,
-            'created' => time()
+            'created' => time(),
         ];
 
         $this->client->setAccessToken($accessToken);
@@ -376,10 +378,10 @@ class GoogleSheetsService
         // Refresh token if needed
         if ($this->client->isAccessTokenExpired()) {
             $newAccessToken = $this->client->fetchAccessTokenWithRefreshToken(decrypt($integration->refresh_token));
-            
+
             if (isset($newAccessToken['access_token'])) {
                 $integration->update([
-                    'access_token' => encrypt($newAccessToken['access_token'])
+                    'access_token' => encrypt($newAccessToken['access_token']),
                 ]);
             }
         }
@@ -400,8 +402,8 @@ class GoogleSheetsService
                     'sheet_id' => $sheet->getProperties()->getSheetId(),
                     'grid_properties' => [
                         'rows' => $sheet->getProperties()->getGridProperties()->getRowCount(),
-                        'columns' => $sheet->getProperties()->getGridProperties()->getColumnCount()
-                    ]
+                        'columns' => $sheet->getProperties()->getGridProperties()->getColumnCount(),
+                    ],
                 ];
             }
 
@@ -409,13 +411,13 @@ class GoogleSheetsService
                 'success' => true,
                 'title' => $spreadsheet->getProperties()->getTitle(),
                 'spreadsheet_id' => $spreadsheet->getSpreadsheetId(),
-                'sheets' => $sheets
+                'sheets' => $sheets,
             ];
 
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Failed to get spreadsheet info: ' . $e->getMessage()
+                'message' => 'Failed to get spreadsheet info: '.$e->getMessage(),
             ];
         }
     }
@@ -426,26 +428,26 @@ class GoogleSheetsService
             $this->setClientCredentials($integration);
             $this->service = new Google_Service_Sheets($this->client);
 
-            $range = $sheetName . '!1:1'; // First row only
+            $range = $sheetName.'!1:1'; // First row only
             $response = $this->service->spreadsheets_values->get($spreadsheetId, $range);
             $values = $response->getValues();
 
             if (empty($values)) {
                 return [
                     'success' => false,
-                    'message' => 'No headers found in the sheet'
+                    'message' => 'No headers found in the sheet',
                 ];
             }
 
             return [
                 'success' => true,
-                'headers' => $values[0]
+                'headers' => $values[0],
             ];
 
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Failed to get sheet headers: ' . $e->getMessage()
+                'message' => 'Failed to get sheet headers: '.$e->getMessage(),
             ];
         }
     }
@@ -456,7 +458,7 @@ class GoogleSheetsService
             $this->setClientCredentials($integration);
             $this->service = new Google_Service_Sheets($this->client);
 
-            $fullRange = $sheetName . '!' . $range;
+            $fullRange = $sheetName.'!'.$range;
             $response = $this->service->spreadsheets_values->get($spreadsheetId, $fullRange);
             $values = $response->getValues();
 
@@ -465,7 +467,7 @@ class GoogleSheetsService
                     'success' => true,
                     'message' => 'No data found in the specified range',
                     'headers' => [],
-                    'data' => []
+                    'data' => [],
                 ];
             }
 
@@ -476,13 +478,13 @@ class GoogleSheetsService
                 'success' => true,
                 'headers' => $headers,
                 'data' => $previewData,
-                'total_rows' => count($values) + 1 // +1 for headers
+                'total_rows' => count($values) + 1, // +1 for headers
             ];
 
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Failed to preview data: ' . $e->getMessage()
+                'message' => 'Failed to preview data: '.$e->getMessage(),
             ];
         }
     }
@@ -500,7 +502,7 @@ class GoogleSheetsService
 
         return [
             'success' => true,
-            'message' => 'Auto sync scheduled for ' . count($integrations) . ' integrations'
+            'message' => 'Auto sync scheduled for '.count($integrations).' integrations',
         ];
     }
 }

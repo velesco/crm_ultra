@@ -2,17 +2,17 @@
 
 namespace App\Jobs;
 
+use App\Models\Contact;
 use App\Models\GoogleSheetsIntegration;
 use App\Models\GoogleSheetsSyncLog;
-use App\Models\Contact;
 use App\Services\GoogleSheetsService;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 class GoogleSheetsSyncJob implements ShouldQueue
 {
@@ -55,8 +55,9 @@ class GoogleSheetsSyncJob implements ShouldQueue
     {
         try {
             // Check if integration is still active
-            if (!$this->integration->is_active) {
+            if (! $this->integration->is_active) {
                 Log::info("Google Sheets integration {$this->integration->id} is not active, skipping sync");
+
                 return;
             }
 
@@ -124,14 +125,14 @@ class GoogleSheetsSyncJob implements ShouldQueue
             $this->integration->update([
                 'last_sync_at' => now(),
                 'last_sync_status' => empty($errors) ? 'success' : 'success_with_errors',
-                'last_error' => empty($errors) ? null : 'Completed with ' . count($errors) . ' errors'
+                'last_error' => empty($errors) ? null : 'Completed with '.count($errors).' errors',
             ]);
 
-            Log::info("Google Sheets sync completed for integration {$this->integration->id}. " . 
-                      "CRM records: {$crmRecordsProcessed}, Sheets records: {$sheetsRecordsProcessed}, Errors: " . count($errors));
+            Log::info("Google Sheets sync completed for integration {$this->integration->id}. ".
+                      "CRM records: {$crmRecordsProcessed}, Sheets records: {$sheetsRecordsProcessed}, Errors: ".count($errors));
 
         } catch (Exception $e) {
-            Log::error("GoogleSheetsSyncJob failed for integration {$this->integration->id}: " . $e->getMessage());
+            Log::error("GoogleSheetsSyncJob failed for integration {$this->integration->id}: ".$e->getMessage());
 
             // Update sync log with error
             if (isset($syncLog)) {
@@ -146,7 +147,7 @@ class GoogleSheetsSyncJob implements ShouldQueue
             $this->integration->update([
                 'last_sync_at' => now(),
                 'last_sync_status' => 'error',
-                'last_error' => $e->getMessage()
+                'last_error' => $e->getMessage(),
             ]);
 
             throw $e;
@@ -199,7 +200,7 @@ class GoogleSheetsSyncJob implements ShouldQueue
             }
 
             // If we have data to sync, update the Google Sheet
-            if (!empty($sheetsData)) {
+            if (! empty($sheetsData)) {
                 // Add headers if this is the first sync or sheet is empty
                 $sheetData = $googleSheetsService->getSheetData();
                 if (empty($sheetData)) {
@@ -208,20 +209,20 @@ class GoogleSheetsSyncJob implements ShouldQueue
 
                 // Update the Google Sheet
                 $result = $googleSheetsService->updateSheetData($sheetsData);
-                
-                if (!$result['success']) {
-                    $errors[] = "Failed to update Google Sheets: " . $result['error'];
+
+                if (! $result['success']) {
+                    $errors[] = 'Failed to update Google Sheets: '.$result['error'];
                 }
             }
 
         } catch (Exception $e) {
-            $errors[] = "CRM to Sheets sync error: " . $e->getMessage();
-            Log::error("Error syncing CRM to Sheets: " . $e->getMessage());
+            $errors[] = 'CRM to Sheets sync error: '.$e->getMessage();
+            Log::error('Error syncing CRM to Sheets: '.$e->getMessage());
         }
 
         return [
             'processed' => $processed,
-            'errors' => $errors
+            'errors' => $errors,
         ];
     }
 
@@ -236,31 +237,32 @@ class GoogleSheetsSyncJob implements ShouldQueue
         try {
             // Get data from Google Sheets
             $result = $googleSheetsService->getSheetData();
-            
-            if (!$result['success']) {
-                throw new Exception("Failed to get Google Sheets data: " . $result['error']);
+
+            if (! $result['success']) {
+                throw new Exception('Failed to get Google Sheets data: '.$result['error']);
             }
 
             $sheetsData = $result['data'];
-            
+
             if (empty($sheetsData)) {
-                Log::info("No data found in Google Sheets");
+                Log::info('No data found in Google Sheets');
+
                 return ['processed' => 0, 'errors' => []];
             }
 
             // First row should be headers
             $headers = array_shift($sheetsData);
-            
+
             // Reverse field mapping (Sheets column -> CRM field)
             $reverseFieldMapping = array_flip($this->integration->field_mapping);
 
-            Log::info("Found " . count($sheetsData) . " rows to sync from Google Sheets to CRM");
+            Log::info('Found '.count($sheetsData).' rows to sync from Google Sheets to CRM');
 
             foreach ($sheetsData as $rowIndex => $row) {
                 try {
                     // Create associative array from row data
                     $rowData = array_combine($headers, $row);
-                    
+
                     // Map Google Sheets data to CRM fields
                     $contactData = [];
                     foreach ($reverseFieldMapping as $sheetsColumn => $crmField) {
@@ -271,7 +273,8 @@ class GoogleSheetsSyncJob implements ShouldQueue
 
                     // Skip if no email (required field)
                     if (empty($contactData['email'])) {
-                        $errors[] = "Row " . ($rowIndex + 2) . ": Email is required but missing";
+                        $errors[] = 'Row '.($rowIndex + 2).': Email is required but missing';
+
                         continue;
                     }
 
@@ -281,7 +284,7 @@ class GoogleSheetsSyncJob implements ShouldQueue
                     if ($existingContact) {
                         // Update existing contact (only if Google Sheets data is newer)
                         $sheetsUpdatedAt = $this->extractUpdatedAt($rowData);
-                        if (!$sheetsUpdatedAt || $sheetsUpdatedAt > $existingContact->updated_at) {
+                        if (! $sheetsUpdatedAt || $sheetsUpdatedAt > $existingContact->updated_at) {
                             $existingContact->update($contactData);
                             $processed++;
                         }
@@ -295,18 +298,18 @@ class GoogleSheetsSyncJob implements ShouldQueue
                     }
 
                 } catch (Exception $e) {
-                    $errors[] = "Row " . ($rowIndex + 2) . ": " . $e->getMessage();
+                    $errors[] = 'Row '.($rowIndex + 2).': '.$e->getMessage();
                 }
             }
 
         } catch (Exception $e) {
-            $errors[] = "Sheets to CRM sync error: " . $e->getMessage();
-            Log::error("Error syncing Sheets to CRM: " . $e->getMessage());
+            $errors[] = 'Sheets to CRM sync error: '.$e->getMessage();
+            Log::error('Error syncing Sheets to CRM: '.$e->getMessage());
         }
 
         return [
             'processed' => $processed,
-            'errors' => $errors
+            'errors' => $errors,
         ];
     }
 
@@ -349,6 +352,7 @@ class GoogleSheetsSyncJob implements ShouldQueue
                 return array_map('trim', explode(',', $value));
             case 'custom_fields':
                 $decoded = json_decode($value, true);
+
                 return is_array($decoded) ? $decoded : [];
             case 'created_at':
             case 'updated_at':
@@ -370,8 +374,8 @@ class GoogleSheetsSyncJob implements ShouldQueue
     {
         $fieldMapping = $this->integration->field_mapping;
         $updatedAtColumn = $fieldMapping['updated_at'] ?? null;
-        
-        if (!$updatedAtColumn || !isset($rowData[$updatedAtColumn])) {
+
+        if (! $updatedAtColumn || ! isset($rowData[$updatedAtColumn])) {
             return null;
         }
 
@@ -387,13 +391,13 @@ class GoogleSheetsSyncJob implements ShouldQueue
      */
     public function failed(Exception $exception): void
     {
-        Log::error("GoogleSheetsSyncJob permanently failed for integration {$this->integration->id}: " . $exception->getMessage());
+        Log::error("GoogleSheetsSyncJob permanently failed for integration {$this->integration->id}: ".$exception->getMessage());
 
         // Update integration error status
         $this->integration->update([
             'last_sync_at' => now(),
             'last_sync_status' => 'error',
-            'last_error' => $exception->getMessage()
+            'last_error' => $exception->getMessage(),
         ]);
 
         // Create failed sync log entry

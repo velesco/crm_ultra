@@ -2,16 +2,16 @@
 
 namespace App\Jobs;
 
+use App\Models\Contact;
 use App\Models\WhatsAppMessage;
 use App\Models\WhatsAppSession;
-use App\Models\Contact;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 class ProcessWhatsAppWebhookJob implements ShouldQueue
 {
@@ -53,9 +53,9 @@ class ProcessWhatsAppWebhookJob implements ShouldQueue
     public function handle(): void
     {
         try {
-            Log::info("Processing WhatsApp webhook", [
+            Log::info('Processing WhatsApp webhook', [
                 'type' => $this->webhookType,
-                'payload_keys' => array_keys($this->payload)
+                'payload_keys' => array_keys($this->payload),
             ]);
 
             switch ($this->webhookType) {
@@ -81,9 +81,9 @@ class ProcessWhatsAppWebhookJob implements ShouldQueue
             }
 
         } catch (Exception $e) {
-            Log::error("ProcessWhatsAppWebhookJob failed: " . $e->getMessage(), [
+            Log::error('ProcessWhatsAppWebhookJob failed: '.$e->getMessage(), [
                 'webhook_type' => $this->webhookType,
-                'payload' => $this->payload
+                'payload' => $this->payload,
             ]);
             throw $e;
         }
@@ -101,15 +101,17 @@ class ProcessWhatsAppWebhookJob implements ShouldQueue
         $timestamp = $this->payload['timestamp'] ?? time();
         $messageType = $this->payload['type'] ?? 'text';
 
-        if (!$sessionId || !$from || !$messageId) {
-            Log::warning("Invalid message webhook payload - missing required fields");
+        if (! $sessionId || ! $from || ! $messageId) {
+            Log::warning('Invalid message webhook payload - missing required fields');
+
             return;
         }
 
         // Find the WhatsApp session
         $session = WhatsAppSession::where('session_id', $sessionId)->first();
-        if (!$session) {
+        if (! $session) {
             Log::warning("WhatsApp session not found: {$sessionId}");
+
             return;
         }
 
@@ -123,6 +125,7 @@ class ProcessWhatsAppWebhookJob implements ShouldQueue
         $existingMessage = WhatsAppMessage::where('message_id', $messageId)->first();
         if ($existingMessage) {
             Log::debug("WhatsApp message {$messageId} already exists, skipping");
+
             return;
         }
 
@@ -161,15 +164,17 @@ class ProcessWhatsAppWebhookJob implements ShouldQueue
         $status = $this->payload['status'] ?? null;
         $timestamp = $this->payload['timestamp'] ?? time();
 
-        if (!$messageId || !$status) {
-            Log::warning("Invalid status webhook payload - missing required fields");
+        if (! $messageId || ! $status) {
+            Log::warning('Invalid status webhook payload - missing required fields');
+
             return;
         }
 
         // Find the message
         $message = WhatsAppMessage::where('message_id', $messageId)->first();
-        if (!$message) {
+        if (! $message) {
             Log::warning("WhatsApp message not found for status update: {$messageId}");
+
             return;
         }
 
@@ -188,16 +193,17 @@ class ProcessWhatsAppWebhookJob implements ShouldQueue
             case 'failed':
                 $message->update([
                     'status' => 'failed',
-                    'error_message' => $this->payload['error'] ?? 'Message failed to send'
+                    'error_message' => $this->payload['error'] ?? 'Message failed to send',
                 ]);
                 Log::info("WhatsApp message {$messageId} marked as failed");
+
                 return;
         }
 
         if ($statusField) {
             $message->update([
                 'status' => $status,
-                $statusField => date('Y-m-d H:i:s', $timestamp)
+                $statusField => date('Y-m-d H:i:s', $timestamp),
             ]);
 
             Log::debug("WhatsApp message {$messageId} status updated to {$status}");
@@ -228,15 +234,17 @@ class ProcessWhatsAppWebhookJob implements ShouldQueue
         $status = $this->payload['status'] ?? null;
         $timestamp = $this->payload['timestamp'] ?? time();
 
-        if (!$sessionId || !$status) {
-            Log::warning("Invalid session status webhook payload - missing required fields");
+        if (! $sessionId || ! $status) {
+            Log::warning('Invalid session status webhook payload - missing required fields');
+
             return;
         }
 
         // Find the session
         $session = WhatsAppSession::where('session_id', $sessionId)->first();
-        if (!$session) {
+        if (! $session) {
             Log::warning("WhatsApp session not found: {$sessionId}");
+
             return;
         }
 
@@ -244,7 +252,7 @@ class ProcessWhatsAppWebhookJob implements ShouldQueue
         $previousStatus = $session->status;
         $session->update([
             'status' => $status,
-            'last_activity_at' => date('Y-m-d H:i:s', $timestamp)
+            'last_activity_at' => date('Y-m-d H:i:s', $timestamp),
         ]);
 
         // Additional actions based on status change
@@ -266,7 +274,7 @@ class ProcessWhatsAppWebhookJob implements ShouldQueue
             case 'expired':
                 $session->update([
                     'qr_code' => null,
-                    'disconnected_at' => now()
+                    'disconnected_at' => now(),
                 ]);
                 Log::info("WhatsApp session {$sessionId} expired");
                 break;
@@ -287,15 +295,17 @@ class ProcessWhatsAppWebhookJob implements ShouldQueue
         $sessionId = $this->payload['session_id'] ?? null;
         $qrCode = $this->payload['qr_code'] ?? null;
 
-        if (!$sessionId || !$qrCode) {
-            Log::warning("Invalid QR code webhook payload - missing required fields");
+        if (! $sessionId || ! $qrCode) {
+            Log::warning('Invalid QR code webhook payload - missing required fields');
+
             return;
         }
 
         // Find the session
         $session = WhatsAppSession::where('session_id', $sessionId)->first();
-        if (!$session) {
+        if (! $session) {
             Log::warning("WhatsApp session not found: {$sessionId}");
+
             return;
         }
 
@@ -303,7 +313,7 @@ class ProcessWhatsAppWebhookJob implements ShouldQueue
         $session->update([
             'qr_code' => $qrCode,
             'status' => 'waiting_for_scan',
-            'qr_generated_at' => now()
+            'qr_generated_at' => now(),
         ]);
 
         Log::info("QR code generated for WhatsApp session {$sessionId}");
@@ -317,17 +327,17 @@ class ProcessWhatsAppWebhookJob implements ShouldQueue
         // Try to find existing contact by phone
         $contact = Contact::where('phone', $phone)->first();
 
-        if (!$contact) {
+        if (! $contact) {
             // Try to find by phone with different formatting
             $cleanPhone = preg_replace('/[^0-9+]/', '', $phone);
             $contact = Contact::where(function ($query) use ($cleanPhone, $phone) {
                 $query->whereRaw("REGEXP_REPLACE(phone, '[^0-9+]', '') = ?", [$cleanPhone])
-                      ->orWhere('phone', 'LIKE', "%{$phone}%");
+                    ->orWhere('phone', 'LIKE', "%{$phone}%");
             })->first();
         }
 
         // Create new contact if not found
-        if (!$contact) {
+        if (! $contact) {
             try {
                 $contact = Contact::create([
                     'phone' => $phone,
@@ -338,7 +348,8 @@ class ProcessWhatsAppWebhookJob implements ShouldQueue
 
                 Log::info("Created new contact from WhatsApp: {$phone}");
             } catch (Exception $e) {
-                Log::error("Failed to create contact from WhatsApp: " . $e->getMessage());
+                Log::error('Failed to create contact from WhatsApp: '.$e->getMessage());
+
                 return null;
             }
         }
@@ -351,9 +362,9 @@ class ProcessWhatsAppWebhookJob implements ShouldQueue
      */
     public function failed(Exception $exception): void
     {
-        Log::error("ProcessWhatsAppWebhookJob permanently failed: " . $exception->getMessage(), [
+        Log::error('ProcessWhatsAppWebhookJob permanently failed: '.$exception->getMessage(), [
             'webhook_type' => $this->webhookType,
-            'payload' => $this->payload
+            'payload' => $this->payload,
         ]);
     }
 

@@ -22,7 +22,7 @@ class WhatsAppSession extends Model
         'is_active',
         'last_activity',
         'settings',
-        'created_by'
+        'created_by',
     ];
 
     protected $casts = [
@@ -66,7 +66,7 @@ class WhatsAppSession extends Model
         $this->update([
             'status' => $status,
             'qr_code' => $qrCode,
-            'last_activity' => now()
+            'last_activity' => now(),
         ]);
     }
 

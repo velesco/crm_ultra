@@ -23,7 +23,7 @@ return new class extends Migration
 
             // Unique constraint to prevent duplicates
             $table->unique(['date', 'type', 'channel']);
-            
+
             // Indexes for performance
             $table->index(['date', 'type']);
             $table->index(['channel', 'date']);

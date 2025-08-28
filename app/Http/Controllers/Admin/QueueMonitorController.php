@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\SystemLog;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
@@ -14,14 +15,17 @@ use Laravel\Horizon\Contracts\MasterSupervisorRepository;
 use Laravel\Horizon\Contracts\MetricsRepository;
 use Laravel\Horizon\Contracts\SupervisorRepository;
 use Laravel\Horizon\Contracts\WorkloadRepository;
-use Carbon\Carbon;
 
 class QueueMonitorController extends Controller
 {
     protected $jobRepository;
+
     protected $supervisorRepository;
+
     protected $masterSupervisorRepository;
+
     protected $metricsRepository;
+
     protected $workloadRepository;
 
     public function __construct(
@@ -60,7 +64,7 @@ class QueueMonitorController extends Controller
                 'recentJobs' => $recentJobs,
                 'supervisors' => $supervisors,
                 'workload' => $workload,
-                'chartData' => $chartData
+                'chartData' => $chartData,
             ]);
         }
 
@@ -77,13 +81,13 @@ class QueueMonitorController extends Controller
         try {
             // Try to get from recent jobs first
             $job = $this->jobRepository->getRecent()->firstWhere('id', $id);
-            
-            if (!$job) {
+
+            if (! $job) {
                 // Try failed jobs
                 $job = $this->jobRepository->getFailed()->firstWhere('id', $id);
             }
 
-            if (!$job) {
+            if (! $job) {
                 return response()->json(['error' => 'Job not found'], 404);
             }
 
@@ -98,7 +102,7 @@ class QueueMonitorController extends Controller
                 'started_at' => $job->started_at,
                 'finished_at' => $job->finished_at,
                 'runtime' => $job->runtime,
-                'attempts' => $job->attempts
+                'attempts' => $job->attempts,
             ];
 
             if ($request->ajax()) {
@@ -107,9 +111,9 @@ class QueueMonitorController extends Controller
 
             return view('admin.queue-monitor.show', compact('jobDetails'));
         } catch (\Exception $e) {
-            SystemLog::error('queue', 'job_details_error', 'Failed to get job details: ' . $e->getMessage(), [
+            SystemLog::error('queue', 'job_details_error', 'Failed to get job details: '.$e->getMessage(), [
                 'job_id' => $id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json(['error' => 'Failed to get job details'], 500);
@@ -123,25 +127,25 @@ class QueueMonitorController extends Controller
     {
         try {
             Artisan::call('queue:retry', ['id' => [$id]]);
-            
+
             SystemLog::info('queue', 'job_retried', 'Job retried successfully', [
                 'job_id' => $id,
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Job retried successfully'
+                'message' => 'Job retried successfully',
             ]);
         } catch (\Exception $e) {
-            SystemLog::error('queue', 'job_retry_error', 'Failed to retry job: ' . $e->getMessage(), [
+            SystemLog::error('queue', 'job_retry_error', 'Failed to retry job: '.$e->getMessage(), [
                 'job_id' => $id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retry job'
+                'message' => 'Failed to retry job',
             ], 500);
         }
     }
@@ -153,23 +157,23 @@ class QueueMonitorController extends Controller
     {
         try {
             Artisan::call('queue:retry', ['id' => ['all']]);
-            
+
             SystemLog::info('queue', 'all_jobs_retried', 'All failed jobs retried successfully', [
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'All failed jobs retried successfully'
+                'message' => 'All failed jobs retried successfully',
             ]);
         } catch (\Exception $e) {
-            SystemLog::error('queue', 'retry_all_error', 'Failed to retry all jobs: ' . $e->getMessage(), [
-                'error' => $e->getMessage()
+            SystemLog::error('queue', 'retry_all_error', 'Failed to retry all jobs: '.$e->getMessage(), [
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retry all jobs'
+                'message' => 'Failed to retry all jobs',
             ], 500);
         }
     }
@@ -181,25 +185,25 @@ class QueueMonitorController extends Controller
     {
         try {
             Artisan::call('queue:forget', ['id' => $id]);
-            
+
             SystemLog::info('queue', 'job_deleted', 'Failed job deleted successfully', [
                 'job_id' => $id,
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Job deleted successfully'
+                'message' => 'Job deleted successfully',
             ]);
         } catch (\Exception $e) {
-            SystemLog::error('queue', 'job_delete_error', 'Failed to delete job: ' . $e->getMessage(), [
+            SystemLog::error('queue', 'job_delete_error', 'Failed to delete job: '.$e->getMessage(), [
                 'job_id' => $id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete job'
+                'message' => 'Failed to delete job',
             ], 500);
         }
     }
@@ -211,23 +215,23 @@ class QueueMonitorController extends Controller
     {
         try {
             Artisan::call('queue:flush');
-            
+
             SystemLog::info('queue', 'all_failed_cleared', 'All failed jobs cleared successfully', [
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'All failed jobs cleared successfully'
+                'message' => 'All failed jobs cleared successfully',
             ]);
         } catch (\Exception $e) {
-            SystemLog::error('queue', 'clear_all_error', 'Failed to clear all failed jobs: ' . $e->getMessage(), [
-                'error' => $e->getMessage()
+            SystemLog::error('queue', 'clear_all_error', 'Failed to clear all failed jobs: '.$e->getMessage(), [
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to clear all failed jobs'
+                'message' => 'Failed to clear all failed jobs',
             ], 500);
         }
     }
@@ -238,28 +242,28 @@ class QueueMonitorController extends Controller
     public function pauseQueue(Request $request)
     {
         $queue = $request->input('queue', 'default');
-        
+
         try {
             Artisan::call('queue:pause', ['queue' => $queue]);
-            
+
             SystemLog::info('queue', 'queue_paused', 'Queue paused successfully', [
                 'queue' => $queue,
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => "Queue '{$queue}' paused successfully"
+                'message' => "Queue '{$queue}' paused successfully",
             ]);
         } catch (\Exception $e) {
-            SystemLog::error('queue', 'queue_pause_error', 'Failed to pause queue: ' . $e->getMessage(), [
+            SystemLog::error('queue', 'queue_pause_error', 'Failed to pause queue: '.$e->getMessage(), [
                 'queue' => $queue,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to pause queue'
+                'message' => 'Failed to pause queue',
             ], 500);
         }
     }
@@ -270,28 +274,28 @@ class QueueMonitorController extends Controller
     public function resumeQueue(Request $request)
     {
         $queue = $request->input('queue', 'default');
-        
+
         try {
             Artisan::call('queue:continue', ['queue' => $queue]);
-            
+
             SystemLog::info('queue', 'queue_resumed', 'Queue resumed successfully', [
                 'queue' => $queue,
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => "Queue '{$queue}' resumed successfully"
+                'message' => "Queue '{$queue}' resumed successfully",
             ]);
         } catch (\Exception $e) {
-            SystemLog::error('queue', 'queue_resume_error', 'Failed to resume queue: ' . $e->getMessage(), [
+            SystemLog::error('queue', 'queue_resume_error', 'Failed to resume queue: '.$e->getMessage(), [
                 'queue' => $queue,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to resume queue'
+                'message' => 'Failed to resume queue',
             ], 500);
         }
     }
@@ -308,7 +312,7 @@ class QueueMonitorController extends Controller
                 $jobsPerHour = $this->metricsRepository->jobsPerHour();
                 $recentlyFailed = $this->metricsRepository->recentlyFailed();
                 $recentJobs = $this->jobRepository->getRecent();
-                
+
                 // Calculate processing stats
                 $totalProcessed = $recentJobs->count();
                 $totalFailed = collect($recentlyFailed)->sum();
@@ -317,7 +321,7 @@ class QueueMonitorController extends Controller
                 // Get queue sizes
                 $queueSizes = [];
                 $queues = ['default', 'emails', 'sms', 'whatsapp', 'import', 'sync'];
-                
+
                 foreach ($queues as $queue) {
                     try {
                         $queueSizes[$queue] = Redis::connection()->llen("queues:{$queue}");
@@ -332,21 +336,21 @@ class QueueMonitorController extends Controller
                     'jobs_per_hour' => collect($jobsPerHour)->sum(),
                     'success_rate' => round($successRate, 2),
                     'queue_sizes' => $queueSizes,
-                    'total_queued' => array_sum($queueSizes)
+                    'total_queued' => array_sum($queueSizes),
                 ];
             });
 
             return $stats;
         } catch (\Exception $e) {
-            SystemLog::error('queue', 'stats_error', 'Failed to get queue stats: ' . $e->getMessage());
-            
+            SystemLog::error('queue', 'stats_error', 'Failed to get queue stats: '.$e->getMessage());
+
             return [
                 'total_jobs' => 0,
                 'failed_jobs' => 0,
                 'jobs_per_hour' => 0,
                 'success_rate' => 0,
                 'queue_sizes' => [],
-                'total_queued' => 0
+                'total_queued' => 0,
             ];
         }
     }
@@ -419,11 +423,11 @@ class QueueMonitorController extends Controller
             for ($i = 23; $i >= 0; $i--) {
                 $hour = Carbon::now()->subHours($i);
                 $hours[] = $hour->format('H:00');
-                
+
                 // Get metrics for this hour
                 $hourlyProcessed = $this->metricsRepository->jobsPerHour()[$hour->format('Y-m-d H:00')] ?? 0;
                 $hourlyFailed = $this->metricsRepository->recentlyFailed()[$hour->format('Y-m-d H:00')] ?? 0;
-                
+
                 $processed[] = $hourlyProcessed;
                 $failed[] = $hourlyFailed;
             }
@@ -431,7 +435,7 @@ class QueueMonitorController extends Controller
             return [
                 'labels' => $hours,
                 'processed' => $processed,
-                'failed' => $failed
+                'failed' => $failed,
             ];
         } catch (\Exception $e) {
             // Return empty data if metrics not available
@@ -443,7 +447,7 @@ class QueueMonitorController extends Controller
             return [
                 'labels' => $hours,
                 'processed' => array_fill(0, 24, 0),
-                'failed' => array_fill(0, 24, 0)
+                'failed' => array_fill(0, 24, 0),
             ];
         }
     }
@@ -457,32 +461,32 @@ class QueueMonitorController extends Controller
             $stats = $this->getQueueStats();
             $failedJobs = $this->getFailedJobs(100);
             $recentJobs = $this->getRecentJobs(100);
-            
+
             $data = [
                 'stats' => $stats,
                 'failed_jobs' => $failedJobs->toArray(),
                 'recent_jobs' => $recentJobs->toArray(),
-                'exported_at' => now()->toDateTimeString()
+                'exported_at' => now()->toDateTimeString(),
             ];
 
-            $filename = 'queue_monitor_' . now()->format('Y_m_d_H_i_s') . '.json';
+            $filename = 'queue_monitor_'.now()->format('Y_m_d_H_i_s').'.json';
             $content = json_encode($data, JSON_PRETTY_PRINT);
 
             SystemLog::info('queue', 'data_exported', 'Queue data exported successfully', [
                 'filename' => $filename,
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
 
             return response($content, 200, [
                 'Content-Type' => 'application/json',
-                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Content-Disposition' => 'attachment; filename="'.$filename.'"',
             ]);
         } catch (\Exception $e) {
-            SystemLog::error('queue', 'export_error', 'Failed to export queue data: ' . $e->getMessage());
-            
+            SystemLog::error('queue', 'export_error', 'Failed to export queue data: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to export data'
+                'message' => 'Failed to export data',
             ], 500);
         }
     }
@@ -495,23 +499,23 @@ class QueueMonitorController extends Controller
         try {
             $stats = $this->getQueueStats();
             $supervisors = $this->getSupervisors();
-            
+
             $health = [
                 'status' => 'healthy',
                 'issues' => [],
-                'recommendations' => []
+                'recommendations' => [],
             ];
 
             // Check for issues
             if ($stats['failed_jobs'] > 50) {
                 $health['status'] = 'warning';
-                $health['issues'][] = 'High number of failed jobs (' . $stats['failed_jobs'] . ')';
+                $health['issues'][] = 'High number of failed jobs ('.$stats['failed_jobs'].')';
                 $health['recommendations'][] = 'Review and retry failed jobs';
             }
 
             if ($stats['success_rate'] < 90) {
                 $health['status'] = 'warning';
-                $health['issues'][] = 'Low success rate (' . $stats['success_rate'] . '%)';
+                $health['issues'][] = 'Low success rate ('.$stats['success_rate'].'%)';
                 $health['recommendations'][] = 'Investigate job failures';
             }
 
@@ -523,7 +527,7 @@ class QueueMonitorController extends Controller
 
             if ($stats['total_queued'] > 1000) {
                 $health['status'] = 'warning';
-                $health['issues'][] = 'High queue backlog (' . $stats['total_queued'] . ' jobs)';
+                $health['issues'][] = 'High queue backlog ('.$stats['total_queued'].' jobs)';
                 $health['recommendations'][] = 'Scale up workers or optimize job processing';
             }
 
@@ -532,7 +536,7 @@ class QueueMonitorController extends Controller
             return response()->json([
                 'status' => 'error',
                 'issues' => ['Unable to determine queue health'],
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

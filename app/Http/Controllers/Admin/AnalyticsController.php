@@ -4,17 +4,15 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Contact;
-use App\Models\EmailCampaign;
-use App\Models\SmsMessage;
-use App\Models\WhatsAppMessage;
 use App\Models\ContactSegment;
+use App\Models\EmailCampaign;
 use App\Models\EmailLog;
-use App\Models\SystemLog;
+use App\Models\SmsMessage;
 use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
+use App\Models\WhatsAppMessage;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class AnalyticsController extends Controller
 {
@@ -32,9 +30,9 @@ class AnalyticsController extends Controller
         $startDate = $request->get('start_date', Carbon::now()->subDays(30)->toDateString());
         $endDate = $request->get('end_date', Carbon::now()->toDateString());
         $period = $request->get('period', '30days');
-        
+
         $cacheKey = "analytics_dashboard_{$period}_{$startDate}_{$endDate}";
-        
+
         $data = Cache::remember($cacheKey, 300, function () use ($startDate, $endDate) {
             return [
                 'overview' => $this->getOverviewStats($startDate, $endDate),
@@ -56,9 +54,9 @@ class AnalyticsController extends Controller
     {
         $startDate = $request->get('start_date', Carbon::now()->subDays(90)->toDateString());
         $endDate = $request->get('end_date', Carbon::now()->toDateString());
-        
+
         $cacheKey = "revenue_analytics_{$startDate}_{$endDate}";
-        
+
         $data = Cache::remember($cacheKey, 600, function () use ($startDate, $endDate) {
             return [
                 'overview' => $this->getRevenueOverview($startDate, $endDate),
@@ -80,9 +78,9 @@ class AnalyticsController extends Controller
         $startDate = $request->get('start_date', Carbon::now()->subDays(30)->toDateString());
         $endDate = $request->get('end_date', Carbon::now()->toDateString());
         $channel = $request->get('channel', 'all');
-        
+
         $cacheKey = "campaign_analytics_{$channel}_{$startDate}_{$endDate}";
-        
+
         $data = Cache::remember($cacheKey, 300, function () use ($startDate, $endDate, $channel) {
             return [
                 'performance' => $this->getCampaignPerformance($startDate, $endDate, $channel),
@@ -103,9 +101,9 @@ class AnalyticsController extends Controller
     {
         $startDate = $request->get('start_date', Carbon::now()->subDays(30)->toDateString());
         $endDate = $request->get('end_date', Carbon::now()->toDateString());
-        
+
         $cacheKey = "contact_analytics_{$startDate}_{$endDate}";
-        
+
         $data = Cache::remember($cacheKey, 300, function () use ($startDate, $endDate) {
             return [
                 'acquisition' => $this->getContactAcquisition($startDate, $endDate),
@@ -126,7 +124,7 @@ class AnalyticsController extends Controller
     {
         $metric = $request->get('metric', 'overall');
         $period = $request->get('period', '7days');
-        
+
         $data = match ($metric) {
             'email' => $this->getEmailPerformanceData($period),
             'sms' => $this->getSmsPerformanceData($period),
@@ -163,7 +161,7 @@ class AnalyticsController extends Controller
         $format = $request->get('format', 'csv');
         $startDate = $request->get('start_date', Carbon::now()->subDays(30)->toDateString());
         $endDate = $request->get('end_date', Carbon::now()->toDateString());
-        
+
         $data = match ($type) {
             'revenue' => $this->exportRevenueData($startDate, $endDate),
             'campaigns' => $this->exportCampaignData($startDate, $endDate),
@@ -172,14 +170,15 @@ class AnalyticsController extends Controller
         };
 
         $filename = "analytics_{$type}_{$startDate}_to_{$endDate}.{$format}";
-        
+
         if ($format === 'json') {
             return response()->json($data)
                 ->header('Content-Disposition', "attachment; filename={$filename}");
         }
-        
+
         // CSV Export
         $csv = $this->arrayToCsv($data);
+
         return response($csv)
             ->header('Content-Type', 'text/csv')
             ->header('Content-Disposition', "attachment; filename={$filename}");
@@ -196,7 +195,7 @@ class AnalyticsController extends Controller
             'engagement_rate' => $this->calculateOverallEngagementRate($startDate, $endDate),
             'revenue' => $this->calculateTotalRevenue($startDate, $endDate),
             'conversion_rate' => $this->calculateOverallConversionRate($startDate, $endDate),
-            'active_users' => User::whereHas('systemLogs', function($q) use ($startDate, $endDate) {
+            'active_users' => User::whereHas('systemLogs', function ($q) use ($startDate, $endDate) {
                 $q->whereBetween('created_at', [$startDate, $endDate]);
             })->count(),
             'growth_rate' => $this->calculateGrowthRate($startDate, $endDate),
@@ -286,9 +285,9 @@ class AnalyticsController extends Controller
 
     private function getUserActivityStats($startDate, $endDate)
     {
-        return User::with(['systemLogs' => function($q) use ($startDate, $endDate) {
-                $q->whereBetween('created_at', [$startDate, $endDate]);
-            }])
+        return User::with(['systemLogs' => function ($q) use ($startDate, $endDate) {
+            $q->whereBetween('created_at', [$startDate, $endDate]);
+        }])
             ->get()
             ->map(function ($user) {
                 return [
@@ -304,7 +303,10 @@ class AnalyticsController extends Controller
 
     private function calculatePercentageChange($current, $previous)
     {
-        if ($previous == 0) return $current > 0 ? 100 : 0;
+        if ($previous == 0) {
+            return $current > 0 ? 100 : 0;
+        }
+
         return round((($current - $previous) / $previous) * 100, 2);
     }
 
@@ -343,7 +345,7 @@ class AnalyticsController extends Controller
         $emails = EmailLog::whereBetween('sent_at', [$startDate, $endDate])->count();
         $sms = SmsMessage::whereBetween('created_at', [$startDate, $endDate])->count();
         $whatsapp = WhatsAppMessage::whereBetween('created_at', [$startDate, $endDate])->count();
-        
+
         return $emails + $sms + $whatsapp;
     }
 
@@ -353,7 +355,7 @@ class AnalyticsController extends Controller
         $totalMessages = $this->getTotalMessagesCount($startDate, $endDate);
         $engaged = EmailLog::whereBetween('sent_at', [$startDate, $endDate])
             ->whereNotNull('opened_at')->count();
-        
+
         return $totalMessages > 0 ? round(($engaged / $totalMessages) * 100, 2) : 0;
     }
 
@@ -373,7 +375,7 @@ class AnalyticsController extends Controller
     {
         $current = Contact::whereBetween('created_at', [$startDate, $endDate])->count();
         $days = Carbon::parse($endDate)->diffInDays(Carbon::parse($startDate));
-        
+
         return $days > 0 ? round($current / $days, 2) : 0;
     }
 
@@ -382,7 +384,7 @@ class AnalyticsController extends Controller
         $total = SmsMessage::whereBetween('created_at', [$startDate, $endDate])->count();
         $delivered = SmsMessage::whereBetween('created_at', [$startDate, $endDate])
             ->where('status', 'delivered')->count();
-        
+
         return $total > 0 ? round(($delivered / $total) * 100, 2) : 0;
     }
 
@@ -392,7 +394,7 @@ class AnalyticsController extends Controller
             ->where('direction', 'outbound')->count();
         $received = WhatsAppMessage::whereBetween('created_at', [$startDate, $endDate])
             ->where('direction', 'inbound')->count();
-        
+
         return $sent > 0 ? round(($received / $sent) * 100, 2) : 0;
     }
 
@@ -410,53 +412,170 @@ class AnalyticsController extends Controller
 
     private function arrayToCsv($data)
     {
-        if (empty($data)) return '';
-        
+        if (empty($data)) {
+            return '';
+        }
+
         $output = fopen('php://temp', 'w');
-        
+
         // Write headers
         fputcsv($output, array_keys((array) $data[0]));
-        
+
         // Write data
         foreach ($data as $row) {
             fputcsv($output, (array) $row);
         }
-        
+
         rewind($output);
         $csv = stream_get_contents($output);
         fclose($output);
-        
+
         return $csv;
     }
 
     // Placeholder methods for additional functionality
-    private function getRevenueOverview($startDate, $endDate) { return []; }
-    private function getRevenueTrends($startDate, $endDate) { return []; }
-    private function getRevenueByChannel($startDate, $endDate) { return []; }
-    private function getRevenueBySegment($startDate, $endDate) { return []; }
-    private function getRevenueForecast($startDate, $endDate) { return []; }
-    private function getCampaignPerformance($startDate, $endDate, $channel) { return []; }
-    private function getCampaignEngagement($startDate, $endDate, $channel) { return []; }
-    private function getCampaignConversion($startDate, $endDate, $channel) { return []; }
-    private function getCampaignCostAnalysis($startDate, $endDate, $channel) { return []; }
-    private function getTopCampaigns($startDate, $endDate, $channel) { return []; }
-    private function getContactAcquisition($startDate, $endDate) { return []; }
-    private function getContactLifecycle($startDate, $endDate) { return []; }
-    private function getContactEngagement($startDate, $endDate) { return []; }
-    private function getContactSegmentation($startDate, $endDate) { return []; }
-    private function getContactQuality($startDate, $endDate) { return []; }
-    private function getEmailPerformanceData($period) { return []; }
-    private function getSmsPerformanceData($period) { return []; }
-    private function getWhatsAppPerformanceData($period) { return []; }
-    private function getConversionData($period) { return []; }
-    private function getOverallPerformanceData($period) { return []; }
-    private function getActiveCampaignsCount() { return rand(5, 15); }
-    private function getOnlineUsersCount() { return rand(2, 10); }
-    private function getRecentActivities($limit) { return []; }
-    private function getLiveMetrics() { return []; }
-    private function getSystemStatus() { return ['status' => 'healthy']; }
-    private function exportRevenueData($startDate, $endDate) { return []; }
-    private function exportCampaignData($startDate, $endDate) { return []; }
-    private function exportContactData($startDate, $endDate) { return []; }
-    private function exportOverviewData($startDate, $endDate) { return []; }
+    private function getRevenueOverview($startDate, $endDate)
+    {
+        return [];
+    }
+
+    private function getRevenueTrends($startDate, $endDate)
+    {
+        return [];
+    }
+
+    private function getRevenueByChannel($startDate, $endDate)
+    {
+        return [];
+    }
+
+    private function getRevenueBySegment($startDate, $endDate)
+    {
+        return [];
+    }
+
+    private function getRevenueForecast($startDate, $endDate)
+    {
+        return [];
+    }
+
+    private function getCampaignPerformance($startDate, $endDate, $channel)
+    {
+        return [];
+    }
+
+    private function getCampaignEngagement($startDate, $endDate, $channel)
+    {
+        return [];
+    }
+
+    private function getCampaignConversion($startDate, $endDate, $channel)
+    {
+        return [];
+    }
+
+    private function getCampaignCostAnalysis($startDate, $endDate, $channel)
+    {
+        return [];
+    }
+
+    private function getTopCampaigns($startDate, $endDate, $channel)
+    {
+        return [];
+    }
+
+    private function getContactAcquisition($startDate, $endDate)
+    {
+        return [];
+    }
+
+    private function getContactLifecycle($startDate, $endDate)
+    {
+        return [];
+    }
+
+    private function getContactEngagement($startDate, $endDate)
+    {
+        return [];
+    }
+
+    private function getContactSegmentation($startDate, $endDate)
+    {
+        return [];
+    }
+
+    private function getContactQuality($startDate, $endDate)
+    {
+        return [];
+    }
+
+    private function getEmailPerformanceData($period)
+    {
+        return [];
+    }
+
+    private function getSmsPerformanceData($period)
+    {
+        return [];
+    }
+
+    private function getWhatsAppPerformanceData($period)
+    {
+        return [];
+    }
+
+    private function getConversionData($period)
+    {
+        return [];
+    }
+
+    private function getOverallPerformanceData($period)
+    {
+        return [];
+    }
+
+    private function getActiveCampaignsCount()
+    {
+        return rand(5, 15);
+    }
+
+    private function getOnlineUsersCount()
+    {
+        return rand(2, 10);
+    }
+
+    private function getRecentActivities($limit)
+    {
+        return [];
+    }
+
+    private function getLiveMetrics()
+    {
+        return [];
+    }
+
+    private function getSystemStatus()
+    {
+        return ['status' => 'healthy'];
+    }
+
+    private function exportRevenueData($startDate, $endDate)
+    {
+        return [];
+    }
+
+    private function exportCampaignData($startDate, $endDate)
+    {
+        return [];
+    }
+
+    private function exportContactData($startDate, $endDate)
+    {
+        return [];
+    }
+
+    private function exportOverviewData($startDate, $endDate)
+    {
+        return [];
+    }
 }

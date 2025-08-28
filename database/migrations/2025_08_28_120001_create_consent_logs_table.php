@@ -15,14 +15,14 @@ return new class extends Migration
             $table->id();
             $table->foreignId('contact_id')->nullable()->constrained('contacts')->onDelete('cascade');
             $table->enum('consent_type', [
-                'email_marketing', 
-                'sms_marketing', 
+                'email_marketing',
+                'sms_marketing',
                 'whatsapp_marketing',
                 'data_processing',
                 'profiling',
                 'third_party_sharing',
                 'cookies',
-                'analytics'
+                'analytics',
             ]);
             $table->enum('status', ['given', 'withdrawn', 'expired'])->default('given');
             $table->timestamp('given_at')->nullable();
@@ -36,7 +36,7 @@ return new class extends Migration
                 'legal_obligation',
                 'vital_interests',
                 'public_task',
-                'legitimate_interests'
+                'legitimate_interests',
             ])->default('consent');
             $table->string('purpose')->nullable();
             $table->integer('retention_period')->nullable(); // in days

@@ -20,8 +20,8 @@ class SmtpConfigController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('host', 'like', "%{$search}%")
-                  ->orWhere('username', 'like', "%{$search}%");
+                    ->orWhere('host', 'like', "%{$search}%")
+                    ->orWhere('username', 'like', "%{$search}%");
             });
         }
 
@@ -62,7 +62,7 @@ class SmtpConfigController extends Controller
     public function store(Request $request)
     {
         \Log::info('SMTP Store Request:', $request->all());
-        
+
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:smtp_configs',
             'host' => 'required|string|max:255',
@@ -88,15 +88,15 @@ class SmtpConfigController extends Controller
         try {
             $smtpConfig = SmtpConfig::create($validated);
             \Log::info('SMTP Created:', ['id' => $smtpConfig->id]);
-            
+
             return redirect()->route('smtp-configs.index')
-                            ->with('success', 'SMTP configuration created successfully.');
+                ->with('success', 'SMTP configuration created successfully.');
         } catch (\Exception $e) {
             \Log::error('SMTP Creation Error:', ['error' => $e->getMessage()]);
-            
+
             return redirect()->back()
-                            ->with('error', 'Error creating SMTP configuration: ' . $e->getMessage())
-                            ->withInput();
+                ->with('error', 'Error creating SMTP configuration: '.$e->getMessage())
+                ->withInput();
         }
     }
 
@@ -107,7 +107,7 @@ class SmtpConfigController extends Controller
     {
         // Load usage statistics for the last 30 days
         $smtpConfig->loadUsageStats();
-        
+
         return view('email.smtp.show', compact('smtpConfig'));
     }
 
@@ -141,7 +141,7 @@ class SmtpConfigController extends Controller
         ]);
 
         // Only update password if provided - will be encrypted by model mutator
-        if (!$request->filled('password')) {
+        if (! $request->filled('password')) {
             unset($validated['password']);
         }
 
@@ -150,7 +150,7 @@ class SmtpConfigController extends Controller
         $smtpConfig->update($validated);
 
         return redirect()->route('smtp-configs.index')
-                        ->with('success', 'SMTP configuration updated successfully.');
+            ->with('success', 'SMTP configuration updated successfully.');
     }
 
     /**
@@ -161,13 +161,13 @@ class SmtpConfigController extends Controller
         // Check if this SMTP config is currently being used
         if ($smtpConfig->emailCampaigns()->where('status', 'sending')->exists()) {
             return redirect()->route('smtp-configs.index')
-                            ->with('error', 'Cannot delete SMTP configuration that is currently being used by active campaigns.');
+                ->with('error', 'Cannot delete SMTP configuration that is currently being used by active campaigns.');
         }
 
         $smtpConfig->delete();
 
         return redirect()->route('smtp-configs.index')
-                        ->with('success', 'SMTP configuration deleted successfully.');
+            ->with('success', 'SMTP configuration deleted successfully.');
     }
 
     /**
@@ -177,22 +177,22 @@ class SmtpConfigController extends Controller
     {
         try {
             $success = $smtpConfig->testConnection();
-            
+
             if ($success) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'SMTP connection test successful!'
+                    'message' => 'SMTP connection test successful!',
                 ]);
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'SMTP connection test failed. Please check your settings.'
+                    'message' => 'SMTP connection test failed. Please check your settings.',
                 ], 422);
             }
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Connection test failed: ' . $e->getMessage()
+                'message' => 'Connection test failed: '.$e->getMessage(),
             ], 422);
         }
     }
@@ -203,13 +203,13 @@ class SmtpConfigController extends Controller
     public function toggle(SmtpConfig $smtpConfig)
     {
         $smtpConfig->update([
-            'is_active' => !$smtpConfig->is_active
+            'is_active' => ! $smtpConfig->is_active,
         ]);
 
         $status = $smtpConfig->is_active ? 'activated' : 'deactivated';
-        
+
         return redirect()->route('smtp-configs.index')
-                        ->with('success', "SMTP configuration {$status} successfully.");
+            ->with('success', "SMTP configuration {$status} successfully.");
     }
 
     /**
@@ -224,7 +224,7 @@ class SmtpConfigController extends Controller
         ]);
 
         return redirect()->route('smtp-configs.show', $smtpConfig)
-                        ->with('success', 'Counters reset successfully.');
+            ->with('success', 'Counters reset successfully.');
     }
 
     /**
@@ -233,7 +233,7 @@ class SmtpConfigController extends Controller
     public function duplicate(SmtpConfig $smtpConfig)
     {
         $duplicate = $smtpConfig->replicate();
-        $duplicate->name = $smtpConfig->name . ' (Copy)';
+        $duplicate->name = $smtpConfig->name.' (Copy)';
         $duplicate->is_active = false;
         $duplicate->sent_today = 0;
         $duplicate->sent_this_hour = 0;
@@ -241,7 +241,7 @@ class SmtpConfigController extends Controller
         $duplicate->save();
 
         return redirect()->route('smtp-configs.edit', $duplicate)
-                        ->with('success', 'SMTP configuration duplicated successfully. Please review and update the settings.');
+            ->with('success', 'SMTP configuration duplicated successfully. Please review and update the settings.');
     }
 
     /**

@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\SmsProvider;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class SmsProviderPolicy
 {
@@ -32,7 +31,7 @@ class SmsProviderPolicy
         }
 
         // Regular users can only view active providers they have permission to use
-        return $smsProvider->is_active && 
+        return $smsProvider->is_active &&
                ($user->hasPermissionTo('view sms-providers') || $user->hasRole('agent'));
     }
 
@@ -108,7 +107,7 @@ class SmsProviderPolicy
     public function test(User $user, SmsProvider $smsProvider): bool
     {
         // Must be able to view the provider
-        if (!$this->view($user, $smsProvider)) {
+        if (! $this->view($user, $smsProvider)) {
             return false;
         }
 
@@ -130,17 +129,17 @@ class SmsProviderPolicy
     public function sendSms(User $user, SmsProvider $smsProvider): bool
     {
         // Provider must be active
-        if (!$smsProvider->is_active) {
+        if (! $smsProvider->is_active) {
             return false;
         }
 
         // Must be able to view the provider
-        if (!$this->view($user, $smsProvider)) {
+        if (! $this->view($user, $smsProvider)) {
             return false;
         }
 
         // Check if provider has reached limits
-        if (!$smsProvider->canSend()) {
+        if (! $smsProvider->canSend()) {
             return false;
         }
 
@@ -161,7 +160,7 @@ class SmsProviderPolicy
     public function viewReports(User $user, SmsProvider $smsProvider): bool
     {
         // Must be able to view provider and have reports permission
-        if (!$this->view($user, $smsProvider)) {
+        if (! $this->view($user, $smsProvider)) {
             return false;
         }
 
@@ -182,7 +181,7 @@ class SmsProviderPolicy
      */
     public function resetCounters(User $user, SmsProvider $smsProvider): bool
     {
-        return $user->hasRole('admin') || 
+        return $user->hasRole('admin') ||
                ($user->hasRole('manager') && $this->update($user, $smsProvider));
     }
 
@@ -192,7 +191,7 @@ class SmsProviderPolicy
     public function viewLogs(User $user, SmsProvider $smsProvider): bool
     {
         // Must be able to view provider and have logs permission
-        if (!$this->view($user, $smsProvider)) {
+        if (! $this->view($user, $smsProvider)) {
             return false;
         }
 
@@ -204,7 +203,7 @@ class SmsProviderPolicy
      */
     public function exportData(User $user, SmsProvider $smsProvider): bool
     {
-        return $this->view($user, $smsProvider) && 
+        return $this->view($user, $smsProvider) &&
                ($user->hasPermissionTo('export data') || $user->hasRole(['admin', 'manager']));
     }
 

@@ -2,13 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\Contact;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
-use Tests\TestCase;
-use App\Models\User;
-use App\Models\Contact;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class ContactControllerTest extends TestCase
 {
@@ -17,7 +17,7 @@ class ContactControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Create roles and permissions
         $this->createRolesAndPermissions();
     }
@@ -37,7 +37,7 @@ class ContactControllerTest extends TestCase
     public function test_admin_can_create_contact()
     {
         $admin = $this->createAdminUser();
-        
+
         $contactData = [
             'first_name' => 'John',
             'last_name' => 'Doe',
@@ -46,7 +46,7 @@ class ContactControllerTest extends TestCase
             'company' => 'Test Company',
             'position' => 'Manager',
             'status' => 'active',
-            'source' => 'website'
+            'source' => 'website',
         ];
 
         $response = $this->actingAs($admin)->post(route('contacts.store'), $contactData);
@@ -54,7 +54,7 @@ class ContactControllerTest extends TestCase
         $response->assertRedirect(route('contacts.index'));
         $this->assertDatabaseHas('contacts', [
             'email' => 'john.doe@example.com',
-            'created_by' => $admin->id
+            'created_by' => $admin->id,
         ]);
     }
 
@@ -71,7 +71,7 @@ class ContactControllerTest extends TestCase
             'company' => 'Updated Company',
             'position' => 'Senior Manager',
             'status' => 'active',
-            'source' => 'referral'
+            'source' => 'referral',
         ];
 
         $response = $this->actingAs($admin)
@@ -81,7 +81,7 @@ class ContactControllerTest extends TestCase
         $this->assertDatabaseHas('contacts', [
             'id' => $contact->id,
             'first_name' => 'Jane',
-            'company' => 'Updated Company'
+            'company' => 'Updated Company',
         ]);
     }
 
@@ -101,7 +101,7 @@ class ContactControllerTest extends TestCase
     {
         $agent = $this->createAgentUser();
         $otherUser = $this->createAgentUser();
-        
+
         // Create contacts - some owned by agent, some by other user
         $ownContact = Contact::factory()->create(['created_by' => $agent->id]);
         $otherContact = Contact::factory()->create(['created_by' => $otherUser->id]);
@@ -117,7 +117,7 @@ class ContactControllerTest extends TestCase
     {
         $agent = $this->createAgentUser();
         $otherUser = $this->createAgentUser();
-        
+
         $otherContact = Contact::factory()->create(['created_by' => $otherUser->id]);
 
         $response = $this->actingAs($agent)
@@ -130,7 +130,7 @@ class ContactControllerTest extends TestCase
     public function test_contact_validation_requires_email()
     {
         $admin = $this->createAdminUser();
-        
+
         $contactData = [
             'first_name' => 'John',
             'last_name' => 'Doe',
@@ -147,7 +147,7 @@ class ContactControllerTest extends TestCase
     {
         $admin = $this->createAdminUser();
         $existingContact = Contact::factory()->create();
-        
+
         $contactData = [
             'first_name' => 'John',
             'last_name' => 'Doe',
@@ -164,16 +164,16 @@ class ContactControllerTest extends TestCase
     {
         $admin = $this->createAdminUser();
         $contacts = Contact::factory(3)->create(['created_by' => $admin->id]);
-        
+
         $contactIds = $contacts->pluck('id')->toArray();
 
         $response = $this->actingAs($admin)->post(route('contacts.bulk-actions'), [
             'action' => 'delete',
-            'contact_ids' => $contactIds
+            'contact_ids' => $contactIds,
         ]);
 
         $response->assertRedirect(route('contacts.index'));
-        
+
         foreach ($contactIds as $id) {
             $this->assertSoftDeleted('contacts', ['id' => $id]);
         }
@@ -184,23 +184,23 @@ class ContactControllerTest extends TestCase
         $admin = $this->createAdminUser();
         $contacts = Contact::factory(3)->create([
             'created_by' => $admin->id,
-            'status' => 'prospect'
+            'status' => 'prospect',
         ]);
-        
+
         $contactIds = $contacts->pluck('id')->toArray();
 
         $response = $this->actingAs($admin)->post(route('contacts.bulk-actions'), [
             'action' => 'update_status',
             'contact_ids' => $contactIds,
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         $response->assertRedirect(route('contacts.index'));
-        
+
         foreach ($contactIds as $id) {
             $this->assertDatabaseHas('contacts', [
                 'id' => $id,
-                'status' => 'active'
+                'status' => 'active',
             ]);
         }
     }
@@ -219,19 +219,19 @@ class ContactControllerTest extends TestCase
     public function test_contact_search_filters_results()
     {
         $admin = $this->createAdminUser();
-        
+
         Contact::factory()->create([
             'first_name' => 'John',
             'last_name' => 'Doe',
             'email' => 'john@example.com',
-            'company' => 'TechCorp'
+            'company' => 'TechCorp',
         ]);
-        
+
         Contact::factory()->create([
             'first_name' => 'Jane',
-            'last_name' => 'Smith', 
+            'last_name' => 'Smith',
             'email' => 'jane@example.com',
-            'company' => 'MarketingPro'
+            'company' => 'MarketingPro',
         ]);
 
         $response = $this->actingAs($admin)->get(route('contacts.index', ['search' => 'John']));
@@ -293,7 +293,7 @@ class ContactControllerTest extends TestCase
         // Create permissions
         $permissions = [
             'view contacts', 'create contacts', 'edit contacts', 'delete contacts',
-            'import contacts', 'export contacts', 'bulk-update contacts'
+            'import contacts', 'export contacts', 'bulk-update contacts',
         ];
 
         foreach ($permissions as $permission) {
@@ -306,7 +306,7 @@ class ContactControllerTest extends TestCase
 
         $agentRole = Role::create(['name' => 'agent']);
         $agentRole->givePermissionTo([
-            'view contacts', 'create contacts', 'edit contacts'
+            'view contacts', 'create contacts', 'edit contacts',
         ]);
 
         $viewerRole = Role::create(['name' => 'viewer']);
@@ -317,6 +317,7 @@ class ContactControllerTest extends TestCase
     {
         $user = User::factory()->create();
         $user->assignRole('admin');
+
         return $user;
     }
 
@@ -324,6 +325,7 @@ class ContactControllerTest extends TestCase
     {
         $user = User::factory()->create();
         $user->assignRole('agent');
+
         return $user;
     }
 
@@ -331,6 +333,7 @@ class ContactControllerTest extends TestCase
     {
         $user = User::factory()->create();
         $user->assignRole('viewer');
+
         return $user;
     }
 }

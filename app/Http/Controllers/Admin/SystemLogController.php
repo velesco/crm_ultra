@@ -6,9 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\SystemLog;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Response;
 
 class SystemLogController extends Controller
 {
@@ -92,10 +92,10 @@ class SystemLogController extends Controller
     public function show(SystemLog $systemLog)
     {
         $systemLog->load('user');
-        
+
         // Get related logs (same request_id or user within 5 minutes)
         $relatedLogs = collect();
-        
+
         if ($systemLog->request_id) {
             $relatedLogs = SystemLog::where('request_id', $systemLog->request_id)
                 ->where('id', '!=', $systemLog->id)
@@ -106,7 +106,7 @@ class SystemLogController extends Controller
             $relatedLogs = SystemLog::where('user_id', $systemLog->user_id)
                 ->whereBetween('occurred_at', [
                     $systemLog->occurred_at->subMinutes(5),
-                    $systemLog->occurred_at->addMinutes(5)
+                    $systemLog->occurred_at->addMinutes(5),
                 ])
                 ->where('id', '!=', $systemLog->id)
                 ->with('user')
@@ -125,9 +125,9 @@ class SystemLogController extends Controller
         $period = $request->get('period', '7d'); // 24h, 7d, 30d, 90d
 
         $cacheKey = "system_logs_chart_data_{$period}";
-        
+
         return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($period) {
-            $startDate = match($period) {
+            $startDate = match ($period) {
                 '24h' => Carbon::now()->subDay(),
                 '7d' => Carbon::now()->subDays(7),
                 '30d' => Carbon::now()->subDays(30),
@@ -135,7 +135,7 @@ class SystemLogController extends Controller
                 default => Carbon::now()->subDays(7)
             };
 
-            $groupBy = match($period) {
+            $groupBy = match ($period) {
                 '24h' => 'hour',
                 '7d' => 'day',
                 '30d' => 'day',
@@ -143,7 +143,7 @@ class SystemLogController extends Controller
                 default => 'day'
             };
 
-            $format = match($period) {
+            $format = match ($period) {
                 '24h' => 'H:00',
                 '7d' => 'M-d',
                 '30d' => 'M-d',
@@ -191,7 +191,7 @@ class SystemLogController extends Controller
     public function healthMetrics()
     {
         $cacheKey = 'system_logs_health_metrics';
-        
+
         return Cache::remember($cacheKey, now()->addMinutes(5), function () {
             $last24h = Carbon::now()->subDay();
             $last7d = Carbon::now()->subDays(7);
@@ -267,7 +267,7 @@ class SystemLogController extends Controller
         $logs = $query->limit(10000)->get(); // Limit to prevent memory issues
 
         $csvData = "ID,Date,Level,Category,Action,Message,User,IP Address\n";
-        
+
         foreach ($logs as $log) {
             $csvData .= sprintf(
                 "%d,\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"\n",
@@ -282,7 +282,7 @@ class SystemLogController extends Controller
             );
         }
 
-        $filename = 'system-logs-' . date('Y-m-d-H-i-s') . '.csv';
+        $filename = 'system-logs-'.date('Y-m-d-H-i-s').'.csv';
 
         return Response::make($csvData, 200, [
             'Content-Type' => 'text/csv',
@@ -336,14 +336,14 @@ class SystemLogController extends Controller
     private function getStatistics()
     {
         $cacheKey = 'system_logs_statistics';
-        
+
         return Cache::remember($cacheKey, now()->addMinutes(5), function () {
             $stats = SystemLog::getStatistics();
-            
+
             $recentErrors = SystemLog::errors()
                 ->where('occurred_at', '>=', Carbon::now()->subHour())
                 ->count();
-                
+
             $todayActivity = SystemLog::whereDate('occurred_at', today())
                 ->selectRaw('level, COUNT(*) as count')
                 ->groupBy('level')
@@ -364,7 +364,7 @@ class SystemLogController extends Controller
     {
         $totalLogs = SystemLog::where('occurred_at', '>=', $since)->count();
         $errorLogs = SystemLog::errors()->where('occurred_at', '>=', $since)->count();
-        
+
         return $totalLogs > 0 ? round(($errorLogs / $totalLogs) * 100, 2) : 0;
     }
 
@@ -374,7 +374,7 @@ class SystemLogController extends Controller
     private function getSystemAlerts()
     {
         $alerts = [];
-        
+
         // High error rate alert
         $errorRate = $this->calculateErrorRate(Carbon::now()->subHour());
         if ($errorRate > 10) {
@@ -384,12 +384,12 @@ class SystemLogController extends Controller
                 'action' => 'Check recent error logs',
             ];
         }
-        
+
         // Large number of failed logins
         $failedLogins = SystemLog::where('action', 'failed_login')
             ->where('occurred_at', '>=', Carbon::now()->subHour())
             ->count();
-            
+
         if ($failedLogins > 10) {
             $alerts[] = [
                 'type' => 'warning',
@@ -397,7 +397,7 @@ class SystemLogController extends Controller
                 'action' => 'Review authentication logs',
             ];
         }
-        
+
         return $alerts;
     }
 }

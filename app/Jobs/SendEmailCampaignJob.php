@@ -2,17 +2,17 @@
 
 namespace App\Jobs;
 
-use App\Models\EmailCampaign;
 use App\Models\Contact;
+use App\Models\EmailCampaign;
 use App\Models\EmailLog;
 use App\Services\EmailService;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 class SendEmailCampaignJob implements ShouldQueue
 {
@@ -45,7 +45,7 @@ class SendEmailCampaignJob implements ShouldQueue
     {
         $this->campaign = $campaign;
         $this->contact = $contact;
-        
+
         // Set queue based on priority
         $this->onQueue($campaign->priority === 'high' ? 'high' : 'emails');
     }
@@ -57,14 +57,16 @@ class SendEmailCampaignJob implements ShouldQueue
     {
         try {
             // Check if campaign is still active and not paused
-            if (!$this->campaign->isActive() || $this->campaign->status === 'paused') {
+            if (! $this->campaign->isActive() || $this->campaign->status === 'paused') {
                 Log::info("Campaign {$this->campaign->id} is not active or paused, skipping email to contact {$this->contact->id}");
+
                 return;
             }
 
             // Check if contact is still active and not unsubscribed
-            if (!$this->contact->is_active || $this->contact->is_unsubscribed) {
+            if (! $this->contact->is_active || $this->contact->is_unsubscribed) {
                 Log::info("Contact {$this->contact->id} is inactive or unsubscribed, skipping email");
+
                 return;
             }
 
@@ -76,6 +78,7 @@ class SendEmailCampaignJob implements ShouldQueue
 
             if ($existingLog) {
                 Log::info("Email already sent to contact {$this->contact->id} for campaign {$this->campaign->id}");
+
                 return;
             }
 
@@ -93,13 +96,13 @@ class SendEmailCampaignJob implements ShouldQueue
                 'template_id' => $this->campaign->template_id,
                 'tracking_enabled' => true,
                 'unsubscribe_url' => route('unsubscribe', [
-                    'token' => $this->generateUnsubscribeToken()
+                    'token' => $this->generateUnsubscribeToken(),
                 ]),
                 'view_in_browser_url' => route('email.view-in-browser', [
                     'campaign' => $this->campaign->id,
                     'contact' => $this->contact->id,
-                    'token' => $this->generateViewToken()
-                ])
+                    'token' => $this->generateViewToken(),
+                ]),
             ];
 
             // Add personalization variables
@@ -128,22 +131,22 @@ class SendEmailCampaignJob implements ShouldQueue
                 // Update contact last_contacted
                 $this->contact->update([
                     'last_contacted_at' => now(),
-                    'contact_source' => $this->contact->contact_source ?? 'email_campaign'
+                    'contact_source' => $this->contact->contact_source ?? 'email_campaign',
                 ]);
 
             } else {
                 // Log failed send
-                Log::error("Failed to send email campaign {$this->campaign->id} to {$this->contact->email}: " . $result['error']);
-                
+                Log::error("Failed to send email campaign {$this->campaign->id} to {$this->contact->email}: ".$result['error']);
+
                 // Increment failed count
                 $this->campaign->increment('emails_failed');
-                
+
                 throw new Exception($result['error']);
             }
 
         } catch (Exception $e) {
             // Log the error
-            Log::error("SendEmailCampaignJob failed for campaign {$this->campaign->id} and contact {$this->contact->id}: " . $e->getMessage());
+            Log::error("SendEmailCampaignJob failed for campaign {$this->campaign->id} and contact {$this->contact->id}: ".$e->getMessage());
 
             // Create error log entry
             EmailLog::create([
@@ -153,11 +156,11 @@ class SendEmailCampaignJob implements ShouldQueue
                 'subject' => $this->campaign->subject,
                 'status' => 'failed',
                 'error_message' => $e->getMessage(),
-                'sent_at' => now()
+                'sent_at' => now(),
             ]);
 
             // Increment failed count if not already done
-            if (!str_contains($e->getMessage(), 'Failed to send email')) {
+            if (! str_contains($e->getMessage(), 'Failed to send email')) {
                 $this->campaign->increment('emails_failed');
             }
 
@@ -196,7 +199,7 @@ class SendEmailCampaignJob implements ShouldQueue
      */
     protected function generateUnsubscribeToken(): string
     {
-        return hash('sha256', $this->contact->email . $this->contact->id . config('app.key'));
+        return hash('sha256', $this->contact->email.$this->contact->id.config('app.key'));
     }
 
     /**
@@ -204,7 +207,7 @@ class SendEmailCampaignJob implements ShouldQueue
      */
     protected function generateViewToken(): string
     {
-        return hash('sha256', $this->campaign->id . $this->contact->id . config('app.key'));
+        return hash('sha256', $this->campaign->id.$this->contact->id.config('app.key'));
     }
 
     /**
@@ -212,7 +215,7 @@ class SendEmailCampaignJob implements ShouldQueue
      */
     public function failed(Exception $exception): void
     {
-        Log::error("SendEmailCampaignJob permanently failed for campaign {$this->campaign->id} and contact {$this->contact->id}: " . $exception->getMessage());
+        Log::error("SendEmailCampaignJob permanently failed for campaign {$this->campaign->id} and contact {$this->contact->id}: ".$exception->getMessage());
 
         // Create final error log entry
         EmailLog::updateOrCreate(
@@ -225,7 +228,7 @@ class SendEmailCampaignJob implements ShouldQueue
                 'subject' => $this->campaign->subject,
                 'status' => 'permanently_failed',
                 'error_message' => $exception->getMessage(),
-                'sent_at' => now()
+                'sent_at' => now(),
             ]
         );
 

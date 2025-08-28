@@ -2,16 +2,14 @@
 
 namespace Tests\Unit;
 
-use PHPUnit\Framework\TestCase;
-use App\Services\EmailService;
-use App\Models\EmailCampaign;
 use App\Models\Contact;
-use App\Models\SmtpConfig;
+use App\Models\EmailCampaign;
 use App\Models\EmailTemplate;
+use App\Models\SmtpConfig;
 use App\Models\User;
+use App\Services\EmailService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Event;
+use PHPUnit\Framework\TestCase;
 
 class EmailServiceTest extends TestCase
 {
@@ -22,14 +20,14 @@ class EmailServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->emailService = new EmailService();
+        $this->emailService = new EmailService;
     }
 
     public function test_can_create_email_campaign()
     {
         $user = User::factory()->create();
         $smtpConfig = SmtpConfig::factory()->create(['created_by' => $user->id]);
-        
+
         $campaignData = [
             'name' => 'Test Campaign',
             'subject' => 'Test Subject',
@@ -38,12 +36,12 @@ class EmailServiceTest extends TestCase
             'scheduled_at' => now()->addHour(),
             'settings' => [
                 'track_opens' => true,
-                'track_clicks' => true
-            ]
+                'track_clicks' => true,
+            ],
         ];
 
         $this->actingAs($user);
-        
+
         $campaign = $this->emailService->createCampaign($campaignData);
 
         $this->assertInstanceOf(EmailCampaign::class, $campaign);
@@ -58,9 +56,9 @@ class EmailServiceTest extends TestCase
         $user = User::factory()->create();
         $campaign = EmailCampaign::factory()->create(['created_by' => $user->id]);
         $contacts = Contact::factory(3)->create();
-        
+
         $contactIds = $contacts->pluck('id')->toArray();
-        
+
         $result = $this->emailService->addContactsToCampaign($campaign, $contactIds);
 
         $this->assertTrue($result['success']);
@@ -75,12 +73,12 @@ class EmailServiceTest extends TestCase
         $user = User::factory()->create();
         $campaign = EmailCampaign::factory()->create(['created_by' => $user->id]);
         $contacts = Contact::factory(3)->create();
-        
+
         $contactIds = $contacts->pluck('id')->toArray();
-        
+
         // Add contacts first time
         $this->emailService->addContactsToCampaign($campaign, $contactIds);
-        
+
         // Try to add same contacts again
         $result = $this->emailService->addContactsToCampaign($campaign, $contactIds);
 
@@ -95,16 +93,16 @@ class EmailServiceTest extends TestCase
             'first_name' => 'John',
             'last_name' => 'Doe',
             'email' => 'john@example.com',
-            'company' => 'Test Company'
+            'company' => 'Test Company',
         ]);
 
         $content = 'Hello {{first_name}} {{last_name}} from {{company}}!';
-        
+
         // Use reflection to test protected method
         $reflection = new \ReflectionClass($this->emailService);
         $method = $reflection->getMethod('personalizeContent');
         $method->setAccessible(true);
-        
+
         $result = $method->invoke($this->emailService, $content);
 
         $this->assertEquals('Hello John Doe from Test Company!', $result);
@@ -116,12 +114,12 @@ class EmailServiceTest extends TestCase
         $campaign = EmailCampaign::factory()->create([
             'subject' => 'Hello {{first_name}}!',
             'content' => 'Dear {{first_name}}, welcome to {{company}}!',
-            'created_by' => $user->id
+            'created_by' => $user->id,
         ]);
-        
+
         $contact = Contact::factory()->create([
             'first_name' => 'Jane',
-            'company' => 'Awesome Corp'
+            'company' => 'Awesome Corp',
         ]);
 
         $preview = $this->emailService->generatePreview($campaign, $contact);
@@ -135,7 +133,7 @@ class EmailServiceTest extends TestCase
         $user = User::factory()->create();
         $template = EmailTemplate::factory()->create();
         $smtpConfig = SmtpConfig::factory()->create();
-        
+
         $originalCampaign = EmailCampaign::factory()->create([
             'name' => 'Original Campaign',
             'subject' => 'Original Subject',
@@ -143,14 +141,14 @@ class EmailServiceTest extends TestCase
             'template_id' => $template->id,
             'smtp_config_id' => $smtpConfig->id,
             'settings' => ['track_opens' => true],
-            'created_by' => $user->id
+            'created_by' => $user->id,
         ]);
 
         $contacts = Contact::factory(2)->create();
         $originalCampaign->contacts()->attach($contacts->pluck('id'));
 
         $this->actingAs($user);
-        
+
         $duplicatedCampaign = $this->emailService->duplicateCampaign($originalCampaign);
 
         $this->assertNotEquals($originalCampaign->id, $duplicatedCampaign->id);
@@ -172,7 +170,7 @@ class EmailServiceTest extends TestCase
             'opened_count' => 360,
             'clicked_count' => 72,
             'bounced_count' => 30,
-            'failed_count' => 20
+            'failed_count' => 20,
         ]);
 
         $stats = $this->emailService->getCampaignStats($campaign);
@@ -181,7 +179,7 @@ class EmailServiceTest extends TestCase
         $this->assertEquals(950, $stats['sent_count']);
         $this->assertEquals(360, $stats['opened_count']);
         $this->assertEquals(72, $stats['clicked_count']);
-        
+
         // Test calculated rates
         $this->assertEquals(37.89, $stats['open_rate']); // 360/950 * 100
         $this->assertEquals(7.58, $stats['click_rate']); // 72/950 * 100
@@ -204,12 +202,12 @@ class EmailServiceTest extends TestCase
         $user = User::factory()->create();
         $inactiveSmtpConfig = SmtpConfig::factory()->create([
             'is_active' => false,
-            'created_by' => $user->id
+            'created_by' => $user->id,
         ]);
-        
+
         $campaign = EmailCampaign::factory()->draft()->create([
             'smtp_config_id' => $inactiveSmtpConfig->id,
-            'created_by' => $user->id
+            'created_by' => $user->id,
         ]);
 
         $contacts = Contact::factory(2)->create();
@@ -237,7 +235,7 @@ class EmailServiceTest extends TestCase
         $user = User::factory()->create();
         $campaign = EmailCampaign::factory()->create([
             'status' => 'paused',
-            'created_by' => $user->id
+            'created_by' => $user->id,
         ]);
 
         $result = $this->emailService->resumeCampaign($campaign);
@@ -262,16 +260,16 @@ class EmailServiceTest extends TestCase
         $variables = [
             'first_name' => 'John',
             'last_name' => null,
-            'company' => 'Test Corp'
+            'company' => 'Test Corp',
         ];
 
         $content = 'Hello {{first_name}} {{last_name}} from {{company}} and {{missing_var}}!';
-        
+
         // Use reflection to test protected method
         $reflection = new \ReflectionClass($this->emailService);
         $method = $reflection->getMethod('replaceVariables');
         $method->setAccessible(true);
-        
+
         $result = $method->invoke($this->emailService, $content, $variables);
 
         $this->assertEquals('Hello John  from Test Corp and {{missing_var}}!', $result);
@@ -281,16 +279,16 @@ class EmailServiceTest extends TestCase
     {
         $content = '<html><body><p>Test email content</p></body></html>';
         $trackingId = 'test-tracking-id';
-        
+
         // Use reflection to test protected method
         $reflection = new \ReflectionClass($this->emailService);
         $method = $reflection->getMethod('addTrackingElements');
         $method->setAccessible(true);
-        
+
         $result = $method->invoke($this->emailService, $content, $trackingId);
 
-        $this->assertStringContains('track/open/' . $trackingId, $result);
-        $this->assertStringContains('unsubscribe/' . $trackingId, $result);
+        $this->assertStringContains('track/open/'.$trackingId, $result);
+        $this->assertStringContains('unsubscribe/'.$trackingId, $result);
         $this->assertStringContains('width="1" height="1"', $result); // tracking pixel
     }
 }

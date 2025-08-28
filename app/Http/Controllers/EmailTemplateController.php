@@ -6,8 +6,6 @@ use App\Models\EmailTemplate;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class EmailTemplateController extends Controller
 {
@@ -21,8 +19,8 @@ class EmailTemplateController extends Controller
             $search = $request->get('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
-                  ->orWhere('subject', 'LIKE', "%{$search}%")
-                  ->orWhere('category', 'LIKE', "%{$search}%");
+                    ->orWhere('subject', 'LIKE', "%{$search}%")
+                    ->orWhere('category', 'LIKE', "%{$search}%");
             });
         }
 
@@ -74,7 +72,7 @@ class EmailTemplateController extends Controller
             'content' => 'required|string',
             'category' => 'required|string|max:100',
             'is_active' => 'boolean',
-            'variables' => 'array'
+            'variables' => 'array',
         ]);
 
         $validated['created_by'] = Auth::id();
@@ -85,7 +83,7 @@ class EmailTemplateController extends Controller
         $extractedVariables = $template->extractVariables();
 
         // Merge with custom variables
-        if (!empty($validated['variables'])) {
+        if (! empty($validated['variables'])) {
             $extractedVariables = array_unique(array_merge($extractedVariables, $validated['variables']));
         }
 
@@ -131,7 +129,7 @@ class EmailTemplateController extends Controller
             'content' => 'required|string',
             'category' => 'required|string|max:100',
             'is_active' => 'boolean',
-            'variables' => 'array'
+            'variables' => 'array',
         ]);
 
         $validated['is_active'] = $request->has('is_active');
@@ -141,7 +139,7 @@ class EmailTemplateController extends Controller
         $extractedVariables = $tempTemplate->extractVariables();
 
         // Merge with custom variables
-        if (!empty($validated['variables'])) {
+        if (! empty($validated['variables'])) {
             $extractedVariables = array_unique(array_merge($extractedVariables, $validated['variables']));
         }
 
@@ -184,13 +182,12 @@ class EmailTemplateController extends Controller
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
-                'preview' => $preview
+                'preview' => $preview,
             ]);
         }
 
         return view('email.templates.preview', compact('emailTemplate', 'preview', 'variables'));
     }
-
 
     public function searchTemplates(Request $request)
     {
@@ -202,8 +199,8 @@ class EmailTemplateController extends Controller
             $search = $request->get('q');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
-                  ->orWhere('subject', 'LIKE', "%{$search}%")
-                  ->orWhere('category', 'LIKE', "%{$search}%");
+                    ->orWhere('subject', 'LIKE', "%{$search}%")
+                    ->orWhere('category', 'LIKE', "%{$search}%");
             });
         }
 
@@ -220,9 +217,9 @@ class EmailTemplateController extends Controller
                     'text' => $template->name,
                     'subject' => $template->subject,
                     'category' => $template->category,
-                    'label' => $template->name . ' (' . $template->category . ')'
+                    'label' => $template->name.' ('.$template->category.')',
                 ];
-            })
+            }),
         ]);
     }
 
@@ -255,19 +252,19 @@ class EmailTemplateController extends Controller
                 // Check if template name already exists
                 $existingCount = EmailTemplate::where('name', $templateData['name'])->count();
                 if ($existingCount > 0) {
-                    $templateData['name'] = $templateData['name'] . ' (' . ($existingCount + 1) . ')';
+                    $templateData['name'] = $templateData['name'].' ('.($existingCount + 1).')';
                 }
 
                 EmailTemplate::create($templateData);
                 $imported++;
             } catch (\Exception $e) {
-                $errors[] = "Template " . ($index + 1) . ": " . $e->getMessage();
+                $errors[] = 'Template '.($index + 1).': '.$e->getMessage();
             }
         }
 
         $message = "Successfully imported {$imported} templates.";
-        if (!empty($errors)) {
-            $message .= " Errors: " . implode(', ', $errors);
+        if (! empty($errors)) {
+            $message .= ' Errors: '.implode(', ', $errors);
         }
 
         return back()->with('success', $message);
@@ -288,11 +285,11 @@ class EmailTemplateController extends Controller
             ->select(['name', 'subject', 'content', 'category', 'variables', 'is_active'])
             ->get();
 
-        $filename = 'email_templates_' . date('Y-m-d_H-i-s') . '.json';
+        $filename = 'email_templates_'.date('Y-m-d_H-i-s').'.json';
 
         return response()->json($templates)
             ->header('Content-Type', 'application/json')
-            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+            ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
     }
 
     /**
@@ -349,7 +346,7 @@ class EmailTemplateController extends Controller
     public function toggleStatus(EmailTemplate $emailTemplate)
     {
         $emailTemplate->update([
-            'is_active' => !$emailTemplate->is_active
+            'is_active' => ! $emailTemplate->is_active,
         ]);
 
         $status = $emailTemplate->is_active ? 'activated' : 'deactivated';
@@ -357,7 +354,7 @@ class EmailTemplateController extends Controller
         return response()->json([
             'success' => true,
             'message' => "Template {$status} successfully!",
-            'is_active' => $emailTemplate->is_active
+            'is_active' => $emailTemplate->is_active,
         ]);
     }
 
@@ -367,7 +364,7 @@ class EmailTemplateController extends Controller
     public function duplicate(EmailTemplate $emailTemplate)
     {
         $newTemplate = $emailTemplate->replicate();
-        $newTemplate->name = $emailTemplate->name . ' (Copy)';
+        $newTemplate->name = $emailTemplate->name.' (Copy)';
         $newTemplate->created_by = Auth::id();
         $newTemplate->is_active = false;
         $newTemplate->created_at = now();
@@ -392,7 +389,7 @@ class EmailTemplateController extends Controller
                 'content' => $emailTemplate->content,
                 'variables' => $emailTemplate->variables,
                 'category' => $emailTemplate->category,
-            ]
+            ],
         ]);
     }
 }

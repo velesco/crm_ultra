@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Carbon\Carbon;
 
 class ExportRequest extends Model
 {
@@ -34,7 +33,7 @@ class ExportRequest extends Model
         'error_message',
         'download_count',
         'user_id',
-        'created_by'
+        'created_by',
     ];
 
     protected $casts = [
@@ -48,7 +47,7 @@ class ExportRequest extends Model
         'completed_at' => 'datetime',
         'file_size' => 'integer',
         'progress' => 'integer',
-        'download_count' => 'integer'
+        'download_count' => 'integer',
     ];
 
     /**
@@ -105,7 +104,7 @@ class ExportRequest extends Model
     public function scopeScheduled($query)
     {
         return $query->whereNotNull('scheduled_for')
-                    ->where('scheduled_for', '>', now());
+            ->where('scheduled_for', '>', now());
     }
 
     /**
@@ -145,7 +144,7 @@ class ExportRequest extends Model
      */
     public function getFormattedFileSizeAttribute(): ?string
     {
-        if (!$this->file_size) {
+        if (! $this->file_size) {
             return null;
         }
 
@@ -157,7 +156,7 @@ class ExportRequest extends Model
      */
     public function getStatusColorAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             'pending' => 'warning',
             'processing' => 'info',
             'completed' => 'success',
@@ -172,7 +171,7 @@ class ExportRequest extends Model
      */
     public function getStatusIconAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             'pending' => 'clock',
             'processing' => 'refresh',
             'completed' => 'check-circle',
@@ -187,7 +186,7 @@ class ExportRequest extends Model
      */
     public function getFormattedDataTypeAttribute(): string
     {
-        return match($this->data_type) {
+        return match ($this->data_type) {
             'contacts' => 'Contacts',
             'email_campaigns' => 'Email Campaigns',
             'sms_messages' => 'SMS Messages',
@@ -205,7 +204,7 @@ class ExportRequest extends Model
      */
     public function getFormattedFormatAttribute(): string
     {
-        return match($this->format) {
+        return match ($this->format) {
             'csv' => 'CSV',
             'xlsx' => 'Excel (XLSX)',
             'json' => 'JSON',
@@ -219,21 +218,23 @@ class ExportRequest extends Model
      */
     public function getProcessingDurationAttribute(): ?string
     {
-        if (!$this->started_at || !$this->completed_at) {
+        if (! $this->started_at || ! $this->completed_at) {
             return null;
         }
 
         $duration = $this->started_at->diffInSeconds($this->completed_at);
-        
+
         if ($duration < 60) {
             return "{$duration} seconds";
         } elseif ($duration < 3600) {
             $minutes = floor($duration / 60);
             $seconds = $duration % 60;
+
             return "{$minutes}m {$seconds}s";
         } else {
             $hours = floor($duration / 3600);
             $minutes = floor(($duration % 3600) / 60);
+
             return "{$hours}h {$minutes}m";
         }
     }
@@ -245,7 +246,7 @@ class ExportRequest extends Model
     {
         $name = str_replace(' ', '_', $this->name);
         $timestamp = $this->created_at->format('Y-m-d_H-i-s');
-        
+
         return "{$name}_{$timestamp}.{$this->format}";
     }
 
@@ -286,7 +287,7 @@ class ExportRequest extends Model
      */
     public function isRecurring(): bool
     {
-        return !is_null($this->recurring_frequency);
+        return ! is_null($this->recurring_frequency);
     }
 
     /**
@@ -298,18 +299,18 @@ class ExportRequest extends Model
             'status' => 'processing',
             'started_at' => now(),
             'progress' => 0,
-            'status_message' => 'Export processing started'
+            'status_message' => 'Export processing started',
         ]);
     }
 
     /**
      * Update progress
      */
-    public function updateProgress(int $progress, string $message = null): void
+    public function updateProgress(int $progress, ?string $message = null): void
     {
         $this->update([
             'progress' => $progress,
-            'status_message' => $message ?? "Processing... {$progress}%"
+            'status_message' => $message ?? "Processing... {$progress}%",
         ]);
     }
 
@@ -324,7 +325,7 @@ class ExportRequest extends Model
             'file_path' => $filePath,
             'file_size' => $fileSize,
             'progress' => 100,
-            'status_message' => 'Export completed successfully'
+            'status_message' => 'Export completed successfully',
         ]);
     }
 
@@ -337,7 +338,7 @@ class ExportRequest extends Model
             'status' => 'failed',
             'completed_at' => now(),
             'error_message' => $errorMessage,
-            'status_message' => 'Export failed'
+            'status_message' => 'Export failed',
         ]);
     }
 
@@ -355,7 +356,7 @@ class ExportRequest extends Model
             'cancelled' => self::where('status', 'cancelled')->count(),
             'scheduled' => self::scheduled()->count(),
             'total_size' => self::where('status', 'completed')->sum('file_size'),
-            'total_downloads' => self::sum('download_count')
+            'total_downloads' => self::sum('download_count'),
         ];
     }
 
@@ -376,7 +377,7 @@ class ExportRequest extends Model
     public static function getRecentActivity(): array
     {
         return self::where('created_at', '>=', now()->subDays(7))
-            ->selectRaw("DATE(created_at) as date, COUNT(*) as count")
+            ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
             ->groupBy('date')
             ->orderBy('date')
             ->pluck('count', 'date')

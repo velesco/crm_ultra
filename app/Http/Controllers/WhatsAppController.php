@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\WhatsAppMessage;
-use App\Models\WhatsAppSession;
 use App\Models\Contact;
 use App\Models\ContactSegment;
+use App\Models\WhatsAppMessage;
+use App\Models\WhatsAppSession;
 use App\Services\WhatsAppService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class WhatsAppController extends Controller
 {
@@ -29,8 +29,8 @@ class WhatsAppController extends Controller
     {
         // Get active WhatsApp session
         $session = WhatsAppSession::where('is_active', true)->first();
-        
-        if (!$session) {
+
+        if (! $session) {
             return view('whatsapp.no-session');
         }
 
@@ -48,7 +48,7 @@ class WhatsAppController extends Controller
         // Get selected contact messages if specified
         $selectedContact = null;
         $messages = collect();
-        
+
         if ($request->filled('contact_id')) {
             $selectedContact = Contact::find($request->contact_id);
             if ($selectedContact) {
@@ -100,19 +100,19 @@ class WhatsAppController extends Controller
 
         try {
             $session = WhatsAppSession::where('is_active', true)->first();
-            
-            if (!$session) {
+
+            if (! $session) {
                 return response()->json(['success' => false, 'message' => 'No active WhatsApp session found'], 400);
             }
 
             $contact = Contact::find($request->contact_id);
-            
-            if (!$contact->whatsapp_number && !$contact->phone) {
-            return response()->json(['success' => false, 'message' => 'Contact does not have WhatsApp number or phone'], 400);
+
+            if (! $contact->whatsapp_number && ! $contact->phone) {
+                return response()->json(['success' => false, 'message' => 'Contact does not have WhatsApp number or phone'], 400);
             }
-                
-                // Use WhatsApp number or fallback to phone
-                $phoneNumber = $contact->whatsapp_number ?: $contact->phone;
+
+            // Use WhatsApp number or fallback to phone
+            $phoneNumber = $contact->whatsapp_number ?: $contact->phone;
 
             // Send message through WhatsApp service
             $result = $this->whatsappService->sendMessage(
@@ -139,16 +139,17 @@ class WhatsAppController extends Controller
                 ]);
 
                 return response()->json([
-                    'success' => true, 
+                    'success' => true,
                     'message' => 'Message sent successfully',
-                    'data' => $message->load('contact')
+                    'data' => $message->load('contact'),
                 ]);
             } else {
                 return response()->json(['success' => false, 'message' => $result['error'] ?? 'Failed to send message'], 400);
             }
 
         } catch (\Exception $e) {
-            \Log::error('WhatsApp send error: ' . $e->getMessage());
+            \Log::error('WhatsApp send error: '.$e->getMessage());
+
             return response()->json(['success' => false, 'message' => 'An error occurred while sending message'], 500);
         }
     }
@@ -175,14 +176,14 @@ class WhatsAppController extends Controller
 
         try {
             $session = WhatsAppSession::where('is_active', true)->first();
-            
-            if (!$session) {
+
+            if (! $session) {
                 return back()->withErrors(['session' => 'No active WhatsApp session found']);
             }
 
             // Get contacts based on send type
             $contacts = $this->getContactsForBulkSend($request);
-            
+
             if ($contacts->isEmpty()) {
                 return back()->withErrors(['contacts' => 'No valid contacts found with WhatsApp numbers']);
             }
@@ -192,8 +193,9 @@ class WhatsAppController extends Controller
             $scheduleAt = $request->schedule_at ? Carbon::parse($request->schedule_at) : null;
 
             foreach ($contacts as $contact) {
-                if (!$contact->whatsapp_number) {
+                if (! $contact->whatsapp_number) {
                     $failedCount++;
+
                     continue;
                 }
 
@@ -247,14 +249,14 @@ class WhatsAppController extends Controller
 
                 } catch (\Exception $e) {
                     $failedCount++;
-                    \Log::error('WhatsApp bulk send error for contact ' . $contact->id . ': ' . $e->getMessage());
+                    \Log::error('WhatsApp bulk send error for contact '.$contact->id.': '.$e->getMessage());
                 }
             }
 
             $totalContacts = $contacts->count();
-            
+
             if ($scheduleAt) {
-                $message = "WhatsApp messages scheduled for {$totalContacts} contacts on " . $scheduleAt->format('d/m/Y H:i');
+                $message = "WhatsApp messages scheduled for {$totalContacts} contacts on ".$scheduleAt->format('d/m/Y H:i');
             } else {
                 $message = "Bulk WhatsApp sending completed. Sent: {$sentCount}, Failed: {$failedCount} out of {$totalContacts} contacts.";
             }
@@ -262,7 +264,7 @@ class WhatsAppController extends Controller
             return redirect()->route('whatsapp.index')->with('success', $message);
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'An error occurred while sending bulk messages: ' . $e->getMessage()])->withInput();
+            return back()->withErrors(['error' => 'An error occurred while sending bulk messages: '.$e->getMessage()])->withInput();
         }
     }
 
@@ -312,13 +314,13 @@ class WhatsAppController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('message', 'like', "%{$search}%")
-                  ->orWhere('phone_number', 'like', "%{$search}%")
-                  ->orWhereHas('contact', function($cq) use ($search) {
-                      $cq->where('first_name', 'like', "%{$search}%")
-                        ->orWhere('last_name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('phone_number', 'like', "%{$search}%")
+                    ->orWhereHas('contact', function ($cq) use ($search) {
+                        $cq->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -349,12 +351,12 @@ class WhatsAppController extends Controller
         try {
             // Validate webhook signature if configured
             $signature = $request->header('X-Webhook-Secret');
-            if (!$this->whatsappService->validateWebhookSignature($request->all(), $signature)) {
+            if (! $this->whatsappService->validateWebhookSignature($request->all(), $signature)) {
                 return response()->json(['status' => 'error', 'message' => 'Invalid signature'], 403);
             }
-            
+
             $result = $this->whatsappService->handleWebhook($request->all());
-            
+
             if ($result['success']) {
                 return response()->json(['status' => 'success'], 200);
             } else {
@@ -362,7 +364,8 @@ class WhatsAppController extends Controller
             }
 
         } catch (\Exception $e) {
-            \Log::error('WhatsApp webhook error: ' . $e->getMessage());
+            \Log::error('WhatsApp webhook error: '.$e->getMessage());
+
             return response()->json(['status' => 'error', 'message' => 'Internal server error'], 500);
         }
     }
@@ -374,13 +377,13 @@ class WhatsAppController extends Controller
     {
         try {
             $result = $this->whatsappService->getQRCode();
-            
+
             if ($result['success']) {
                 return response()->json([
                     'success' => true,
                     'qr_code' => $result['qr_code'] ?? null,
                     'session_status' => $result['session_status'] ?? 'disconnected',
-                    'is_ready' => $result['is_ready'] ?? false
+                    'is_ready' => $result['is_ready'] ?? false,
                 ]);
             } else {
                 return response()->json(['success' => false, 'message' => $result['error']], 400);
@@ -398,12 +401,12 @@ class WhatsAppController extends Controller
     {
         try {
             $result = $this->whatsappService->getSessionStatus();
-            
+
             if ($result['success']) {
                 return response()->json([
                     'success' => true,
                     'status' => $result['status'] ?? 'disconnected',
-                    'info' => $result['info'] ?? null
+                    'info' => $result['info'] ?? null,
                 ]);
             } else {
                 return response()->json(['success' => false, 'message' => $result['error']], 400);
@@ -421,16 +424,16 @@ class WhatsAppController extends Controller
     {
         try {
             $result = $this->whatsappService->disconnect();
-            
+
             if ($result['success']) {
                 return redirect()->route('whatsapp.index')
                     ->with('success', 'WhatsApp session disconnected successfully.');
             } else {
-                return back()->withErrors(['error' => 'Failed to disconnect session: ' . $result['error']]);
+                return back()->withErrors(['error' => 'Failed to disconnect session: '.$result['error']]);
             }
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'An error occurred while disconnecting: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'An error occurred while disconnecting: '.$e->getMessage()]);
         }
     }
 
@@ -494,6 +497,7 @@ class WhatsAppController extends Controller
 
             case 'segment':
                 $segment = ContactSegment::with('contacts')->find($request->segment_id);
+
                 return $segment ? $segment->contacts()->whereNotNull('whatsapp_number')->get() : collect();
 
             default:

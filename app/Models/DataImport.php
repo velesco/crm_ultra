@@ -22,7 +22,7 @@ class DataImport extends Model
         'validation_rules',
         'error_log',
         'preview_data',
-        'created_by'
+        'created_by',
     ];
 
     protected $casts = [
@@ -62,7 +62,7 @@ class DataImport extends Model
         if ($this->total_rows == 0) {
             return 0;
         }
-        
+
         return round(($this->processed_rows / $this->total_rows) * 100, 2);
     }
 
@@ -71,7 +71,7 @@ class DataImport extends Model
         if ($this->processed_rows == 0) {
             return 0;
         }
-        
+
         return round(($this->successful_rows / $this->processed_rows) * 100, 2);
     }
 
@@ -82,7 +82,7 @@ class DataImport extends Model
             'row' => $row,
             'field' => $field,
             'message' => $message,
-            'timestamp' => now()->toISOString()
+            'timestamp' => now()->toISOString(),
         ];
         $this->error_log = $errorLog;
         $this->save();
@@ -92,7 +92,7 @@ class DataImport extends Model
     {
         $this->update([
             'status' => 'completed',
-            'processed_rows' => $this->total_rows
+            'processed_rows' => $this->total_rows,
         ]);
     }
 
@@ -100,7 +100,7 @@ class DataImport extends Model
     {
         $this->update([
             'status' => 'failed',
-            'error_log' => $error ? [$error] : $this->error_log
+            'error_log' => $error ? [$error] : $this->error_log,
         ]);
     }
 }

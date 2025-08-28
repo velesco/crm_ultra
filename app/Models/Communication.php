@@ -23,7 +23,7 @@ class Communication extends Model
         'sent_at',
         'delivered_at',
         'read_at',
-        'replied_at'
+        'replied_at',
     ];
 
     protected $casts = [
@@ -87,28 +87,28 @@ class Communication extends Model
     // Methods
     public function markAsRead()
     {
-        if (!$this->read_at) {
+        if (! $this->read_at) {
             $this->update(['read_at' => now()]);
         }
     }
 
     public function markAsDelivered()
     {
-        if (!$this->delivered_at) {
+        if (! $this->delivered_at) {
             $this->update(['delivered_at' => now()]);
         }
     }
 
     public function markAsReplied()
     {
-        if (!$this->replied_at) {
+        if (! $this->replied_at) {
             $this->update(['replied_at' => now()]);
         }
     }
 
     public function getStatusColorAttribute()
     {
-        return match($this->status) {
+        return match ($this->status) {
             'sent' => 'green',
             'delivered' => 'blue',
             'read' => 'purple',

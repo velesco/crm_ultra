@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class CustomReport extends Model
 {
@@ -31,7 +30,7 @@ class CustomReport extends Model
         'last_run_at',
         'run_count',
         'created_by',
-        'updated_by'
+        'updated_by',
     ];
 
     protected $casts = [
@@ -88,8 +87,8 @@ class CustomReport extends Model
     {
         return $query->where(function ($q) use ($userId) {
             $q->where('created_by', $userId)
-              ->orWhere('visibility', 'public')
-              ->orWhere('visibility', 'shared');
+                ->orWhere('visibility', 'public')
+                ->orWhere('visibility', 'shared');
         });
     }
 
@@ -105,61 +104,62 @@ class CustomReport extends Model
             'contacts' => [
                 'label' => 'Contacts',
                 'table' => 'contacts',
-                'columns' => ['id', 'first_name', 'last_name', 'email', 'phone', 'company', 'industry', 'status', 'created_at', 'updated_at']
+                'columns' => ['id', 'first_name', 'last_name', 'email', 'phone', 'company', 'industry', 'status', 'created_at', 'updated_at'],
             ],
             'email_campaigns' => [
                 'label' => 'Email Campaigns',
                 'table' => 'email_campaigns',
-                'columns' => ['id', 'name', 'subject', 'status', 'sent_count', 'opened_count', 'clicked_count', 'created_at']
+                'columns' => ['id', 'name', 'subject', 'status', 'sent_count', 'opened_count', 'clicked_count', 'created_at'],
             ],
             'sms_messages' => [
                 'label' => 'SMS Messages',
                 'table' => 'sms_messages',
-                'columns' => ['id', 'to_number', 'content', 'status', 'sent_at', 'delivered_at', 'cost', 'provider']
+                'columns' => ['id', 'to_number', 'content', 'status', 'sent_at', 'delivered_at', 'cost', 'provider'],
             ],
             'whatsapp_messages' => [
                 'label' => 'WhatsApp Messages',
                 'table' => 'whatsapp_messages',
-                'columns' => ['id', 'session_id', 'phone_number', 'content', 'message_type', 'status', 'sent_at']
+                'columns' => ['id', 'session_id', 'phone_number', 'content', 'message_type', 'status', 'sent_at'],
             ],
             'revenues' => [
                 'label' => 'Revenue',
                 'table' => 'revenues',
-                'columns' => ['id', 'amount', 'currency', 'type', 'source', 'status', 'customer_name', 'created_at']
+                'columns' => ['id', 'amount', 'currency', 'type', 'source', 'status', 'customer_name', 'created_at'],
             ],
             'contact_segments' => [
                 'label' => 'Contact Segments',
                 'table' => 'contact_segments',
-                'columns' => ['id', 'name', 'is_dynamic', 'contact_count', 'created_at']
+                'columns' => ['id', 'name', 'is_dynamic', 'contact_count', 'created_at'],
             ],
             'communications' => [
                 'label' => 'Communications',
                 'table' => 'communications',
-                'columns' => ['id', 'contact_id', 'type', 'status', 'subject', 'sent_at', 'opened_at', 'clicked_at']
-            ]
+                'columns' => ['id', 'contact_id', 'type', 'status', 'subject', 'sent_at', 'opened_at', 'clicked_at'],
+            ],
         ];
     }
 
     public function getColumnOptions(): array
     {
         $dataSources = $this->getAvailableDataSources();
+
         return $dataSources[$this->data_source]['columns'] ?? [];
     }
 
     public function executeReport($limit = null): array
     {
         $query = $this->buildQuery();
-        
+
         if ($limit) {
             $query->limit($limit);
         }
 
         $results = $query->get()->toArray();
-        
+
         // Update run statistics
         $this->increment('run_count');
         $this->update(['last_run_at' => now()]);
-        
+
         return [
             'data' => $results,
             'metadata' => [
@@ -167,8 +167,8 @@ class CustomReport extends Model
                 'columns' => $this->columns,
                 'filters_applied' => count($this->filters ?? []),
                 'last_run' => $this->last_run_at,
-                'run_count' => $this->run_count
-            ]
+                'run_count' => $this->run_count,
+            ],
         ];
     }
 
@@ -176,33 +176,33 @@ class CustomReport extends Model
     {
         $dataSources = $this->getAvailableDataSources();
         $tableInfo = $dataSources[$this->data_source];
-        
+
         $query = DB::table($tableInfo['table']);
-        
+
         // Apply column selection
-        if (!empty($this->columns)) {
+        if (! empty($this->columns)) {
             $query->select($this->columns);
         }
-        
+
         // Apply filters
-        if (!empty($this->filters)) {
+        if (! empty($this->filters)) {
             foreach ($this->filters as $filter) {
                 $this->applyFilter($query, $filter);
             }
         }
-        
+
         // Apply sorting
-        if (!empty($this->sorting)) {
+        if (! empty($this->sorting)) {
             foreach ($this->sorting as $sort) {
                 $query->orderBy($sort['column'], $sort['direction'] ?? 'asc');
             }
         }
-        
+
         // Apply grouping
-        if (!empty($this->grouping)) {
+        if (! empty($this->grouping)) {
             $query->groupBy($this->grouping);
         }
-        
+
         return $query;
     }
 
@@ -211,7 +211,7 @@ class CustomReport extends Model
         $column = $filter['column'];
         $operator = $filter['operator'];
         $value = $filter['value'];
-        
+
         switch ($operator) {
             case 'equals':
                 $query->where($column, '=', $value);
@@ -260,10 +260,10 @@ class CustomReport extends Model
         if (empty($this->chart_config)) {
             return [];
         }
-        
+
         $results = $this->executeReport();
         $chartConfig = $this->chart_config;
-        
+
         // Process data based on chart type
         switch ($chartConfig['type']) {
             case 'line':
@@ -281,15 +281,15 @@ class CustomReport extends Model
     {
         $xColumn = $config['x_axis'];
         $yColumn = $config['y_axis'];
-        
+
         $processedData = [];
         foreach ($data as $row) {
             $processedData[] = [
                 'x' => $row[$xColumn],
-                'y' => $row[$yColumn]
+                'y' => $row[$yColumn],
             ];
         }
-        
+
         return $processedData;
     }
 
@@ -297,22 +297,22 @@ class CustomReport extends Model
     {
         $labelColumn = $config['label_column'];
         $valueColumn = $config['value_column'];
-        
+
         $processedData = [];
         foreach ($data as $row) {
             $processedData[] = [
                 'label' => $row[$labelColumn],
-                'value' => $row[$valueColumn]
+                'value' => $row[$valueColumn],
             ];
         }
-        
+
         return $processedData;
     }
 
     public function canUserAccess($userId): bool
     {
-        return $this->created_by == $userId || 
-               $this->visibility == 'public' || 
+        return $this->created_by == $userId ||
+               $this->visibility == 'public' ||
                $this->visibility == 'shared';
     }
 
@@ -329,7 +329,7 @@ class CustomReport extends Model
             'contacts' => 'Contact Reports',
             'campaigns' => 'Campaign Reports',
             'revenue' => 'Revenue Reports',
-            'system' => 'System Reports'
+            'system' => 'System Reports',
         ];
     }
 
@@ -348,7 +348,7 @@ class CustomReport extends Model
             'not_in' => 'Not In List',
             'is_null' => 'Is Empty',
             'is_not_null' => 'Is Not Empty',
-            'date_range' => 'Date Range'
+            'date_range' => 'Date Range',
         ];
     }
 
@@ -359,7 +359,7 @@ class CustomReport extends Model
             'line' => 'Line Chart',
             'bar' => 'Bar Chart',
             'pie' => 'Pie Chart',
-            'doughnut' => 'Doughnut Chart'
+            'doughnut' => 'Doughnut Chart',
         ];
     }
 }

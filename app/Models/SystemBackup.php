@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 class SystemBackup extends Model
 {
@@ -78,18 +78,18 @@ class SystemBackup extends Model
      */
     public function getFormattedFileSizeAttribute()
     {
-        if (!$this->file_size) {
+        if (! $this->file_size) {
             return 'N/A';
         }
 
         $bytes = $this->file_size;
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        
+
         for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
             $bytes /= 1024;
         }
-        
-        return round($bytes, 2) . ' ' . $units[$i];
+
+        return round($bytes, 2).' '.$units[$i];
     }
 
     /**
@@ -97,7 +97,7 @@ class SystemBackup extends Model
      */
     public function getDurationAttribute()
     {
-        if (!$this->started_at || !$this->completed_at) {
+        if (! $this->started_at || ! $this->completed_at) {
             return null;
         }
 
@@ -110,19 +110,19 @@ class SystemBackup extends Model
     public function getFormattedDurationAttribute()
     {
         $duration = $this->duration;
-        
-        if (!$duration) {
+
+        if (! $duration) {
             return 'N/A';
         }
 
         if ($duration < 60) {
-            return $duration . 's';
+            return $duration.'s';
         }
 
         $minutes = floor($duration / 60);
         $seconds = $duration % 60;
-        
-        return $minutes . 'm ' . $seconds . 's';
+
+        return $minutes.'m '.$seconds.'s';
     }
 
     /**
@@ -130,7 +130,7 @@ class SystemBackup extends Model
      */
     public function getStatusBadgeClassAttribute()
     {
-        return match($this->status) {
+        return match ($this->status) {
             'completed' => 'success',
             'failed' => 'danger',
             'in_progress' => 'warning',
@@ -144,7 +144,7 @@ class SystemBackup extends Model
      */
     public function getStatusIconAttribute()
     {
-        return match($this->status) {
+        return match ($this->status) {
             'completed' => 'fas fa-check-circle',
             'failed' => 'fas fa-times-circle',
             'in_progress' => 'fas fa-spinner fa-spin',
@@ -158,7 +158,7 @@ class SystemBackup extends Model
      */
     public function getTypeIconAttribute()
     {
-        return match($this->type) {
+        return match ($this->type) {
             'full' => 'fas fa-database',
             'database' => 'fas fa-table',
             'files' => 'fas fa-folder',
@@ -172,7 +172,7 @@ class SystemBackup extends Model
      */
     public function canBeRestored()
     {
-        return $this->status === 'completed' && !empty($this->file_path);
+        return $this->status === 'completed' && ! empty($this->file_path);
     }
 
     /**
@@ -180,7 +180,7 @@ class SystemBackup extends Model
      */
     public function canBeDeleted()
     {
-        return !in_array($this->status, ['in_progress', 'restoring']);
+        return ! in_array($this->status, ['in_progress', 'restoring']);
     }
 
     /**
@@ -220,6 +220,7 @@ class SystemBackup extends Model
             if ($this->isOld()) {
                 return 'warning';
             }
+
             return 'healthy';
         }
 
@@ -231,7 +232,7 @@ class SystemBackup extends Model
      */
     public function getDownloadUrlAttribute()
     {
-        if ($this->status !== 'completed' || !$this->file_path) {
+        if ($this->status !== 'completed' || ! $this->file_path) {
             return null;
         }
 
@@ -261,7 +262,7 @@ class SystemBackup extends Model
     public static function cleanupOld($daysToKeep = 30)
     {
         $cutoffDate = Carbon::now()->subDays($daysToKeep);
-        
+
         return self::where('created_at', '<', $cutoffDate)
             ->where('status', 'completed')
             ->delete();
@@ -283,11 +284,11 @@ class SystemBackup extends Model
      */
     public function fileExists()
     {
-        if (!$this->file_path) {
+        if (! $this->file_path) {
             return false;
         }
 
-        return file_exists(storage_path('app/' . $this->file_path));
+        return file_exists(storage_path('app/'.$this->file_path));
     }
 
     /**
@@ -295,11 +296,11 @@ class SystemBackup extends Model
      */
     public function getActualFileSize()
     {
-        if (!$this->fileExists()) {
+        if (! $this->fileExists()) {
             return null;
         }
 
-        return filesize(storage_path('app/' . $this->file_path));
+        return filesize(storage_path('app/'.$this->file_path));
     }
 
     /**
@@ -307,18 +308,18 @@ class SystemBackup extends Model
      */
     public function validateIntegrity()
     {
-        if (!$this->fileExists()) {
+        if (! $this->fileExists()) {
             return ['valid' => false, 'error' => 'File not found'];
         }
 
         $actualSize = $this->getActualFileSize();
-        
+
         if ($actualSize !== $this->file_size) {
             return ['valid' => false, 'error' => 'File size mismatch'];
         }
 
         // Additional ZIP validation could be added here
-        
+
         return ['valid' => true, 'message' => 'Backup is valid'];
     }
 }

@@ -25,7 +25,7 @@ return new class extends Migration
                 'consent_logs',
                 'data_requests',
                 'backup_files',
-                'export_files'
+                'export_files',
             ]);
             $table->integer('retention_period_days');
             $table->string('legal_basis')->nullable();

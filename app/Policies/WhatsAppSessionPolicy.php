@@ -2,9 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\WhatsAppSession;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
+use App\Models\WhatsAppSession;
 
 class WhatsAppSessionPolicy
 {
@@ -43,7 +42,7 @@ class WhatsAppSessionPolicy
         // Check if user has reached session limit
         $userSessionCount = WhatsAppSession::where('created_by', $user->id)->count();
         $maxSessions = $user->hasRole('admin') ? 10 : ($user->hasRole('manager') ? 5 : 2);
-        
+
         if ($userSessionCount >= $maxSessions) {
             return false;
         }
@@ -92,8 +91,8 @@ class WhatsAppSessionPolicy
 
         // Managers can delete sessions they created or from agents
         if ($user->hasRole('manager')) {
-            return $whatsAppSession->created_by === $user->id || 
-                   !$whatsAppSession->creator->hasRole(['admin', 'manager']);
+            return $whatsAppSession->created_by === $user->id ||
+                   ! $whatsAppSession->creator->hasRole(['admin', 'manager']);
         }
 
         // Users can only delete sessions they created
@@ -127,7 +126,7 @@ class WhatsAppSessionPolicy
         }
 
         // Must be able to view the session
-        if (!$this->view($user, $whatsAppSession)) {
+        if (! $this->view($user, $whatsAppSession)) {
             return false;
         }
 
@@ -141,7 +140,7 @@ class WhatsAppSessionPolicy
     public function stop(User $user, WhatsAppSession $whatsAppSession): bool
     {
         // Session must be active
-        if (!in_array($whatsAppSession->status, ['connecting', 'connected'])) {
+        if (! in_array($whatsAppSession->status, ['connecting', 'connected'])) {
             return false;
         }
 
@@ -180,7 +179,7 @@ class WhatsAppSessionPolicy
         }
 
         // Must be able to view the session
-        if (!$this->view($user, $whatsAppSession)) {
+        if (! $this->view($user, $whatsAppSession)) {
             return false;
         }
 
@@ -201,7 +200,7 @@ class WhatsAppSessionPolicy
     public function viewLogs(User $user, WhatsAppSession $whatsAppSession): bool
     {
         // Must be able to view session and have logs permission
-        if (!$this->view($user, $whatsAppSession)) {
+        if (! $this->view($user, $whatsAppSession)) {
             return false;
         }
 
@@ -213,7 +212,7 @@ class WhatsAppSessionPolicy
      */
     public function manageWebhooks(User $user, WhatsAppSession $whatsAppSession): bool
     {
-        return $this->update($user, $whatsAppSession) && 
+        return $this->update($user, $whatsAppSession) &&
                ($user->hasPermissionTo('manage webhooks') || $user->hasRole(['admin', 'manager']));
     }
 
@@ -222,7 +221,7 @@ class WhatsAppSessionPolicy
      */
     public function exportData(User $user, WhatsAppSession $whatsAppSession): bool
     {
-        return $this->view($user, $whatsAppSession) && 
+        return $this->view($user, $whatsAppSession) &&
                ($user->hasPermissionTo('export data') || $user->hasRole(['admin', 'manager']));
     }
 

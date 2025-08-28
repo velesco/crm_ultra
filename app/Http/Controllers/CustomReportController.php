@@ -3,12 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\CustomReport;
-use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CustomReportController extends Controller
@@ -43,7 +42,7 @@ class CustomReportController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
-                  ->orWhere('description', 'LIKE', "%{$search}%");
+                    ->orWhere('description', 'LIKE', "%{$search}%");
             });
         }
 
@@ -60,7 +59,7 @@ class CustomReportController extends Controller
         if ($request->ajax()) {
             return response()->json([
                 'html' => view('admin.custom-reports.table', compact('reports'))->render(),
-                'pagination' => $reports->links()->render()
+                'pagination' => $reports->links()->render(),
             ]);
         }
 
@@ -73,7 +72,7 @@ class CustomReportController extends Controller
     public function create()
     {
         $categories = CustomReport::getCategories();
-        $dataSources = (new CustomReport())->getAvailableDataSources();
+        $dataSources = (new CustomReport)->getAvailableDataSources();
         $operators = CustomReport::getFilterOperators();
         $chartTypes = CustomReport::getChartTypes();
 
@@ -88,7 +87,7 @@ class CustomReportController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'category' => 'required|string|in:' . implode(',', array_keys(CustomReport::getCategories())),
+            'category' => 'required|string|in:'.implode(',', array_keys(CustomReport::getCategories())),
             'data_source' => 'required|string',
             'columns' => 'required|array|min:1',
             'columns.*' => 'string',
@@ -104,6 +103,7 @@ class CustomReportController extends Controller
             if ($request->ajax()) {
                 return response()->json(['errors' => $validator->errors()], 422);
             }
+
             return back()->withErrors($validator)->withInput();
         }
 
@@ -122,14 +122,14 @@ class CustomReportController extends Controller
                 'visibility' => $request->visibility,
                 'export_format' => $request->export_format,
                 'created_by' => Auth::id(),
-                'updated_by' => Auth::id()
+                'updated_by' => Auth::id(),
             ]);
 
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Report created successfully!',
-                    'redirect' => route('admin.custom-reports.show', $report)
+                    'redirect' => route('admin.custom-reports.show', $report),
                 ]);
             }
 
@@ -138,9 +138,10 @@ class CustomReportController extends Controller
 
         } catch (\Exception $e) {
             if ($request->ajax()) {
-                return response()->json(['error' => 'Failed to create report: ' . $e->getMessage()], 500);
+                return response()->json(['error' => 'Failed to create report: '.$e->getMessage()], 500);
             }
-            return back()->withInput()->with('error', 'Failed to create report: ' . $e->getMessage());
+
+            return back()->withInput()->with('error', 'Failed to create report: '.$e->getMessage());
         }
     }
 
@@ -149,20 +150,20 @@ class CustomReportController extends Controller
      */
     public function show(CustomReport $customReport, Request $request)
     {
-        if (!$customReport->canUserAccess(Auth::id())) {
+        if (! $customReport->canUserAccess(Auth::id())) {
             abort(403, 'You do not have permission to view this report.');
         }
 
         $limit = $request->get('limit', 100);
-        
+
         try {
             $reportData = $customReport->executeReport($limit);
             $chartData = $customReport->getChartData();
-            
+
             return view('admin.custom-reports.show', compact('customReport', 'reportData', 'chartData'));
-            
+
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to execute report: ' . $e->getMessage());
+            return back()->with('error', 'Failed to execute report: '.$e->getMessage());
         }
     }
 
@@ -171,12 +172,12 @@ class CustomReportController extends Controller
      */
     public function edit(CustomReport $customReport)
     {
-        if (!$customReport->canUserAccess(Auth::id()) && Auth::user()->cannot('update', $customReport)) {
+        if (! $customReport->canUserAccess(Auth::id()) && Auth::user()->cannot('update', $customReport)) {
             abort(403, 'You do not have permission to edit this report.');
         }
 
         $categories = CustomReport::getCategories();
-        $dataSources = (new CustomReport())->getAvailableDataSources();
+        $dataSources = (new CustomReport)->getAvailableDataSources();
         $operators = CustomReport::getFilterOperators();
         $chartTypes = CustomReport::getChartTypes();
 
@@ -188,14 +189,14 @@ class CustomReportController extends Controller
      */
     public function update(Request $request, CustomReport $customReport)
     {
-        if (!$customReport->canUserAccess(Auth::id()) && Auth::user()->cannot('update', $customReport)) {
+        if (! $customReport->canUserAccess(Auth::id()) && Auth::user()->cannot('update', $customReport)) {
             abort(403, 'You do not have permission to edit this report.');
         }
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'category' => 'required|string|in:' . implode(',', array_keys(CustomReport::getCategories())),
+            'category' => 'required|string|in:'.implode(',', array_keys(CustomReport::getCategories())),
             'data_source' => 'required|string',
             'columns' => 'required|array|min:1',
             'columns.*' => 'string',
@@ -211,6 +212,7 @@ class CustomReportController extends Controller
             if ($request->ajax()) {
                 return response()->json(['errors' => $validator->errors()], 422);
             }
+
             return back()->withErrors($validator)->withInput();
         }
 
@@ -228,14 +230,14 @@ class CustomReportController extends Controller
                 'chart_config' => $request->chart_config,
                 'visibility' => $request->visibility,
                 'export_format' => $request->export_format,
-                'updated_by' => Auth::id()
+                'updated_by' => Auth::id(),
             ]);
 
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Report updated successfully!',
-                    'redirect' => route('admin.custom-reports.show', $customReport)
+                    'redirect' => route('admin.custom-reports.show', $customReport),
                 ]);
             }
 
@@ -244,9 +246,10 @@ class CustomReportController extends Controller
 
         } catch (\Exception $e) {
             if ($request->ajax()) {
-                return response()->json(['error' => 'Failed to update report: ' . $e->getMessage()], 500);
+                return response()->json(['error' => 'Failed to update report: '.$e->getMessage()], 500);
             }
-            return back()->withInput()->with('error', 'Failed to update report: ' . $e->getMessage());
+
+            return back()->withInput()->with('error', 'Failed to update report: '.$e->getMessage());
         }
     }
 
@@ -265,7 +268,7 @@ class CustomReportController extends Controller
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Report deleted successfully!'
+                    'message' => 'Report deleted successfully!',
                 ]);
             }
 
@@ -274,9 +277,10 @@ class CustomReportController extends Controller
 
         } catch (\Exception $e) {
             if ($request->ajax()) {
-                return response()->json(['error' => 'Failed to delete report: ' . $e->getMessage()], 500);
+                return response()->json(['error' => 'Failed to delete report: '.$e->getMessage()], 500);
             }
-            return back()->with('error', 'Failed to delete report: ' . $e->getMessage());
+
+            return back()->with('error', 'Failed to delete report: '.$e->getMessage());
         }
     }
 
@@ -285,13 +289,13 @@ class CustomReportController extends Controller
      */
     public function duplicate(CustomReport $customReport, Request $request)
     {
-        if (!$customReport->canUserAccess(Auth::id())) {
+        if (! $customReport->canUserAccess(Auth::id())) {
             abort(403, 'You do not have permission to duplicate this report.');
         }
 
         try {
             $duplicate = $customReport->replicate();
-            $duplicate->name = $customReport->name . ' (Copy)';
+            $duplicate->name = $customReport->name.' (Copy)';
             $duplicate->visibility = 'private';
             $duplicate->created_by = Auth::id();
             $duplicate->updated_by = Auth::id();
@@ -303,7 +307,7 @@ class CustomReportController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Report duplicated successfully!',
-                    'redirect' => route('admin.custom-reports.edit', $duplicate)
+                    'redirect' => route('admin.custom-reports.edit', $duplicate),
                 ]);
             }
 
@@ -312,9 +316,10 @@ class CustomReportController extends Controller
 
         } catch (\Exception $e) {
             if ($request->ajax()) {
-                return response()->json(['error' => 'Failed to duplicate report: ' . $e->getMessage()], 500);
+                return response()->json(['error' => 'Failed to duplicate report: '.$e->getMessage()], 500);
             }
-            return back()->with('error', 'Failed to duplicate report: ' . $e->getMessage());
+
+            return back()->with('error', 'Failed to duplicate report: '.$e->getMessage());
         }
     }
 
@@ -323,23 +328,23 @@ class CustomReportController extends Controller
      */
     public function execute(CustomReport $customReport, Request $request): JsonResponse
     {
-        if (!$customReport->canUserAccess(Auth::id())) {
+        if (! $customReport->canUserAccess(Auth::id())) {
             return response()->json(['error' => 'Access denied'], 403);
         }
 
         try {
             $limit = $request->get('limit', 100);
             $reportData = $customReport->executeReport($limit);
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $reportData['data'],
-                'metadata' => $reportData['metadata']
+                'metadata' => $reportData['metadata'],
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Failed to execute report: ' . $e->getMessage()
+                'error' => 'Failed to execute report: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -349,22 +354,22 @@ class CustomReportController extends Controller
      */
     public function chartData(CustomReport $customReport): JsonResponse
     {
-        if (!$customReport->canUserAccess(Auth::id())) {
+        if (! $customReport->canUserAccess(Auth::id())) {
             return response()->json(['error' => 'Access denied'], 403);
         }
 
         try {
             $chartData = $customReport->getChartData();
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $chartData,
-                'config' => $customReport->chart_config
+                'config' => $customReport->chart_config,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Failed to generate chart data: ' . $e->getMessage()
+                'error' => 'Failed to generate chart data: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -374,31 +379,31 @@ class CustomReportController extends Controller
      */
     public function export(CustomReport $customReport, Request $request): StreamedResponse
     {
-        if (!$customReport->canUserAccess(Auth::id())) {
+        if (! $customReport->canUserAccess(Auth::id())) {
             abort(403, 'Access denied');
         }
 
         $format = $request->get('format', 'csv');
-        
+
         return response()->streamDownload(function () use ($customReport, $format) {
             $reportData = $customReport->executeReport();
-            
+
             if ($format === 'csv') {
                 $output = fopen('php://output', 'w');
-                
-                if (!empty($reportData['data'])) {
+
+                if (! empty($reportData['data'])) {
                     // Write headers
                     fputcsv($output, array_keys($reportData['data'][0]));
-                    
+
                     // Write data
                     foreach ($reportData['data'] as $row) {
                         fputcsv($output, $row);
                     }
                 }
-                
+
                 fclose($output);
             }
-        }, $customReport->name . '_export_' . date('Y-m-d_H-i-s') . '.' . $format, [
+        }, $customReport->name.'_export_'.date('Y-m-d_H-i-s').'.'.$format, [
             'Content-Type' => $format === 'csv' ? 'text/csv' : 'application/json',
         ]);
     }
@@ -409,17 +414,17 @@ class CustomReportController extends Controller
     public function getColumns(Request $request): JsonResponse
     {
         $dataSource = $request->get('data_source');
-        
-        if (!$dataSource) {
+
+        if (! $dataSource) {
             return response()->json(['error' => 'Data source is required'], 400);
         }
 
         $report = new CustomReport(['data_source' => $dataSource]);
         $columns = $report->getColumnOptions();
-        
+
         return response()->json([
             'success' => true,
-            'columns' => $columns
+            'columns' => $columns,
         ]);
     }
 
@@ -431,16 +436,16 @@ class CustomReportController extends Controller
         try {
             $tempReport = new CustomReport($request->all());
             $reportData = $tempReport->executeReport(10); // Limit to 10 rows for preview
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $reportData['data'],
-                'metadata' => $reportData['metadata']
+                'metadata' => $reportData['metadata'],
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Preview failed: ' . $e->getMessage()
+                'error' => 'Preview failed: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -452,7 +457,7 @@ class CustomReportController extends Controller
     {
         $action = $request->get('action');
         $reportIds = $request->get('report_ids', []);
-        
+
         if (empty($reportIds)) {
             return response()->json(['error' => 'No reports selected'], 400);
         }
@@ -463,7 +468,7 @@ class CustomReportController extends Controller
                 ->get();
 
             $count = 0;
-            
+
             switch ($action) {
                 case 'delete':
                     foreach ($reports as $report) {
@@ -473,7 +478,7 @@ class CustomReportController extends Controller
                         }
                     }
                     break;
-                    
+
                 case 'activate':
                     $reports->each(function ($report) use (&$count) {
                         if (Auth::user()->can('update', $report)) {
@@ -482,7 +487,7 @@ class CustomReportController extends Controller
                         }
                     });
                     break;
-                    
+
                 case 'deactivate':
                     $reports->each(function ($report) use (&$count) {
                         if (Auth::user()->can('update', $report)) {
@@ -491,7 +496,7 @@ class CustomReportController extends Controller
                         }
                     });
                     break;
-                    
+
                 case 'make_private':
                     $reports->each(function ($report) use (&$count) {
                         if (Auth::user()->can('update', $report)) {
@@ -500,7 +505,7 @@ class CustomReportController extends Controller
                         }
                     });
                     break;
-                    
+
                 case 'make_shared':
                     $reports->each(function ($report) use (&$count) {
                         if (Auth::user()->can('update', $report)) {
@@ -513,12 +518,12 @@ class CustomReportController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "Action completed on {$count} report(s)."
+                'message' => "Action completed on {$count} report(s).",
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Bulk action failed: ' . $e->getMessage()
+                'error' => 'Bulk action failed: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -529,7 +534,7 @@ class CustomReportController extends Controller
     private function getReportStatistics(): array
     {
         $userId = Auth::id();
-        
+
         return [
             'total_reports' => CustomReport::accessibleBy($userId)->count(),
             'my_reports' => CustomReport::where('created_by', $userId)->count(),
@@ -544,7 +549,7 @@ class CustomReportController extends Controller
                 ->select('data_source', DB::raw('count(*) as count'))
                 ->groupBy('data_source')
                 ->pluck('count', 'data_source')
-                ->toArray()
+                ->toArray(),
         ];
     }
 }

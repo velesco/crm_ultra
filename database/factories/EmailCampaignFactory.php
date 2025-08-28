@@ -2,10 +2,10 @@
 
 namespace Database\Factories;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
-use App\Models\User;
 use App\Models\EmailTemplate;
 use App\Models\SmtpConfig;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\EmailCampaign>
@@ -23,7 +23,7 @@ class EmailCampaignFactory extends Factory
             'Welcome New Users', 'Monthly Newsletter', 'Product Launch Announcement',
             'Holiday Special Offer', 'Webinar Invitation', 'Customer Feedback Survey',
             'Industry Report Release', 'Feature Update Notification', 'Re-engagement Campaign',
-            'Black Friday Deals', 'Year End Review', 'New Partnership Announcement'
+            'Black Friday Deals', 'Year End Review', 'New Partnership Announcement',
         ];
 
         $subjects = [
@@ -36,15 +36,15 @@ class EmailCampaignFactory extends Factory
             '🚀 Something amazing is coming your way',
             'Last chance to grab this deal',
             'We\'d love your feedback, {{first_name}}',
-            'Breaking: Industry insights you need to know'
+            'Breaking: Industry insights you need to know',
         ];
 
         $status = fake()->randomElement(['draft', 'scheduled', 'sending', 'sent', 'paused', 'cancelled', 'failed']);
-        
+
         $totalRecipients = fake()->numberBetween(10, 1000);
-        $sentCount = $status === 'sent' ? $totalRecipients : 
+        $sentCount = $status === 'sent' ? $totalRecipients :
                     ($status === 'sending' ? fake()->numberBetween(1, $totalRecipients) : 0);
-        
+
         $deliveredCount = $sentCount > 0 ? fake()->numberBetween(0, $sentCount) : 0;
         $openedCount = $deliveredCount > 0 ? fake()->numberBetween(0, $deliveredCount) : 0;
         $clickedCount = $openedCount > 0 ? fake()->numberBetween(0, $openedCount) : 0;
@@ -206,12 +206,12 @@ class EmailCampaignFactory extends Factory
     public function newsletter(): static
     {
         return $this->state(fn (array $attributes) => [
-            'name' => 'Monthly Newsletter - ' . fake()->monthName() . ' ' . fake()->year(),
+            'name' => 'Monthly Newsletter - '.fake()->monthName().' '.fake()->year(),
             'subject' => fake()->randomElement([
                 'Your monthly update from {{company}}',
                 '{{company}} Newsletter - {{current_date}}',
                 'What\'s new this month, {{first_name}}?',
-                'Monthly insights and updates'
+                'Monthly insights and updates',
             ]),
             'settings' => array_merge($attributes['settings'] ?? [], [
                 'track_opens' => true,
@@ -233,13 +233,13 @@ class EmailCampaignFactory extends Factory
                 'Black Friday Deals',
                 'Holiday Special Offer',
                 'Flash Sale Alert',
-                'Exclusive Discount'
+                'Exclusive Discount',
             ]),
             'subject' => fake()->randomElement([
                 '🔥 Limited time offer - 50% off!',
                 'Don\'t miss out, {{first_name}} - Sale ends soon!',
                 'Exclusive deal just for you',
-                'Last chance - Save big today!'
+                'Last chance - Save big today!',
             ]),
             'settings' => array_merge($attributes['settings'] ?? [], [
                 'track_opens' => true,
@@ -285,7 +285,7 @@ class EmailCampaignFactory extends Factory
 
     protected function getWelcomeContent(): string
     {
-        return <<<HTML
+        return <<<'HTML'
 <h1>Welcome to {{company}}, {{first_name}}!</h1>
 <p>We're thrilled to have you join our community of innovative professionals.</p>
 <p>Here's what you can expect:</p>
@@ -302,7 +302,7 @@ HTML;
 
     protected function getNewsletterContent(): string
     {
-        return <<<HTML
+        return <<<'HTML'
 <h1>{{company}} Newsletter</h1>
 <h2>Hi {{first_name}},</h2>
 <p>Here's what's happening this month:</p>
@@ -322,7 +322,7 @@ HTML;
 
     protected function getPromotionalContent(): string
     {
-        return <<<HTML
+        return <<<'HTML'
 <h1>🔥 Special Offer Just for You!</h1>
 <h2>Hi {{first_name}},</h2>
 <p>We have an exclusive deal that you won't want to miss!</p>
@@ -342,7 +342,7 @@ HTML;
 
     protected function getAnnouncementContent(): string
     {
-        return <<<HTML
+        return <<<'HTML'
 <h1>Exciting News from {{company}}!</h1>
 <h2>Hello {{first_name}},</h2>
 <p>We're excited to share some important updates with you.</p>

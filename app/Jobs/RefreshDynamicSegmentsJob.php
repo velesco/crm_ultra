@@ -2,16 +2,16 @@
 
 namespace App\Jobs;
 
-use App\Models\ContactSegment;
 use App\Models\Contact;
+use App\Models\ContactSegment;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
-use Exception;
+use Illuminate\Support\Facades\Log;
 
 class RefreshDynamicSegmentsJob implements ShouldQueue
 {
@@ -35,7 +35,7 @@ class RefreshDynamicSegmentsJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct(ContactSegment $segment = null)
+    public function __construct(?ContactSegment $segment = null)
     {
         $this->segment = $segment;
         $this->onQueue('segments');
@@ -47,7 +47,7 @@ class RefreshDynamicSegmentsJob implements ShouldQueue
     public function handle(): void
     {
         try {
-            Log::info("Starting dynamic segments refresh job");
+            Log::info('Starting dynamic segments refresh job');
 
             if ($this->segment) {
                 // Refresh specific segment
@@ -65,7 +65,7 @@ class RefreshDynamicSegmentsJob implements ShouldQueue
                         $this->refreshSegment($segment);
                         $refreshed++;
                     } catch (Exception $e) {
-                        Log::error("Failed to refresh segment {$segment->id}: " . $e->getMessage());
+                        Log::error("Failed to refresh segment {$segment->id}: ".$e->getMessage());
                     }
                 }
 
@@ -73,7 +73,7 @@ class RefreshDynamicSegmentsJob implements ShouldQueue
             }
 
         } catch (Exception $e) {
-            Log::error("RefreshDynamicSegmentsJob failed: " . $e->getMessage());
+            Log::error('RefreshDynamicSegmentsJob failed: '.$e->getMessage());
             throw $e;
         }
     }
@@ -85,11 +85,13 @@ class RefreshDynamicSegmentsJob implements ShouldQueue
     {
         if ($segment->type !== 'dynamic') {
             Log::info("Segment {$segment->id} is not dynamic, skipping");
+
             return;
         }
 
-        if (!$segment->conditions) {
+        if (! $segment->conditions) {
             Log::warning("Segment {$segment->id} has no conditions defined");
+
             return;
         }
 
@@ -109,13 +111,13 @@ class RefreshDynamicSegmentsJob implements ShouldQueue
 
             DB::transaction(function () use ($segment, $contactsToAdd, $contactsToRemove) {
                 // Remove contacts that no longer match
-                if (!empty($contactsToRemove)) {
+                if (! empty($contactsToRemove)) {
                     $segment->contacts()->detach($contactsToRemove);
-                    Log::debug("Removed " . count($contactsToRemove) . " contacts from segment {$segment->id}");
+                    Log::debug('Removed '.count($contactsToRemove)." contacts from segment {$segment->id}");
                 }
 
                 // Add new contacts that match
-                if (!empty($contactsToAdd)) {
+                if (! empty($contactsToAdd)) {
                     $attachData = [];
                     foreach ($contactsToAdd as $contactId) {
                         $attachData[$contactId] = [
@@ -124,7 +126,7 @@ class RefreshDynamicSegmentsJob implements ShouldQueue
                         ];
                     }
                     $segment->contacts()->attach($attachData);
-                    Log::debug("Added " . count($contactsToAdd) . " contacts to segment {$segment->id}");
+                    Log::debug('Added '.count($contactsToAdd)." contacts to segment {$segment->id}");
                 }
 
                 // Update segment statistics
@@ -135,11 +137,11 @@ class RefreshDynamicSegmentsJob implements ShouldQueue
                 ]);
             });
 
-            Log::info("Segment {$segment->id} refreshed: {$segment->contact_count} total contacts, " . 
-                     "added " . count($contactsToAdd) . ", removed " . count($contactsToRemove));
+            Log::info("Segment {$segment->id} refreshed: {$segment->contact_count} total contacts, ".
+                     'added '.count($contactsToAdd).', removed '.count($contactsToRemove));
 
         } catch (Exception $e) {
-            Log::error("Error refreshing segment {$segment->id}: " . $e->getMessage());
+            Log::error("Error refreshing segment {$segment->id}: ".$e->getMessage());
             throw $e;
         }
     }
@@ -178,7 +180,7 @@ class RefreshDynamicSegmentsJob implements ShouldQueue
             // If this rule has nested rules, handle as group
             if (isset($rule['rules'])) {
                 $groupLogic = $rule['logic'] ?? 'and';
-                
+
                 if ($index === 0) {
                     $query->where(function ($subQuery) use ($rule, $groupLogic) {
                         $this->applyConditionGroup($subQuery, $rule['rules'], $groupLogic);
@@ -265,7 +267,7 @@ class RefreshDynamicSegmentsJob implements ShouldQueue
                 break;
 
             case 'is_not_null':
-                $whereMethod = $logic === 'and' && $isFirst ? 'whereNotNull' : 
+                $whereMethod = $logic === 'and' && $isFirst ? 'whereNotNull' :
                              ($logic === 'or' ? 'orWhereNotNull' : 'whereNotNull');
                 $query->{$whereMethod}($field);
                 break;
@@ -273,7 +275,7 @@ class RefreshDynamicSegmentsJob implements ShouldQueue
             case 'in':
                 $values = is_array($value) ? $value : explode(',', $value);
                 $values = array_map('trim', $values);
-                $whereMethod = $logic === 'and' && $isFirst ? 'whereIn' : 
+                $whereMethod = $logic === 'and' && $isFirst ? 'whereIn' :
                              ($logic === 'or' ? 'orWhereIn' : 'whereIn');
                 $query->{$whereMethod}($field, $values);
                 break;
@@ -281,14 +283,14 @@ class RefreshDynamicSegmentsJob implements ShouldQueue
             case 'not_in':
                 $values = is_array($value) ? $value : explode(',', $value);
                 $values = array_map('trim', $values);
-                $whereMethod = $logic === 'and' && $isFirst ? 'whereNotIn' : 
+                $whereMethod = $logic === 'and' && $isFirst ? 'whereNotIn' :
                              ($logic === 'or' ? 'orWhereNotIn' : 'whereNotIn');
                 $query->{$whereMethod}($field, $values);
                 break;
 
             case 'between':
                 if (is_array($value) && count($value) >= 2) {
-                    $whereMethod = $logic === 'and' && $isFirst ? 'whereBetween' : 
+                    $whereMethod = $logic === 'and' && $isFirst ? 'whereBetween' :
                                  ($logic === 'or' ? 'orWhereBetween' : 'whereBetween');
                     $query->{$whereMethod}($field, [$value[0], $value[1]]);
                 }
@@ -296,7 +298,7 @@ class RefreshDynamicSegmentsJob implements ShouldQueue
 
             case 'not_between':
                 if (is_array($value) && count($value) >= 2) {
-                    $whereMethod = $logic === 'and' && $isFirst ? 'whereNotBetween' : 
+                    $whereMethod = $logic === 'and' && $isFirst ? 'whereNotBetween' :
                                  ($logic === 'or' ? 'orWhereNotBetween' : 'whereNotBetween');
                     $query->{$whereMethod}($field, [$value[0], $value[1]]);
                 }
@@ -315,13 +317,13 @@ class RefreshDynamicSegmentsJob implements ShouldQueue
                 break;
 
             case 'days_ago':
-                $daysAgo = (int)$value;
+                $daysAgo = (int) $value;
                 $targetDate = now()->subDays($daysAgo)->format('Y-m-d');
                 $query->{$whereMethod}(DB::raw("DATE({$field})"), '=', $targetDate);
                 break;
 
             case 'last_n_days':
-                $days = (int)$value;
+                $days = (int) $value;
                 $startDate = now()->subDays($days)->format('Y-m-d');
                 $query->{$whereMethod}(DB::raw("DATE({$field})"), '>=', $startDate);
                 break;
@@ -337,14 +339,14 @@ class RefreshDynamicSegmentsJob implements ShouldQueue
             case 'custom_field_equals':
                 if (isset($condition['custom_field'])) {
                     $customField = $condition['custom_field'];
-                    $query->{$whereMethod}('custom_fields->' . $customField, '=', $value);
+                    $query->{$whereMethod}('custom_fields->'.$customField, '=', $value);
                 }
                 break;
 
             case 'custom_field_contains':
                 if (isset($condition['custom_field'])) {
                     $customField = $condition['custom_field'];
-                    $query->{$whereMethod}('custom_fields->' . $customField, 'LIKE', "%{$value}%");
+                    $query->{$whereMethod}('custom_fields->'.$customField, 'LIKE', "%{$value}%");
                 }
                 break;
 
@@ -373,7 +375,7 @@ class RefreshDynamicSegmentsJob implements ShouldQueue
      */
     public function failed(Exception $exception): void
     {
-        Log::error("RefreshDynamicSegmentsJob permanently failed: " . $exception->getMessage());
+        Log::error('RefreshDynamicSegmentsJob permanently failed: '.$exception->getMessage());
 
         if ($this->segment) {
             Log::error("Failed segment ID: {$this->segment->id}");

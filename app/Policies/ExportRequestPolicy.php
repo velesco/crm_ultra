@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\ExportRequest;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class ExportRequestPolicy
 {
@@ -103,8 +102,8 @@ class ExportRequestPolicy
     public function download(User $user, ExportRequest $exportRequest): bool
     {
         // Must be able to view the export and export must be completed
-        return $this->view($user, $exportRequest) && 
-               $exportRequest->status === 'completed' && 
+        return $this->view($user, $exportRequest) &&
+               $exportRequest->status === 'completed' &&
                $exportRequest->file_path;
     }
 
@@ -114,7 +113,7 @@ class ExportRequestPolicy
     public function process(User $user, ExportRequest $exportRequest): bool
     {
         // Must be able to update and export must be pending
-        return $this->update($user, $exportRequest) && 
+        return $this->update($user, $exportRequest) &&
                $exportRequest->status === 'pending';
     }
 
@@ -124,7 +123,7 @@ class ExportRequestPolicy
     public function cancel(User $user, ExportRequest $exportRequest): bool
     {
         // Must be able to update and export must be cancellable
-        return $this->update($user, $exportRequest) && 
+        return $this->update($user, $exportRequest) &&
                in_array($exportRequest->status, ['pending', 'processing']);
     }
 
@@ -184,11 +183,11 @@ class ExportRequestPolicy
     public function exportSensitiveData(User $user, string $dataType): bool
     {
         $sensitiveDataTypes = ['revenue', 'system_logs', 'custom'];
-        
-        if (!in_array($dataType, $sensitiveDataTypes)) {
+
+        if (! in_array($dataType, $sensitiveDataTypes)) {
             return true;
         }
-        
+
         // Only admin roles can export sensitive data
         return $user->hasAnyRole(['super_admin', 'admin']);
     }

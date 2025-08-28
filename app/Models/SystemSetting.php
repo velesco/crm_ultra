@@ -44,8 +44,8 @@ class SystemSetting extends Model
             // Auto-set updated_by
             if (auth()->check()) {
                 $setting->updated_by = auth()->id();
-                
-                if (!$setting->exists) {
+
+                if (! $setting->exists) {
                     $setting->created_by = auth()->id();
                 }
             }
@@ -140,6 +140,7 @@ class SystemSetting extends Model
     public static function get($key, $default = null)
     {
         $settings = self::getAllCached();
+
         return $settings[$key] ?? $default;
     }
 
@@ -148,13 +149,14 @@ class SystemSetting extends Model
         $setting = self::firstOrNew(['key' => $key]);
         $setting->value = $value;
         $setting->type = $type;
-        
-        if (!$setting->exists) {
+
+        if (! $setting->exists) {
             $setting->group = 'general';
             $setting->label = ucfirst(str_replace(['_', '-'], ' ', $key));
         }
-        
+
         $setting->save();
+
         return $setting;
     }
 
@@ -175,7 +177,7 @@ class SystemSetting extends Model
     public static function clearSettingsCache()
     {
         Cache::forget('system_settings');
-        
+
         // Clear group caches
         $groups = self::distinct('group')->pluck('group');
         foreach ($groups as $group) {
@@ -202,6 +204,7 @@ class SystemSetting extends Model
     {
         // Add any business logic for non-editable settings
         $readOnlyKeys = ['app_version', 'installation_id', 'license_key'];
-        return !in_array($this->key, $readOnlyKeys);
+
+        return ! in_array($this->key, $readOnlyKeys);
     }
 }

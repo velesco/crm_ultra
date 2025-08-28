@@ -15,7 +15,7 @@ class ContactSegment extends Model
         'conditions',
         'is_dynamic',
         'color',
-        'created_by'
+        'created_by',
     ];
 
     protected $casts = [
@@ -50,13 +50,13 @@ class ContactSegment extends Model
     // Methods
     public function refreshDynamicContacts()
     {
-        if (!$this->is_dynamic) {
+        if (! $this->is_dynamic) {
             return;
         }
 
         // Build query based on conditions
         $query = Contact::query();
-        
+
         foreach ($this->conditions as $condition) {
             $field = $condition['field'];
             $operator = $condition['operator'];

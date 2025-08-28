@@ -2,12 +2,12 @@
 
 namespace App\Listeners;
 
-use App\Events\WhatsAppMessageReceived;
-use App\Events\EmailOpened;
-use App\Events\EmailClicked;
-use App\Events\SmsDelivered;
 use App\Events\ContactCreated;
 use App\Events\ContactUpdated;
+use App\Events\EmailClicked;
+use App\Events\EmailOpened;
+use App\Events\SmsDelivered;
+use App\Events\WhatsAppMessageReceived;
 use App\Models\Contact;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
@@ -25,7 +25,7 @@ class LogCommunication implements ShouldQueue
     {
         try {
             $communicationData = $this->prepareCommunicationData($event);
-            
+
             if (empty($communicationData)) {
                 return;
             }
@@ -83,7 +83,7 @@ class LogCommunication implements ShouldQueue
                 'type' => 'email',
                 'direction' => 'tracking',
                 'channel' => 'email',
-                'content' => 'Email opened: ' . $event->emailLog->subject,
+                'content' => 'Email opened: '.$event->emailLog->subject,
                 'email' => $event->contact->email,
                 'subject' => $event->emailLog->subject,
                 'external_id' => $event->emailLog->id,
@@ -102,7 +102,7 @@ class LogCommunication implements ShouldQueue
                 'type' => 'email',
                 'direction' => 'tracking',
                 'channel' => 'email',
-                'content' => 'Email link clicked: ' . $event->clickedUrl,
+                'content' => 'Email link clicked: '.$event->clickedUrl,
                 'email' => $event->contact->email,
                 'subject' => $event->emailLog->subject,
                 'external_id' => $event->emailLog->id,
@@ -180,7 +180,7 @@ class LogCommunication implements ShouldQueue
         try {
             // Update daily communication stats
             $today = now()->format('Y-m-d');
-            $statType = $communicationData['type'] . '_' . $communicationData['direction'];
+            $statType = $communicationData['type'].'_'.$communicationData['direction'];
 
             DB::table('communication_stats')
                 ->updateOrInsert(

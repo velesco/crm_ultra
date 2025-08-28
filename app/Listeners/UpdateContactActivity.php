@@ -2,10 +2,10 @@
 
 namespace App\Listeners;
 
-use App\Events\WhatsAppMessageReceived;
-use App\Events\EmailOpened;
 use App\Events\EmailClicked;
+use App\Events\EmailOpened;
 use App\Events\SmsDelivered;
+use App\Events\WhatsAppMessageReceived;
 use App\Models\Contact;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
@@ -23,8 +23,8 @@ class UpdateContactActivity implements ShouldQueue
     {
         try {
             $contact = $this->getContactFromEvent($event);
-            
-            if (!$contact) {
+
+            if (! $contact) {
                 return;
             }
 
@@ -144,7 +144,7 @@ class UpdateContactActivity implements ShouldQueue
     private function calculateEngagementScore(Contact $contact, string $activityType): int
     {
         $currentScore = $contact->engagement_score ?? 0;
-        
+
         $scoreIncrements = [
             'whatsapp_received' => 10,
             'email_opened' => 5,
@@ -153,7 +153,7 @@ class UpdateContactActivity implements ShouldQueue
         ];
 
         $increment = $scoreIncrements[$activityType] ?? 0;
-        
+
         // Cap the engagement score at 100
         return min(100, $currentScore + $increment);
     }
@@ -180,7 +180,7 @@ class UpdateContactActivity implements ShouldQueue
         $statsColumn = match ($activityType) {
             'whatsapp_received' => 'whatsapp_messages_received',
             'email_opened' => 'emails_opened',
-            'email_clicked' => 'emails_clicked', 
+            'email_clicked' => 'emails_clicked',
             'sms_delivered' => 'sms_messages_received',
             default => null,
         };

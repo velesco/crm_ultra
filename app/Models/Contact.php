@@ -27,7 +27,7 @@ class Contact extends Model
         'status',
         'source',
         'created_by',
-        'assigned_to'
+        'assigned_to',
     ];
 
     protected $casts = [
@@ -78,7 +78,7 @@ class Contact extends Model
     // Accessors
     public function getFullNameAttribute()
     {
-        return trim($this->first_name . ' ' . $this->last_name);
+        return trim($this->first_name.' '.$this->last_name);
     }
 
     public function getLastActivityAtAttribute()
@@ -90,7 +90,7 @@ class Contact extends Model
     public function addTag($tag)
     {
         $tags = $this->tags ?? [];
-        if (!in_array($tag, $tags)) {
+        if (! in_array($tag, $tags)) {
             $tags[] = $tag;
             $this->tags = $tags;
             $this->save();
@@ -100,7 +100,7 @@ class Contact extends Model
     public function removeTag($tag)
     {
         $tags = $this->tags ?? [];
-        $this->tags = array_values(array_filter($tags, fn($t) => $t !== $tag));
+        $this->tags = array_values(array_filter($tags, fn ($t) => $t !== $tag));
         $this->save();
     }
 }

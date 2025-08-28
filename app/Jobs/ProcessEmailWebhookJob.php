@@ -2,16 +2,16 @@
 
 namespace App\Jobs;
 
-use App\Models\EmailLog;
 use App\Models\Contact;
 use App\Models\EmailCampaign;
+use App\Models\EmailLog;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 class ProcessEmailWebhookJob implements ShouldQueue
 {
@@ -54,7 +54,7 @@ class ProcessEmailWebhookJob implements ShouldQueue
     {
         try {
             Log::info("Processing email webhook from {$this->provider}", [
-                'payload_size' => count($this->payload)
+                'payload_size' => count($this->payload),
             ]);
 
             switch ($this->provider) {
@@ -80,9 +80,9 @@ class ProcessEmailWebhookJob implements ShouldQueue
             }
 
         } catch (Exception $e) {
-            Log::error("ProcessEmailWebhookJob failed: " . $e->getMessage(), [
+            Log::error('ProcessEmailWebhookJob failed: '.$e->getMessage(), [
                 'provider' => $this->provider,
-                'payload_keys' => array_keys($this->payload)
+                'payload_keys' => array_keys($this->payload),
             ]);
             throw $e;
         }
@@ -111,8 +111,9 @@ class ProcessEmailWebhookJob implements ShouldQueue
         $timestamp = $event['timestamp'] ?? time();
         $messageId = $event['sg_message_id'] ?? $event['smtp-id'] ?? null;
 
-        if (!$eventType || !$email) {
-            Log::warning("Invalid SendGrid event - missing event type or email");
+        if (! $eventType || ! $email) {
+            Log::warning('Invalid SendGrid event - missing event type or email');
+
             return;
         }
 
@@ -123,8 +124,9 @@ class ProcessEmailWebhookJob implements ShouldQueue
         // Find email log entry
         $emailLog = $this->findEmailLog($messageId, $email, $campaignId, $contactId);
 
-        if (!$emailLog) {
+        if (! $emailLog) {
             Log::debug("Email log not found for SendGrid event: {$eventType} - {$email}");
+
             return;
         }
 
@@ -183,8 +185,9 @@ class ProcessEmailWebhookJob implements ShouldQueue
         $timestamp = $eventData['timestamp'] ?? time();
         $messageId = $eventData['message']['headers']['message-id'] ?? null;
 
-        if (!$eventType || !$recipient) {
-            Log::warning("Invalid Mailgun event - missing event type or recipient");
+        if (! $eventType || ! $recipient) {
+            Log::warning('Invalid Mailgun event - missing event type or recipient');
+
             return;
         }
 
@@ -195,8 +198,9 @@ class ProcessEmailWebhookJob implements ShouldQueue
         // Find email log entry
         $emailLog = $this->findEmailLog($messageId, $recipient, $campaignId, $contactId);
 
-        if (!$emailLog) {
+        if (! $emailLog) {
             Log::debug("Email log not found for Mailgun event: {$eventType} - {$recipient}");
+
             return;
         }
 
@@ -243,8 +247,9 @@ class ProcessEmailWebhookJob implements ShouldQueue
         $mail = $message['mail'] ?? [];
         $timestamp = strtotime($mail['timestamp'] ?? 'now');
 
-        if (!$eventType) {
-            Log::warning("Invalid SES event - missing event type");
+        if (! $eventType) {
+            Log::warning('Invalid SES event - missing event type');
+
             return;
         }
 
@@ -254,7 +259,7 @@ class ProcessEmailWebhookJob implements ShouldQueue
         foreach ($recipients as $recipient) {
             $emailLog = $this->findEmailLog($messageId, $recipient);
 
-            if (!$emailLog) {
+            if (! $emailLog) {
                 continue;
             }
 
@@ -295,14 +300,15 @@ class ProcessEmailWebhookJob implements ShouldQueue
         $email = $this->payload['Email'] ?? null;
         $messageId = $this->payload['MessageID'] ?? null;
 
-        if (!$recordType || !$email) {
-            Log::warning("Invalid Postmark event - missing record type or email");
+        if (! $recordType || ! $email) {
+            Log::warning('Invalid Postmark event - missing record type or email');
+
             return;
         }
 
         $emailLog = $this->findEmailLog($messageId, $email);
 
-        if (!$emailLog) {
+        if (! $emailLog) {
             return;
         }
 
@@ -343,7 +349,9 @@ class ProcessEmailWebhookJob implements ShouldQueue
         // Try to find by message ID first
         if ($messageId) {
             $log = $query->where('message_id', $messageId)->first();
-            if ($log) return $log;
+            if ($log) {
+                return $log;
+            }
         }
 
         // Try to find by email and campaign
@@ -351,7 +359,9 @@ class ProcessEmailWebhookJob implements ShouldQueue
             $log = EmailLog::where('campaign_id', $campaignId)
                 ->where('email', $email)
                 ->first();
-            if ($log) return $log;
+            if ($log) {
+                return $log;
+            }
         }
 
         // Try to find by email and contact
@@ -359,7 +369,9 @@ class ProcessEmailWebhookJob implements ShouldQueue
             $log = EmailLog::where('contact_id', $contactId)
                 ->where('email', $email)
                 ->first();
-            if ($log) return $log;
+            if ($log) {
+                return $log;
+            }
         }
 
         // Last resort - find by email and recent timestamp
@@ -375,13 +387,13 @@ class ProcessEmailWebhookJob implements ShouldQueue
     protected function recordEmailOpen(EmailLog $emailLog, array $eventData, int $timestamp): void
     {
         $emailLog->increment('opens');
-        
-        if (!$emailLog->opened_at) {
+
+        if (! $emailLog->opened_at) {
             $emailLog->update([
                 'status' => 'opened',
                 'opened_at' => date('Y-m-d H:i:s', $timestamp),
             ]);
-            
+
             $this->updateCampaignStats($emailLog->campaign_id, 'opened');
             $this->updateContactEngagement($emailLog->contact_id, 'email_opened');
         }
@@ -394,7 +406,7 @@ class ProcessEmailWebhookJob implements ShouldQueue
                 'user_agent' => $eventData['useragent'] ?? $eventData['user-agent'] ?? null,
                 'ip' => $eventData['ip'] ?? null,
                 'location' => $eventData['geo'] ?? null,
-            ]])
+            ]]),
         ]);
 
         Log::debug("Recorded email open for {$emailLog->email}");
@@ -406,13 +418,13 @@ class ProcessEmailWebhookJob implements ShouldQueue
     protected function recordEmailClick(EmailLog $emailLog, array $eventData, int $timestamp): void
     {
         $emailLog->increment('clicks');
-        
-        if (!$emailLog->clicked_at) {
+
+        if (! $emailLog->clicked_at) {
             $emailLog->update([
                 'status' => 'clicked',
                 'clicked_at' => date('Y-m-d H:i:s', $timestamp),
             ]);
-            
+
             $this->updateCampaignStats($emailLog->campaign_id, 'clicked');
             $this->updateContactEngagement($emailLog->contact_id, 'email_clicked');
         }
@@ -426,7 +438,7 @@ class ProcessEmailWebhookJob implements ShouldQueue
                 'url' => $url,
                 'user_agent' => $eventData['useragent'] ?? $eventData['user-agent'] ?? null,
                 'ip' => $eventData['ip'] ?? null,
-            ]])
+            ]]),
         ]);
 
         Log::debug("Recorded email click for {$emailLog->email} on URL: {$url}");
@@ -438,9 +450,9 @@ class ProcessEmailWebhookJob implements ShouldQueue
     protected function recordEmailBounce(EmailLog $emailLog, array $eventData, int $timestamp): void
     {
         $bounceType = $eventData['bounce']['bounceType'] ?? $eventData['Type'] ?? 'hard';
-        $reason = $eventData['bounce']['bouncedRecipients'][0]['diagnosticCode'] ?? 
-                 $eventData['reason'] ?? 
-                 $eventData['Description'] ?? 
+        $reason = $eventData['bounce']['bouncedRecipients'][0]['diagnosticCode'] ??
+                 $eventData['reason'] ??
+                 $eventData['Description'] ??
                  'Email bounced';
 
         $emailLog->update([
@@ -514,10 +526,14 @@ class ProcessEmailWebhookJob implements ShouldQueue
      */
     protected function updateCampaignStats(?int $campaignId, string $eventType): void
     {
-        if (!$campaignId) return;
+        if (! $campaignId) {
+            return;
+        }
 
         $campaign = EmailCampaign::find($campaignId);
-        if (!$campaign) return;
+        if (! $campaign) {
+            return;
+        }
 
         switch ($eventType) {
             case 'delivered':
@@ -549,10 +565,14 @@ class ProcessEmailWebhookJob implements ShouldQueue
      */
     protected function updateContactEngagement(?int $contactId, string $action): void
     {
-        if (!$contactId) return;
+        if (! $contactId) {
+            return;
+        }
 
         $contact = Contact::find($contactId);
-        if (!$contact) return;
+        if (! $contact) {
+            return;
+        }
 
         $engagementScore = $contact->engagement_score ?? 0;
 
@@ -576,9 +596,9 @@ class ProcessEmailWebhookJob implements ShouldQueue
      */
     public function failed(Exception $exception): void
     {
-        Log::error("ProcessEmailWebhookJob permanently failed: " . $exception->getMessage(), [
+        Log::error('ProcessEmailWebhookJob permanently failed: '.$exception->getMessage(), [
             'provider' => $this->provider,
-            'payload_keys' => array_keys($this->payload)
+            'payload_keys' => array_keys($this->payload),
         ]);
     }
 

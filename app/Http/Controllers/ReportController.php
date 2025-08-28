@@ -2,19 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 use App\Models\Contact;
+use App\Models\ContactSegment;
 use App\Models\EmailCampaign;
 use App\Models\EmailLog;
 use App\Models\SmsMessage;
 use App\Models\WhatsAppMessage;
-use App\Models\ContactSegment;
-use App\Services\EmailService;
-use App\Services\SmsService;
-use App\Services\WhatsAppService;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
@@ -52,7 +49,7 @@ class ReportController extends Controller
                 'dynamic' => ContactSegment::where('type', 'dynamic')->count(),
                 'static' => ContactSegment::where('type', 'static')->count(),
                 'largest_segment_size' => $this->getLargestSegmentSize(),
-            ]
+            ],
         ];
 
         // Recent activity trends
@@ -83,7 +80,7 @@ class ReportController extends Controller
     public function contacts(Request $request)
     {
         $dateRange = $this->getDateRange($request);
-        
+
         $contactStats = [
             'total_contacts' => Contact::count(),
             'new_contacts' => Contact::whereBetween('created_at', $dateRange)->count(),
@@ -133,7 +130,7 @@ class ReportController extends Controller
     public function emailCampaigns(Request $request)
     {
         $dateRange = $this->getDateRange($request);
-        
+
         $emailStats = [
             'total_campaigns' => EmailCampaign::count(),
             'active_campaigns' => EmailCampaign::where('status', 'active')->count(),
@@ -146,17 +143,17 @@ class ReportController extends Controller
         ];
 
         // Calculate rates
-        $emailStats['open_rate'] = $emailStats['total_emails_sent'] > 0 
-            ? round(($emailStats['total_opens'] / $emailStats['total_emails_sent']) * 100, 2) 
+        $emailStats['open_rate'] = $emailStats['total_emails_sent'] > 0
+            ? round(($emailStats['total_opens'] / $emailStats['total_emails_sent']) * 100, 2)
             : 0;
-        $emailStats['click_rate'] = $emailStats['total_emails_sent'] > 0 
-            ? round(($emailStats['total_clicks'] / $emailStats['total_emails_sent']) * 100, 2) 
+        $emailStats['click_rate'] = $emailStats['total_emails_sent'] > 0
+            ? round(($emailStats['total_clicks'] / $emailStats['total_emails_sent']) * 100, 2)
             : 0;
-        $emailStats['bounce_rate'] = $emailStats['total_emails_sent'] > 0 
-            ? round(($emailStats['total_bounces'] / $emailStats['total_emails_sent']) * 100, 2) 
+        $emailStats['bounce_rate'] = $emailStats['total_emails_sent'] > 0
+            ? round(($emailStats['total_bounces'] / $emailStats['total_emails_sent']) * 100, 2)
             : 0;
-        $emailStats['unsubscribe_rate'] = $emailStats['total_emails_sent'] > 0 
-            ? round(($emailStats['total_unsubscribes'] / $emailStats['total_emails_sent']) * 100, 2) 
+        $emailStats['unsubscribe_rate'] = $emailStats['total_emails_sent'] > 0
+            ? round(($emailStats['total_unsubscribes'] / $emailStats['total_emails_sent']) * 100, 2)
             : 0;
 
         // Campaign performance over time
@@ -170,7 +167,7 @@ class ReportController extends Controller
                 $sent = $logs->count();
                 $opens = $logs->where('opened', true)->count();
                 $clicks = $logs->where('clicked', true)->count();
-                
+
                 return [
                     'campaign' => $campaign,
                     'sent' => $sent,
@@ -205,7 +202,7 @@ class ReportController extends Controller
     public function sms(Request $request)
     {
         $dateRange = $this->getDateRange($request);
-        
+
         $smsStats = [
             'total_messages' => SmsMessage::count(),
             'delivered_messages' => SmsMessage::where('status', 'delivered')->count(),
@@ -215,24 +212,25 @@ class ReportController extends Controller
         ];
 
         // Calculate delivery rate
-        $smsStats['delivery_rate'] = $smsStats['total_messages'] > 0 
-            ? round(($smsStats['delivered_messages'] / $smsStats['total_messages']) * 100, 2) 
+        $smsStats['delivery_rate'] = $smsStats['total_messages'] > 0
+            ? round(($smsStats['delivered_messages'] / $smsStats['total_messages']) * 100, 2)
             : 0;
 
         // SMS volume over time
         $smsVolume = $this->getSmsVolumeData($dateRange);
 
         // Provider performance
-        $providerPerformance = SmsMessage::select('provider', 
-                DB::raw('count(*) as total'),
-                DB::raw('sum(case when status = "delivered" then 1 else 0 end) as delivered'),
-                DB::raw('sum(cost) as total_cost')
-            )
+        $providerPerformance = SmsMessage::select('provider',
+            DB::raw('count(*) as total'),
+            DB::raw('sum(case when status = "delivered" then 1 else 0 end) as delivered'),
+            DB::raw('sum(cost) as total_cost')
+        )
             ->groupBy('provider')
             ->get()
             ->map(function ($item) {
                 $item->delivery_rate = $item->total > 0 ? round(($item->delivered / $item->total) * 100, 2) : 0;
                 $item->avg_cost = $item->total > 0 ? round($item->total_cost / $item->total, 4) : 0;
+
                 return $item;
             });
 
@@ -258,7 +256,7 @@ class ReportController extends Controller
     public function whatsapp(Request $request)
     {
         $dateRange = $this->getDateRange($request);
-        
+
         $whatsappStats = [
             'total_messages' => WhatsAppMessage::count(),
             'outbound_messages' => WhatsAppMessage::where('direction', 'outbound')->count(),
@@ -269,11 +267,11 @@ class ReportController extends Controller
         ];
 
         // Calculate engagement rate
-        $whatsappStats['delivery_rate'] = $whatsappStats['outbound_messages'] > 0 
-            ? round(($whatsappStats['delivered_messages'] / $whatsappStats['outbound_messages']) * 100, 2) 
+        $whatsappStats['delivery_rate'] = $whatsappStats['outbound_messages'] > 0
+            ? round(($whatsappStats['delivered_messages'] / $whatsappStats['outbound_messages']) * 100, 2)
             : 0;
-        $whatsappStats['read_rate'] = $whatsappStats['delivered_messages'] > 0 
-            ? round(($whatsappStats['read_messages'] / $whatsappStats['delivered_messages']) * 100, 2) 
+        $whatsappStats['read_rate'] = $whatsappStats['delivered_messages'] > 0
+            ? round(($whatsappStats['read_messages'] / $whatsappStats['delivered_messages']) * 100, 2)
             : 0;
 
         // Message volume over time
@@ -311,7 +309,7 @@ class ReportController extends Controller
     public function communications(Request $request)
     {
         $dateRange = $this->getDateRange($request);
-        
+
         // Overall communication stats
         $commStats = [
             'email' => [
@@ -327,7 +325,7 @@ class ReportController extends Controller
                 'sent' => WhatsAppMessage::where('direction', 'outbound')->count(),
                 'delivered' => WhatsAppMessage::where('status', 'delivered')->count(),
                 'read' => WhatsAppMessage::where('status', 'read')->count(),
-            ]
+            ],
         ];
 
         // Channel comparison
@@ -360,7 +358,7 @@ class ReportController extends Controller
         $request->validate([
             'report_type' => 'required|in:contacts,email_campaigns,sms,whatsapp,communications',
             'format' => 'required|in:csv,excel,pdf',
-            'date_range' => 'required|in:7,30,90,365,all'
+            'date_range' => 'required|in:7,30,90,365,all',
         ]);
 
         $dateRange = $this->getDateRange($request);
@@ -392,11 +390,11 @@ class ReportController extends Controller
     private function getDateRange(Request $request)
     {
         $days = $request->get('date_range', 30);
-        
+
         if ($days == 'all') {
             return [Carbon::create(2020, 1, 1), now()];
         }
-        
+
         return [now()->subDays($days), now()];
     }
 
@@ -404,9 +402,11 @@ class ReportController extends Controller
     {
         $thisMonth = Contact::whereMonth('created_at', now()->month)->count();
         $lastMonth = Contact::whereMonth('created_at', now()->subMonth()->month)->count();
-        
-        if ($lastMonth == 0) return 100;
-        
+
+        if ($lastMonth == 0) {
+            return 100;
+        }
+
         return round((($thisMonth - $lastMonth) / $lastMonth) * 100, 2);
     }
 
@@ -418,7 +418,9 @@ class ReportController extends Controller
     private function getAverageOpenRate()
     {
         $campaigns = EmailCampaign::with('emailLogs')->get();
-        if ($campaigns->isEmpty()) return 0;
+        if ($campaigns->isEmpty()) {
+            return 0;
+        }
 
         $totalOpenRate = 0;
         $campaignCount = 0;
@@ -443,9 +445,9 @@ class ReportController extends Controller
     private function getContactRegistrationTrend()
     {
         return Contact::select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('count(*) as count')
-            )
+            DB::raw('DATE(created_at) as date'),
+            DB::raw('count(*) as count')
+        )
             ->where('created_at', '>=', now()->subDays(30))
             ->groupBy('date')
             ->orderBy('date')
@@ -455,11 +457,11 @@ class ReportController extends Controller
     private function getEmailPerformanceTrend()
     {
         return EmailLog::select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('count(*) as sent'),
-                DB::raw('sum(opened) as opens'),
-                DB::raw('sum(clicked) as clicks')
-            )
+            DB::raw('DATE(created_at) as date'),
+            DB::raw('count(*) as sent'),
+            DB::raw('sum(opened) as opens'),
+            DB::raw('sum(clicked) as clicks')
+        )
             ->where('created_at', '>=', now()->subDays(30))
             ->groupBy('date')
             ->orderBy('date')
@@ -469,10 +471,10 @@ class ReportController extends Controller
     private function getSmsDeliveryTrend()
     {
         return SmsMessage::select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('count(*) as total'),
-                DB::raw('sum(case when status = "delivered" then 1 else 0 end) as delivered')
-            )
+            DB::raw('DATE(created_at) as date'),
+            DB::raw('count(*) as total'),
+            DB::raw('sum(case when status = "delivered" then 1 else 0 end) as delivered')
+        )
             ->where('created_at', '>=', now()->subDays(30))
             ->groupBy('date')
             ->orderBy('date')
@@ -482,11 +484,11 @@ class ReportController extends Controller
     private function getWhatsAppActivityTrend()
     {
         return WhatsAppMessage::select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('count(*) as total'),
-                DB::raw('sum(case when direction = "outbound" then 1 else 0 end) as outbound'),
-                DB::raw('sum(case when direction = "inbound" then 1 else 0 end) as inbound')
-            )
+            DB::raw('DATE(created_at) as date'),
+            DB::raw('count(*) as total'),
+            DB::raw('sum(case when direction = "outbound" then 1 else 0 end) as outbound'),
+            DB::raw('sum(case when direction = "inbound" then 1 else 0 end) as inbound')
+        )
             ->where('created_at', '>=', now()->subDays(30))
             ->groupBy('date')
             ->orderBy('date')
@@ -502,7 +504,7 @@ class ReportController extends Controller
                 $sent = $logs->count();
                 $opens = $logs->where('opened', true)->count();
                 $clicks = $logs->where('clicked', true)->count();
-                
+
                 return [
                     'name' => $campaign->name,
                     'sent' => $sent,
@@ -526,25 +528,25 @@ class ReportController extends Controller
         return [
             'email' => [
                 'count' => $emailSent,
-                'percentage' => $total > 0 ? round(($emailSent / $total) * 100, 1) : 0
+                'percentage' => $total > 0 ? round(($emailSent / $total) * 100, 1) : 0,
             ],
             'sms' => [
                 'count' => $smsSent,
-                'percentage' => $total > 0 ? round(($smsSent / $total) * 100, 1) : 0
+                'percentage' => $total > 0 ? round(($smsSent / $total) * 100, 1) : 0,
             ],
             'whatsapp' => [
                 'count' => $whatsappSent,
-                'percentage' => $total > 0 ? round(($whatsappSent / $total) * 100, 1) : 0
-            ]
+                'percentage' => $total > 0 ? round(($whatsappSent / $total) * 100, 1) : 0,
+            ],
         ];
     }
 
     private function getContactGrowthData($dateRange)
     {
         return Contact::select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('count(*) as count')
-            )
+            DB::raw('DATE(created_at) as date'),
+            DB::raw('count(*) as count')
+        )
             ->whereBetween('created_at', $dateRange)
             ->groupBy('date')
             ->orderBy('date')
@@ -556,14 +558,14 @@ class ReportController extends Controller
         return Contact::with(['emailLogs', 'smsMessages', 'whatsappMessages'])
             ->get()
             ->map(function ($contact) {
-                $emailEngagement = $contact->emailLogs->where('opened', true)->count() + 
+                $emailEngagement = $contact->emailLogs->where('opened', true)->count() +
                                  ($contact->emailLogs->where('clicked', true)->count() * 2);
                 $smsEngagement = $contact->smsMessages->where('status', 'delivered')->count();
                 $whatsappEngagement = $contact->whatsappMessages->count();
-                
+
                 return [
                     'contact' => $contact,
-                    'engagement_score' => $emailEngagement + $smsEngagement + $whatsappEngagement
+                    'engagement_score' => $emailEngagement + $smsEngagement + $whatsappEngagement,
                 ];
             })
             ->sortByDesc('engagement_score')
@@ -579,11 +581,11 @@ class ReportController extends Controller
                 $contactIds = $segment->contacts->pluck('id');
                 $emailEngagement = EmailLog::whereIn('contact_id', $contactIds)->where('opened', true)->count();
                 $totalEmails = EmailLog::whereIn('contact_id', $contactIds)->count();
-                
+
                 return [
                     'segment' => $segment,
                     'contact_count' => $segment->contacts->count(),
-                    'engagement_rate' => $totalEmails > 0 ? round(($emailEngagement / $totalEmails) * 100, 2) : 0
+                    'engagement_rate' => $totalEmails > 0 ? round(($emailEngagement / $totalEmails) * 100, 2) : 0,
                 ];
             })
             ->sortByDesc('engagement_rate');
@@ -632,16 +634,17 @@ class ReportController extends Controller
     private function getBestSendTimes()
     {
         return EmailLog::select(
-                DB::raw('HOUR(created_at) as hour'),
-                DB::raw('count(*) as sent'),
-                DB::raw('sum(opened) as opens')
-            )
+            DB::raw('HOUR(created_at) as hour'),
+            DB::raw('count(*) as sent'),
+            DB::raw('sum(opened) as opens')
+        )
             ->where('status', 'sent')
             ->groupBy('hour')
             ->orderBy('hour')
             ->get()
             ->map(function ($item) {
                 $item->open_rate = $item->sent > 0 ? round(($item->opens / $item->sent) * 100, 2) : 0;
+
                 return $item;
             });
     }
@@ -649,9 +652,9 @@ class ReportController extends Controller
     private function getSmsVolumeData($dateRange)
     {
         return SmsMessage::select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('count(*) as count')
-            )
+            DB::raw('DATE(created_at) as date'),
+            DB::raw('count(*) as count')
+        )
             ->whereBetween('created_at', $dateRange)
             ->groupBy('date')
             ->orderBy('date')
@@ -672,16 +675,16 @@ class ReportController extends Controller
     private function getSmsLengthStats()
     {
         return SmsMessage::select(
-                DB::raw('
+            DB::raw('
                     CASE 
                         WHEN LENGTH(message) <= 160 THEN "Short (<=160)"
                         WHEN LENGTH(message) <= 320 THEN "Medium (161-320)"
                         ELSE "Long (>320)"
                     END as length_category'
-                ),
-                DB::raw('count(*) as count'),
-                DB::raw('avg(cost) as avg_cost')
-            )
+            ),
+            DB::raw('count(*) as count'),
+            DB::raw('avg(cost) as avg_cost')
+        )
             ->groupBy('length_category')
             ->get();
     }
@@ -689,11 +692,11 @@ class ReportController extends Controller
     private function getWhatsAppVolumeData($dateRange)
     {
         return WhatsAppMessage::select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('count(*) as count'),
-                DB::raw('sum(case when direction = "outbound" then 1 else 0 end) as outbound'),
-                DB::raw('sum(case when direction = "inbound" then 1 else 0 end) as inbound')
-            )
+            DB::raw('DATE(created_at) as date'),
+            DB::raw('count(*) as count'),
+            DB::raw('sum(case when direction = "outbound" then 1 else 0 end) as outbound'),
+            DB::raw('sum(case when direction = "inbound" then 1 else 0 end) as inbound')
+        )
             ->whereBetween('created_at', $dateRange)
             ->groupBy('date')
             ->orderBy('date')
@@ -769,30 +772,30 @@ class ReportController extends Controller
 
         // Get email data
         $emailData = EmailLog::select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('count(*) as count'),
-                DB::raw('"email" as channel')
-            )
+            DB::raw('DATE(created_at) as date'),
+            DB::raw('count(*) as count'),
+            DB::raw('"email" as channel')
+        )
             ->whereBetween('created_at', $dateRange)
             ->groupBy('date')
             ->get();
 
         // Get SMS data
         $smsData = SmsMessage::select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('count(*) as count'),
-                DB::raw('"sms" as channel')
-            )
+            DB::raw('DATE(created_at) as date'),
+            DB::raw('count(*) as count'),
+            DB::raw('"sms" as channel')
+        )
             ->whereBetween('created_at', $dateRange)
             ->groupBy('date')
             ->get();
 
         // Get WhatsApp data
         $whatsappData = WhatsAppMessage::select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('count(*) as count'),
-                DB::raw('"whatsapp" as channel')
-            )
+            DB::raw('DATE(created_at) as date'),
+            DB::raw('count(*) as count'),
+            DB::raw('"whatsapp" as channel')
+        )
             ->where('direction', 'outbound')
             ->whereBetween('created_at', $dateRange)
             ->groupBy('date')
@@ -806,11 +809,11 @@ class ReportController extends Controller
         return Contact::with(['emailLogs', 'smsMessages', 'whatsappMessages'])
             ->get()
             ->map(function ($contact) {
-                $emailScore = $contact->emailLogs->where('opened', true)->count() * 2 + 
+                $emailScore = $contact->emailLogs->where('opened', true)->count() * 2 +
                              $contact->emailLogs->where('clicked', true)->count() * 5;
                 $smsScore = $contact->smsMessages->where('status', 'delivered')->count() * 3;
                 $whatsappScore = $contact->whatsappMessages->where('direction', 'inbound')->count() * 4;
-                
+
                 return [
                     'contact' => $contact,
                     'engagement_score' => $emailScore + $smsScore + $whatsappScore,
@@ -847,7 +850,7 @@ class ReportController extends Controller
                 'total_cost' => WhatsAppMessage::where('direction', 'outbound')->count() * $whatsappCost,
                 'delivered' => WhatsAppMessage::where('status', 'delivered')->count(),
                 'read' => WhatsAppMessage::where('status', 'read')->count(),
-            ]
+            ],
         ];
     }
 
@@ -855,9 +858,9 @@ class ReportController extends Controller
     private function getContactsExportData($dateRange)
     {
         return Contact::select([
-                'id', 'first_name', 'last_name', 'email', 'phone', 'company', 
-                'status', 'source', 'country', 'created_at'
-            ])
+            'id', 'first_name', 'last_name', 'email', 'phone', 'company',
+            'status', 'source', 'country', 'created_at',
+        ])
             ->whereBetween('created_at', $dateRange)
             ->get()
             ->toArray();
@@ -873,7 +876,7 @@ class ReportController extends Controller
                 $sent = $logs->count();
                 $opens = $logs->where('opened', true)->count();
                 $clicks = $logs->where('clicked', true)->count();
-                
+
                 return [
                     'campaign_name' => $campaign->name,
                     'subject' => $campaign->subject,
@@ -896,7 +899,7 @@ class ReportController extends Controller
             ->get()
             ->map(function ($sms) {
                 return [
-                    'contact_name' => $sms->contact->first_name . ' ' . $sms->contact->last_name,
+                    'contact_name' => $sms->contact->first_name.' '.$sms->contact->last_name,
                     'phone' => $sms->to_number,
                     'message' => $sms->message,
                     'status' => $sms->status,
@@ -915,7 +918,7 @@ class ReportController extends Controller
             ->get()
             ->map(function ($message) {
                 return [
-                    'contact_name' => $message->contact->first_name . ' ' . $message->contact->last_name,
+                    'contact_name' => $message->contact->first_name.' '.$message->contact->last_name,
                     'phone' => $message->to_number,
                     'message' => $message->message,
                     'direction' => $message->direction,
@@ -938,7 +941,7 @@ class ReportController extends Controller
             ->map(function ($email) {
                 return [
                     'channel' => 'email',
-                    'contact_name' => $email->contact->first_name . ' ' . $email->contact->last_name,
+                    'contact_name' => $email->contact->first_name.' '.$email->contact->last_name,
                     'contact_email' => $email->contact->email,
                     'subject' => $email->campaign->subject ?? 'N/A',
                     'status' => $email->status,
@@ -957,7 +960,7 @@ class ReportController extends Controller
             ->map(function ($sms) {
                 return [
                     'channel' => 'sms',
-                    'contact_name' => $sms->contact->first_name . ' ' . $sms->contact->last_name,
+                    'contact_name' => $sms->contact->first_name.' '.$sms->contact->last_name,
                     'contact_phone' => $sms->to_number,
                     'message' => $sms->message,
                     'status' => $sms->status,
@@ -975,7 +978,7 @@ class ReportController extends Controller
             ->map(function ($message) {
                 return [
                     'channel' => 'whatsapp',
-                    'contact_name' => $message->contact->first_name . ' ' . $message->contact->last_name,
+                    'contact_name' => $message->contact->first_name.' '.$message->contact->last_name,
                     'contact_phone' => $message->to_number,
                     'message' => $message->message,
                     'direction' => $message->direction,
@@ -989,7 +992,7 @@ class ReportController extends Controller
 
     private function generateExport($data, $format, $reportType)
     {
-        $fileName = $reportType . '_report_' . now()->format('Y-m-d_H-i-s');
+        $fileName = $reportType.'_report_'.now()->format('Y-m-d_H-i-s');
 
         switch ($format) {
             case 'csv':
@@ -1007,22 +1010,22 @@ class ReportController extends Controller
     {
         $headers = [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $fileName . '.csv"',
+            'Content-Disposition' => 'attachment; filename="'.$fileName.'.csv"',
         ];
 
         $callback = function () use ($data) {
             $file = fopen('php://output', 'w');
-            
+
             // Add headers
-            if (!empty($data)) {
+            if (! empty($data)) {
                 fputcsv($file, array_keys($data[0]));
             }
-            
+
             // Add data
             foreach ($data as $row) {
                 fputcsv($file, $row);
             }
-            
+
             fclose($file);
         };
 
@@ -1040,10 +1043,10 @@ class ReportController extends Controller
     {
         // This would require a PDF generation package
         // For now, return a simple HTML response
-        $html = view('reports.pdf.' . $reportType, compact('data'))->render();
-        
+        $html = view('reports.pdf.'.$reportType, compact('data'))->render();
+
         return response($html)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'attachment; filename="' . $fileName . '.pdf"');
+            ->header('Content-Disposition', 'attachment; filename="'.$fileName.'.pdf"');
     }
 }

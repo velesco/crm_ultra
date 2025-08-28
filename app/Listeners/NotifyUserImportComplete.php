@@ -39,7 +39,7 @@ class NotifyUserImportComplete implements ShouldQueue
             $user->notify(new DataImportCompletedNotification($notificationData));
 
             // If there are errors, also log them for admin attention
-            if ($hasErrors && !empty($results['errors'])) {
+            if ($hasErrors && ! empty($results['errors'])) {
                 $this->logImportErrors($user, $fileName, $results['errors']);
             }
 
@@ -108,7 +108,7 @@ class NotifyUserImportComplete implements ShouldQueue
     private function sendImportCompletionEmail(User $user, array $notificationData): void
     {
         try {
-            $subject = $notificationData['has_errors'] 
+            $subject = $notificationData['has_errors']
                 ? 'Data Import Completed with Errors'
                 : 'Data Import Completed Successfully';
 
@@ -139,12 +139,12 @@ class NotifyUserImportComplete implements ShouldQueue
     private function sendBrowserNotification(User $user, array $notificationData): void
     {
         try {
-            $title = $notificationData['has_errors'] 
+            $title = $notificationData['has_errors']
                 ? 'Import Completed with Errors'
                 : 'Import Completed Successfully';
-                
+
             $message = "File '{$notificationData['file_name']}' has been processed. ";
-            
+
             if (isset($notificationData['results']['created_contacts'])) {
                 $message .= "{$notificationData['results']['created_contacts']} contacts created.";
             }

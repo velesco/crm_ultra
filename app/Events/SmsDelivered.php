@@ -2,11 +2,9 @@
 
 namespace App\Events;
 
-use App\Models\SmsMessage;
 use App\Models\Contact;
-use Illuminate\Broadcasting\Channel;
+use App\Models\SmsMessage;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -17,7 +15,9 @@ class SmsDelivered implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public SmsMessage $smsMessage;
+
     public ?Contact $contact;
+
     public array $deliveryData;
 
     /**
@@ -39,7 +39,7 @@ class SmsDelivered implements ShouldBroadcast
     {
         return [
             new PrivateChannel('sms-messages'),
-            new PrivateChannel('contact.' . ($this->contact ? $this->contact->id : 'unknown')),
+            new PrivateChannel('contact.'.($this->contact ? $this->contact->id : 'unknown')),
             new PrivateChannel('dashboard'),
         ];
     }

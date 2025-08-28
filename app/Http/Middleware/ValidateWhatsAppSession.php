@@ -2,10 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\WhatsAppSession;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use App\Models\WhatsAppSession;
 
 class ValidateWhatsAppSession
 {
@@ -14,23 +14,23 @@ class ValidateWhatsAppSession
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, string $sessionId = null): Response
+    public function handle(Request $request, Closure $next, ?string $sessionId = null): Response
     {
         $user = $request->user();
-        
-        if (!$user) {
+
+        if (! $user) {
             return $this->handleUnauthenticated($request);
         }
 
         // Get WhatsApp session from parameter or request
         $session = $this->getWhatsAppSession($request, $sessionId);
-        
-        if (!$session) {
+
+        if (! $session) {
             return $this->handleMissingSession($request);
         }
 
         // Check if user owns or has access to this session
-        if (!$this->userCanUseSession($user, $session)) {
+        if (! $this->userCanUseSession($user, $session)) {
             return $this->handleUnauthorizedSession($request, $session);
         }
 
@@ -44,7 +44,7 @@ class ValidateWhatsAppSession
         ];
 
         foreach ($validationChecks as $type => $check) {
-            if (!$check['valid']) {
+            if (! $check['valid']) {
                 return $this->handleValidationFailure($request, $type, $check, $session);
             }
         }
@@ -80,6 +80,7 @@ class ValidateWhatsAppSession
 
         // Get user's default active session
         $user = $request->user();
+
         return $user->whatsappSessions()->connected()->first();
     }
 
@@ -100,7 +101,7 @@ class ValidateWhatsAppSession
 
         // Managers can use sessions from their team
         if ($user->hasRole('manager')) {
-            return $session->creator->hasRole(['agent']) || 
+            return $session->creator->hasRole(['agent']) ||
                    $session->is_shared;
         }
 
@@ -114,15 +115,15 @@ class ValidateWhatsAppSession
     protected function checkSessionStatus(WhatsAppSession $session): array
     {
         $validStatuses = ['connected', 'connecting'];
-        
+
         return [
             'valid' => in_array($session->status, $validStatuses),
             'current_status' => $session->status,
-            'message' => $session->status === 'connected' 
-                ? 'Session is connected and ready' 
-                : ($session->status === 'connecting' 
-                    ? 'Session is connecting, please wait' 
-                    : "Session is {$session->status}")
+            'message' => $session->status === 'connected'
+                ? 'Session is connected and ready'
+                : ($session->status === 'connecting'
+                    ? 'Session is connecting, please wait'
+                    : "Session is {$session->status}"),
         ];
     }
 
@@ -154,7 +155,7 @@ class ValidateWhatsAppSession
         }
 
         // Check webhook connectivity
-        if (!$this->checkWebhookConnectivity($session)) {
+        if (! $this->checkWebhookConnectivity($session)) {
             $isHealthy = false;
             $issues[] = 'Webhook connectivity issues';
         }
@@ -162,7 +163,7 @@ class ValidateWhatsAppSession
         return [
             'valid' => $isHealthy,
             'issues' => $issues,
-            'error_rate' => $errorRate ?? 0
+            'error_rate' => $errorRate ?? 0,
         ];
     }
 
@@ -185,10 +186,10 @@ class ValidateWhatsAppSession
         }
 
         return [
-            'valid' => !$limitExceeded,
+            'valid' => ! $limitExceeded,
             'limits' => $limits,
             'usage' => $usage,
-            'exceeded' => $exceededLimits
+            'exceeded' => $exceededLimits,
         ];
     }
 
@@ -214,7 +215,7 @@ class ValidateWhatsAppSession
         return [
             'valid' => $isStable,
             'recent_disconnections' => $recentDisconnections,
-            'delivery_rate' => $deliveryRate
+            'delivery_rate' => $deliveryRate,
         ];
     }
 
@@ -224,11 +225,11 @@ class ValidateWhatsAppSession
     protected function checkWebhookHealth(WhatsAppSession $session): array
     {
         $webhookUrl = $session->webhook_url;
-        
-        if (!$webhookUrl) {
+
+        if (! $webhookUrl) {
             return [
                 'valid' => true, // Webhook is optional
-                'configured' => false
+                'configured' => false,
             ];
         }
 
@@ -244,7 +245,7 @@ class ValidateWhatsAppSession
             'valid' => $webhookHealthy,
             'configured' => true,
             'url' => $webhookUrl,
-            'last_response' => $lastWebhookResponse
+            'last_response' => $lastWebhookResponse,
         ];
     }
 
@@ -253,12 +254,13 @@ class ValidateWhatsAppSession
      */
     protected function checkWebhookConnectivity(WhatsAppSession $session): bool
     {
-        if (!$session->webhook_url) {
+        if (! $session->webhook_url) {
             return true; // No webhook configured, so no connectivity issues
         }
 
         try {
-            $response = \Http::timeout(5)->get($session->webhook_url . '/health');
+            $response = \Http::timeout(5)->get($session->webhook_url.'/health');
+
             return $response->successful();
         } catch (\Exception $e) {
             return false;
@@ -330,7 +332,7 @@ class ValidateWhatsAppSession
         if ($request->expectsJson()) {
             return response()->json([
                 'error' => 'WhatsApp session required',
-                'message' => 'Please set up a WhatsApp session first.'
+                'message' => 'Please set up a WhatsApp session first.',
             ], 422);
         }
 
@@ -346,7 +348,7 @@ class ValidateWhatsAppSession
         if ($request->expectsJson()) {
             return response()->json([
                 'error' => 'Unauthorized WhatsApp session',
-                'message' => 'You do not have permission to use this WhatsApp session.'
+                'message' => 'You do not have permission to use this WhatsApp session.',
             ], 403);
         }
 
@@ -366,7 +368,7 @@ class ValidateWhatsAppSession
                 'error' => 'WhatsApp session validation failed',
                 'type' => $type,
                 'message' => $message,
-                'details' => $check
+                'details' => $check,
             ], match ($type) {
                 'status' => 503,
                 'health' => 503,
@@ -395,9 +397,9 @@ class ValidateWhatsAppSession
     protected function getValidationFailureMessage(string $type, array $check, WhatsAppSession $session): string
     {
         return match ($type) {
-            'status' => "WhatsApp session is {$check['current_status']}. " . $check['message'],
-            'health' => 'WhatsApp session is unhealthy: ' . implode(', ', $check['issues']),
-            'limits' => 'WhatsApp session limits exceeded: ' . implode(', ', $check['exceeded']),
+            'status' => "WhatsApp session is {$check['current_status']}. ".$check['message'],
+            'health' => 'WhatsApp session is unhealthy: '.implode(', ', $check['issues']),
+            'limits' => 'WhatsApp session limits exceeded: '.implode(', ', $check['exceeded']),
             'connection' => 'WhatsApp session connection is unstable. Please check your connection.',
             'webhook' => 'WhatsApp session webhook is not responding properly.',
             default => 'WhatsApp session validation failed.'
@@ -409,8 +411,8 @@ class ValidateWhatsAppSession
      */
     public static function getSessionStatus(WhatsAppSession $session): array
     {
-        $middleware = new self();
-        
+        $middleware = new self;
+
         return [
             'id' => $session->id,
             'name' => $session->name,
@@ -423,7 +425,7 @@ class ValidateWhatsAppSession
                 'limits' => $middleware->checkSessionLimits($session),
                 'connection' => $middleware->checkConnectionStability($session),
                 'webhook' => $middleware->checkWebhookHealth($session),
-            ]
+            ],
         ];
     }
 }

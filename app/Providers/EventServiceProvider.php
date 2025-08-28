@@ -2,27 +2,25 @@
 
 namespace App\Providers;
 
+use App\Events\CampaignSent;
+use App\Events\ContactCreated;
+use App\Events\ContactUpdated;
+use App\Events\DataImportCompleted;
+// Import CRM Events
+use App\Events\EmailClicked;
+use App\Events\EmailOpened;
+use App\Events\SmsDelivered;
+use App\Events\WhatsAppMessageReceived;
+use App\Listeners\LogCommunication;
+use App\Listeners\NotifyUserImportComplete;
+use App\Listeners\RefreshContactSegments;
+use App\Listeners\SendWelcomeEmail;
+// Import CRM Listeners
+use App\Listeners\UpdateContactActivity;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
-
-// Import CRM Events
-use App\Events\WhatsAppMessageReceived;
-use App\Events\EmailOpened;
-use App\Events\EmailClicked;
-use App\Events\ContactCreated;
-use App\Events\ContactUpdated;
-use App\Events\CampaignSent;
-use App\Events\SmsDelivered;
-use App\Events\DataImportCompleted;
-
-// Import CRM Listeners
-use App\Listeners\UpdateContactActivity;
-use App\Listeners\SendWelcomeEmail;
-use App\Listeners\LogCommunication;
-use App\Listeners\RefreshContactSegments;
-use App\Listeners\NotifyUserImportComplete;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -114,7 +112,7 @@ class EventServiceProvider extends ServiceProvider
                         'event' => $eventName,
                         'data' => array_map(function ($item) {
                             return is_object($item) ? get_class($item) : gettype($item);
-                        }, $data)
+                        }, $data),
                     ]);
                 }
             });

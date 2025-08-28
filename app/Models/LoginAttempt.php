@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Carbon\Carbon;
 
 class LoginAttempt extends Model
 {
@@ -114,7 +114,7 @@ class LoginAttempt extends Model
     public static function getFailedAttemptsCount(string $identifier, string $type = 'email', int $hours = 1): int
     {
         $query = static::failed()->recent($hours);
-        
+
         if ($type === 'email') {
             $query->byEmail($identifier);
         } else {
@@ -127,7 +127,7 @@ class LoginAttempt extends Model
     public static function isBlocked(string $identifier, string $type = 'email'): bool
     {
         $query = static::currentlyBlocked();
-        
+
         if ($type === 'email') {
             $query->byEmail($identifier);
         } else {
@@ -140,7 +140,7 @@ class LoginAttempt extends Model
     public static function getBlockedUntil(string $identifier, string $type = 'email'): ?Carbon
     {
         $query = static::currentlyBlocked();
-        
+
         if ($type === 'email') {
             $query->byEmail($identifier);
         } else {
@@ -148,6 +148,7 @@ class LoginAttempt extends Model
         }
 
         $attempt = $query->first();
+
         return $attempt ? $attempt->blocked_until : null;
     }
 
@@ -161,13 +162,13 @@ class LoginAttempt extends Model
      */
     public function getLocationAttribute(): ?string
     {
-        if (!$this->metadata || !isset($this->metadata['country'])) {
+        if (! $this->metadata || ! isset($this->metadata['country'])) {
             return null;
         }
 
         $location = $this->metadata['country'];
         if (isset($this->metadata['city'])) {
-            $location = $this->metadata['city'] . ', ' . $location;
+            $location = $this->metadata['city'].', '.$location;
         }
 
         return $location;
@@ -175,7 +176,7 @@ class LoginAttempt extends Model
 
     public function getDeviceAttribute(): ?string
     {
-        if (!$this->metadata || !isset($this->metadata['device'])) {
+        if (! $this->metadata || ! isset($this->metadata['device'])) {
             return null;
         }
 
@@ -184,7 +185,7 @@ class LoginAttempt extends Model
 
     public function getBrowserAttribute(): ?string
     {
-        if (!$this->metadata || !isset($this->metadata['browser'])) {
+        if (! $this->metadata || ! isset($this->metadata['browser'])) {
             return null;
         }
 
@@ -212,25 +213,25 @@ class LoginAttempt extends Model
             'failed_attempts' => static::failed()->count(),
             'blocked_attempts' => static::blocked()->count(),
             'success_attempts' => static::success()->count(),
-            
+
             'today' => [
                 'total' => static::where('created_at', '>=', $today)->count(),
                 'failed' => static::failed()->where('created_at', '>=', $today)->count(),
                 'blocked' => static::blocked()->where('created_at', '>=', $today)->count(),
             ],
-            
+
             'this_week' => [
                 'total' => static::where('created_at', '>=', $thisWeek)->count(),
                 'failed' => static::failed()->where('created_at', '>=', $thisWeek)->count(),
                 'blocked' => static::blocked()->where('created_at', '>=', $thisWeek)->count(),
             ],
-            
+
             'this_month' => [
                 'total' => static::where('created_at', '>=', $thisMonth)->count(),
                 'failed' => static::failed()->where('created_at', '>=', $thisMonth)->count(),
                 'blocked' => static::blocked()->where('created_at', '>=', $thisMonth)->count(),
             ],
-            
+
             'currently_blocked' => static::currentlyBlocked()->count(),
             'unique_ips_blocked' => static::currentlyBlocked()->distinct('ip_address')->count(),
         ];

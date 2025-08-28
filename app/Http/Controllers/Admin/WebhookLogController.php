@@ -5,9 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\WebhookLog;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Response;
 
 class WebhookLogController extends Controller
 {
@@ -61,7 +60,7 @@ class WebhookLogController extends Controller
             WebhookLog::TYPE_GOOGLE_SHEETS => 'Google Sheets',
             WebhookLog::TYPE_API => 'API',
         ];
-        
+
         $providers = [
             WebhookLog::PROVIDER_SENDGRID => 'SendGrid',
             WebhookLog::PROVIDER_MAILGUN => 'Mailgun',
@@ -114,7 +113,7 @@ class WebhookLogController extends Controller
     {
         // Get related logs (same reference_id or webhook_id)
         $relatedLogs = collect();
-        
+
         if ($webhookLog->reference_id && $webhookLog->reference_type) {
             $relatedLogs = WebhookLog::where('reference_id', $webhookLog->reference_id)
                 ->where('reference_type', $webhookLog->reference_type)
@@ -138,7 +137,7 @@ class WebhookLogController extends Controller
      */
     public function retry(WebhookLog $webhookLog)
     {
-        if (!$webhookLog->canRetry()) {
+        if (! $webhookLog->canRetry()) {
             return back()->with('error', 'Webhook cannot be retried.');
         }
 
@@ -156,7 +155,7 @@ class WebhookLogController extends Controller
 
             return back()->with('success', 'Webhook queued for retry.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to retry webhook: ' . $e->getMessage());
+            return back()->with('error', 'Failed to retry webhook: '.$e->getMessage());
         }
     }
 
@@ -185,7 +184,7 @@ class WebhookLogController extends Controller
                         'error_context' => null,
                         'next_retry_at' => null,
                     ]);
-                    
+
                     // ProcessWebhookJob::dispatch($webhook);
                     $retryCount++;
                 }
@@ -198,7 +197,7 @@ class WebhookLogController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retry webhooks: ' . $e->getMessage(),
+                'message' => 'Failed to retry webhooks: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -215,11 +214,11 @@ class WebhookLogController extends Controller
 
         try {
             $query = WebhookLog::where('created_at', '<', now()->subDays($request->days));
-            
+
             if ($request->status && $request->status !== 'all') {
                 $query->where('status', $request->status);
             }
-            
+
             $deletedCount = $query->count();
             $query->delete();
 
@@ -230,7 +229,7 @@ class WebhookLogController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to clear old webhooks: ' . $e->getMessage(),
+                'message' => 'Failed to clear old webhooks: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -269,16 +268,16 @@ class WebhookLogController extends Controller
 
         $webhooks = $query->limit(10000)->get(); // Limit for performance
 
-        $filename = 'webhook_logs_' . now()->format('Y-m-d_H-i-s') . '.csv';
-        
+        $filename = 'webhook_logs_'.now()->format('Y-m-d_H-i-s').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ];
 
-        return Response::stream(function() use ($webhooks) {
+        return Response::stream(function () use ($webhooks) {
             $handle = fopen('php://output', 'w');
-            
+
             // CSV headers
             fputcsv($handle, [
                 'ID',
@@ -299,7 +298,7 @@ class WebhookLogController extends Controller
                 'Processed At',
                 'Processing Time (ms)',
             ]);
-            
+
             foreach ($webhooks as $webhook) {
                 fputcsv($handle, [
                     $webhook->id,
@@ -321,7 +320,7 @@ class WebhookLogController extends Controller
                     $webhook->processing_time,
                 ]);
             }
-            
+
             fclose($handle);
         }, 200, $headers);
     }
@@ -333,9 +332,9 @@ class WebhookLogController extends Controller
     {
         $period = $request->input('period', '7'); // days
 
-        $data = Cache::remember("webhook_chart_data_{$period}", 300, function() use ($period) {
+        $data = Cache::remember("webhook_chart_data_{$period}", 300, function () use ($period) {
             $startDate = now()->subDays($period);
-            
+
             // Daily webhook counts
             $dailyCounts = WebhookLog::where('webhook_received_at', '>=', $startDate)
                 ->selectRaw('DATE(webhook_received_at) as date')
@@ -367,18 +366,18 @@ class WebhookLogController extends Controller
      */
     public function healthMetrics()
     {
-        $metrics = Cache::remember('webhook_health_metrics', 300, function() {
+        $metrics = Cache::remember('webhook_health_metrics', 300, function () {
             $recentFailed = WebhookLog::failed()
                 ->where('webhook_received_at', '>=', now()->subHour())
                 ->count();
 
             $pendingWebhooks = WebhookLog::pending()->count();
-            
+
             $avgProcessingTime = WebhookLog::whereNotNull('processed_at')
                 ->whereNotNull('webhook_received_at')
                 ->where('webhook_received_at', '>=', now()->subDay())
                 ->get()
-                ->avg(function($log) {
+                ->avg(function ($log) {
                     return $log->processing_time;
                 });
 
@@ -415,7 +414,7 @@ class WebhookLogController extends Controller
      */
     private function getStatistics()
     {
-        return Cache::remember('webhook_log_statistics', 300, function() {
+        return Cache::remember('webhook_log_statistics', 300, function () {
             return WebhookLog::getStatistics();
         });
     }

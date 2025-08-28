@@ -35,14 +35,14 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
             if (app()->environment('local')) {
                 return true;
             }
-            
+
             // In production, allow access for authenticated users with admin roles
             return $user && (
-                $user->hasRole('super_admin') || 
+                $user->hasRole('super_admin') ||
                 $user->hasRole('admin') ||
                 in_array($user->email, [
                     'admin@crmultra.com',
-                    'superadmin@crmultra.com'
+                    'superadmin@crmultra.com',
                 ])
             );
         });

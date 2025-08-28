@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ContactSegment;
 use App\Models\Contact;
+use App\Models\ContactSegment;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class ContactSegmentController extends Controller
@@ -30,9 +30,9 @@ class ContactSegmentController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -44,14 +44,14 @@ class ContactSegmentController extends Controller
                 // Refresh dynamic segment count
                 $segment->contacts_count = $this->calculateDynamicSegmentCount($segment);
             }
-            
+
             $segment->engagement_rate = $this->calculateSegmentEngagement($segment);
             $segment->last_used_at = $this->getSegmentLastUsed($segment);
         }
 
         $segmentTypes = [
             'static' => 'Static',
-            'dynamic' => 'Dynamic'
+            'dynamic' => 'Dynamic',
         ];
 
         return view('segments.index', compact('segments', 'segmentTypes'));
@@ -64,7 +64,7 @@ class ContactSegmentController extends Controller
     {
         $segmentTypes = [
             'static' => 'Static Segment',
-            'dynamic' => 'Dynamic Segment'
+            'dynamic' => 'Dynamic Segment',
         ];
 
         // Available fields for dynamic segmentation
@@ -149,7 +149,8 @@ class ContactSegmentController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to create segment: ' . $e->getMessage()])->withInput();
+
+            return back()->withErrors(['error' => 'Failed to create segment: '.$e->getMessage()])->withInput();
         }
     }
 
@@ -169,11 +170,11 @@ class ContactSegmentController extends Controller
         // Apply additional filters
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('company', 'like', "%{$search}%");
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('company', 'like', "%{$search}%");
             });
         }
 
@@ -185,8 +186,8 @@ class ContactSegmentController extends Controller
 
         // Segment statistics
         $stats = [
-            'total_contacts' => $segment->type === 'static' ? 
-                $segment->contacts()->count() : 
+            'total_contacts' => $segment->type === 'static' ?
+                $segment->contacts()->count() :
                 $this->calculateDynamicSegmentCount($segment),
             'email_campaigns_sent' => $this->getEmailCampaignsSent($segment),
             'sms_campaigns_sent' => $this->getSmsCampaignsSent($segment),
@@ -209,7 +210,7 @@ class ContactSegmentController extends Controller
     {
         $segmentTypes = [
             'static' => 'Static Segment',
-            'dynamic' => 'Dynamic Segment'
+            'dynamic' => 'Dynamic Segment',
         ];
 
         $availableFields = [
@@ -302,7 +303,8 @@ class ContactSegmentController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to update segment: ' . $e->getMessage()])->withInput();
+
+            return back()->withErrors(['error' => 'Failed to update segment: '.$e->getMessage()])->withInput();
         }
     }
 
@@ -315,18 +317,18 @@ class ContactSegmentController extends Controller
             // Check if segment is being used in campaigns
             $emailCampaigns = $segment->emailCampaigns()->count();
             $smsCampaigns = 0; // TODO: Add when SMS campaigns are implemented
-            
+
             if ($emailCampaigns > 0) {
                 return back()->withErrors(['error' => "Cannot delete segment that is used in {$emailCampaigns} email campaign(s)."]);
             }
 
             $segment->delete();
-            
+
             return redirect()->route('segments.index')
                 ->with('success', 'Contact segment deleted successfully.');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to delete segment: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to delete segment: '.$e->getMessage()]);
         }
     }
 
@@ -342,13 +344,13 @@ class ContactSegmentController extends Controller
         try {
             // Update the segment's updated_at timestamp to trigger recalculation
             $segment->touch();
-            
+
             $contactCount = $this->calculateDynamicSegmentCount($segment);
-            
+
             return back()->with('success', "Dynamic segment refreshed. Found {$contactCount} contacts.");
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to refresh segment: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to refresh segment: '.$e->getMessage()]);
         }
     }
 
@@ -361,7 +363,7 @@ class ContactSegmentController extends Controller
             DB::beginTransaction();
 
             $newSegment = $segment->replicate();
-            $newSegment->name = $segment->name . ' (Copy)';
+            $newSegment->name = $segment->name.' (Copy)';
             $newSegment->save();
 
             // If it's a static segment, copy the contacts
@@ -377,7 +379,8 @@ class ContactSegmentController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to duplicate segment: ' . $e->getMessage()]);
+
+            return back()->withErrors(['error' => 'Failed to duplicate segment: '.$e->getMessage()]);
         }
     }
 
@@ -402,7 +405,7 @@ class ContactSegmentController extends Controller
         try {
             $addedCount = 0;
             foreach ($request->contact_ids as $contactId) {
-                if (!$segment->contacts()->where('contact_id', $contactId)->exists()) {
+                if (! $segment->contacts()->where('contact_id', $contactId)->exists()) {
                     $segment->contacts()->attach($contactId);
                     $addedCount++;
                 }
@@ -410,7 +413,7 @@ class ContactSegmentController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "Added {$addedCount} contacts to segment."
+                'message' => "Added {$addedCount} contacts to segment.",
             ]);
 
         } catch (\Exception $e) {
@@ -441,7 +444,7 @@ class ContactSegmentController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Contacts removed from segment successfully.'
+                'message' => 'Contacts removed from segment successfully.',
             ]);
 
         } catch (\Exception $e) {
@@ -455,8 +458,8 @@ class ContactSegmentController extends Controller
     private function buildDynamicQuery(ContactSegment $segment)
     {
         $query = Contact::query();
-        
-        if (!$segment->conditions || empty($segment->conditions)) {
+
+        if (! $segment->conditions || empty($segment->conditions)) {
             return $query->where('id', 0); // No results for empty conditions
         }
 
@@ -464,16 +467,16 @@ class ContactSegmentController extends Controller
         $logic = $segment->logic ?? 'and';
 
         if ($logic === 'or') {
-            $query->where(function($q) use ($conditions) {
+            $query->where(function ($q) use ($conditions) {
                 foreach ($conditions as $condition) {
-                    $q->orWhere(function($subQ) use ($condition) {
+                    $q->orWhere(function ($subQ) use ($condition) {
                         $this->applyCondition($subQ, $condition);
                     });
                 }
             });
         } else {
             foreach ($conditions as $condition) {
-                $query->where(function($q) use ($condition) {
+                $query->where(function ($q) use ($condition) {
                     $this->applyCondition($q, $condition);
                 });
             }
@@ -511,7 +514,7 @@ class ContactSegmentController extends Controller
                 $query->where($field, 'like', "%{$value}");
                 break;
             case 'is_empty':
-                $query->where(function($q) use ($field) {
+                $query->where(function ($q) use ($field) {
                     $q->whereNull($field)->orWhere($field, '');
                 });
                 break;

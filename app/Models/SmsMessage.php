@@ -19,7 +19,7 @@ class SmsMessage extends Model
         'cost',
         'delivered_at',
         'error_message',
-        'metadata'
+        'metadata',
     ];
 
     protected $casts = [
@@ -67,7 +67,7 @@ class SmsMessage extends Model
     {
         $this->update([
             'status' => 'delivered',
-            'delivered_at' => now()
+            'delivered_at' => now(),
         ]);
     }
 
@@ -75,13 +75,13 @@ class SmsMessage extends Model
     {
         $this->update([
             'status' => 'failed',
-            'error_message' => $errorMessage
+            'error_message' => $errorMessage,
         ]);
     }
 
     public function getStatusColorAttribute()
     {
-        return match($this->status) {
+        return match ($this->status) {
             'sent' => 'green',
             'delivered' => 'blue',
             'failed' => 'red',

@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
-use Carbon\Carbon;
 
 class Revenue extends Model
 {
@@ -33,7 +33,7 @@ class Revenue extends Model
         'metadata',
         'notes',
         'created_by',
-        'created_source'
+        'created_source',
     ];
 
     protected $casts = [
@@ -44,40 +44,55 @@ class Revenue extends Model
         'revenue_date' => 'datetime',
         'confirmed_at' => 'datetime',
         'refunded_at' => 'datetime',
-        'metadata' => 'array'
+        'metadata' => 'array',
     ];
 
     protected $dates = [
         'revenue_date',
         'confirmed_at',
-        'refunded_at'
+        'refunded_at',
     ];
 
     // Revenue types
     const TYPE_SUBSCRIPTION = 'subscription';
+
     const TYPE_ONE_TIME = 'one_time';
+
     const TYPE_COMMISSION = 'commission';
+
     const TYPE_REFUND = 'refund';
+
     const TYPE_BONUS = 'bonus';
 
     // Revenue statuses
     const STATUS_PENDING = 'pending';
+
     const STATUS_CONFIRMED = 'confirmed';
+
     const STATUS_REFUNDED = 'refunded';
+
     const STATUS_CANCELLED = 'cancelled';
 
     // Revenue channels
     const CHANNEL_EMAIL = 'email';
+
     const CHANNEL_SMS = 'sms';
+
     const CHANNEL_WHATSAPP = 'whatsapp';
+
     const CHANNEL_DIRECT = 'direct';
+
     const CHANNEL_API = 'api';
+
     const CHANNEL_MANUAL = 'manual';
 
     // Source types
     const SOURCE_EMAIL_CAMPAIGN = 'email_campaign';
+
     const SOURCE_SMS_CAMPAIGN = 'sms_campaign';
+
     const SOURCE_WHATSAPP_MESSAGE = 'whatsapp_message';
+
     const SOURCE_MANUAL = 'manual';
 
     /**
@@ -89,9 +104,9 @@ class Revenue extends Model
 
         static::creating(function ($revenue) {
             if (empty($revenue->transaction_id)) {
-                $revenue->transaction_id = 'TXN-' . strtoupper(uniqid()) . '-' . time();
+                $revenue->transaction_id = 'TXN-'.strtoupper(uniqid()).'-'.time();
             }
-            
+
             if (empty($revenue->revenue_date)) {
                 $revenue->revenue_date = now();
             }
@@ -114,19 +129,19 @@ class Revenue extends Model
     public function emailCampaign()
     {
         return $this->belongsTo(EmailCampaign::class, 'source_id')
-                    ->where('source_type', self::SOURCE_EMAIL_CAMPAIGN);
+            ->where('source_type', self::SOURCE_EMAIL_CAMPAIGN);
     }
 
     public function smsMessage()
     {
         return $this->belongsTo(SmsMessage::class, 'source_id')
-                    ->where('source_type', self::SOURCE_SMS_CAMPAIGN);
+            ->where('source_type', self::SOURCE_SMS_CAMPAIGN);
     }
 
     public function whatsappMessage()
     {
         return $this->belongsTo(WhatsAppMessage::class, 'source_id')
-                    ->where('source_type', self::SOURCE_WHATSAPP_MESSAGE);
+            ->where('source_type', self::SOURCE_WHATSAPP_MESSAGE);
     }
 
     /**
@@ -168,7 +183,7 @@ class Revenue extends Model
     {
         return $query->whereBetween('revenue_date', [
             now()->startOfMonth(),
-            now()->endOfMonth()
+            now()->endOfMonth(),
         ]);
     }
 
@@ -176,7 +191,7 @@ class Revenue extends Model
     {
         return $query->whereBetween('revenue_date', [
             now()->startOfYear(),
-            now()->endOfYear()
+            now()->endOfYear(),
         ]);
     }
 
@@ -184,7 +199,7 @@ class Revenue extends Model
     {
         return $query->whereBetween('revenue_date', [
             Carbon::parse($startDate)->startOfDay(),
-            Carbon::parse($endDate)->endOfDay()
+            Carbon::parse($endDate)->endOfDay(),
         ]);
     }
 
@@ -213,12 +228,12 @@ class Revenue extends Model
 
     public function getFormattedAmountAttribute()
     {
-        return number_format($this->amount, 2) . ' ' . $this->currency;
+        return number_format($this->amount, 2).' '.$this->currency;
     }
 
     public function getFormattedNetRevenueAttribute()
     {
-        return number_format($this->net_revenue, 2) . ' ' . $this->currency;
+        return number_format($this->net_revenue, 2).' '.$this->currency;
     }
 
     public function getStatusBadgeAttribute()
@@ -227,7 +242,7 @@ class Revenue extends Model
             self::STATUS_PENDING => 'bg-warning',
             self::STATUS_CONFIRMED => 'bg-success',
             self::STATUS_REFUNDED => 'bg-danger',
-            self::STATUS_CANCELLED => 'bg-secondary'
+            self::STATUS_CANCELLED => 'bg-secondary',
         ];
 
         return $classes[$this->status] ?? 'bg-secondary';
@@ -241,7 +256,7 @@ class Revenue extends Model
             self::CHANNEL_WHATSAPP => 'fab fa-whatsapp',
             self::CHANNEL_DIRECT => 'fas fa-handshake',
             self::CHANNEL_API => 'fas fa-plug',
-            self::CHANNEL_MANUAL => 'fas fa-user'
+            self::CHANNEL_MANUAL => 'fas fa-user',
         ];
 
         return $icons[$this->channel] ?? 'fas fa-question';
@@ -254,7 +269,7 @@ class Revenue extends Model
     {
         $this->update([
             'status' => self::STATUS_CONFIRMED,
-            'confirmed_at' => now()
+            'confirmed_at' => now(),
         ]);
     }
 
@@ -263,7 +278,7 @@ class Revenue extends Model
         $this->update([
             'status' => self::STATUS_REFUNDED,
             'refunded_at' => now(),
-            'notes' => $this->notes ? $this->notes . "\n\nRefund reason: " . $reason : "Refund reason: " . $reason
+            'notes' => $this->notes ? $this->notes."\n\nRefund reason: ".$reason : 'Refund reason: '.$reason,
         ]);
     }
 
@@ -271,7 +286,7 @@ class Revenue extends Model
     {
         $this->update([
             'status' => self::STATUS_CANCELLED,
-            'notes' => $this->notes ? $this->notes . "\n\nCancellation reason: " . $reason : "Cancellation reason: " . $reason
+            'notes' => $this->notes ? $this->notes."\n\nCancellation reason: ".$reason : 'Cancellation reason: '.$reason,
         ]);
     }
 
@@ -324,8 +339,8 @@ class Revenue extends Model
         }
 
         return $query->selectRaw('channel, SUM(amount) as total_revenue, COUNT(*) as transaction_count')
-                     ->groupBy('channel')
-                     ->get();
+            ->groupBy('channel')
+            ->get();
     }
 
     public static function getRevenueByType($startDate = null, $endDate = null)
@@ -337,8 +352,8 @@ class Revenue extends Model
         }
 
         return $query->selectRaw('type, SUM(amount) as total_revenue, COUNT(*) as transaction_count')
-                     ->groupBy('type')
-                     ->get();
+            ->groupBy('type')
+            ->get();
     }
 
     public static function getMonthlyRevenue($year = null)
@@ -346,11 +361,11 @@ class Revenue extends Model
         $year = $year ?? now()->year;
 
         return static::confirmed()
-                     ->whereYear('revenue_date', $year)
-                     ->selectRaw('MONTH(revenue_date) as month, SUM(amount) as total_revenue, COUNT(*) as transaction_count')
-                     ->groupBy('month')
-                     ->orderBy('month')
-                     ->get();
+            ->whereYear('revenue_date', $year)
+            ->selectRaw('MONTH(revenue_date) as month, SUM(amount) as total_revenue, COUNT(*) as transaction_count')
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
     }
 
     public static function getTopCustomersByRevenue($limit = 10, $startDate = null, $endDate = null)
@@ -362,22 +377,22 @@ class Revenue extends Model
         }
 
         return $query->selectRaw('contact_id, SUM(amount) as total_revenue, COUNT(*) as transaction_count')
-                     ->with('contact:id,first_name,last_name,email,company')
-                     ->groupBy('contact_id')
-                     ->orderBy('total_revenue', 'desc')
-                     ->limit($limit)
-                     ->get();
+            ->with('contact:id,first_name,last_name,email,company')
+            ->groupBy('contact_id')
+            ->orderBy('total_revenue', 'desc')
+            ->limit($limit)
+            ->get();
     }
 
     public static function getGrowthRate($startDate, $endDate)
     {
         $currentRevenue = static::getTotalRevenue($startDate, $endDate);
-        
+
         $previousStart = Carbon::parse($startDate)->subDays(
             Carbon::parse($startDate)->diffInDays(Carbon::parse($endDate))
         );
         $previousEnd = Carbon::parse($startDate)->subDay();
-        
+
         $previousRevenue = static::getTotalRevenue($previousStart, $previousEnd);
 
         if ($previousRevenue > 0) {
@@ -401,14 +416,14 @@ class Revenue extends Model
             'channel' => self::CHANNEL_EMAIL,
             'contact_id' => $emailLog->contact_id,
             'customer_email' => $emailLog->contact->email ?? null,
-            'customer_name' => $emailLog->contact ? $emailLog->contact->first_name . ' ' . $emailLog->contact->last_name : null,
+            'customer_name' => $emailLog->contact ? $emailLog->contact->first_name.' '.$emailLog->contact->last_name : null,
             'cost' => 0.01, // Estimated email cost
             'revenue_date' => $emailLog->opened_at ?? now(),
             'created_source' => 'system',
             'metadata' => [
                 'email_log_id' => $emailLog->id,
-                'campaign_name' => $emailLog->emailCampaign->subject ?? null
-            ]
+                'campaign_name' => $emailLog->emailCampaign->subject ?? null,
+            ],
         ]);
     }
 
@@ -424,14 +439,14 @@ class Revenue extends Model
             'source_id' => $smsMessage->id,
             'channel' => self::CHANNEL_SMS,
             'contact_id' => $contact?->id,
-            'customer_name' => $contact ? $contact->first_name . ' ' . $contact->last_name : null,
+            'customer_name' => $contact ? $contact->first_name.' '.$contact->last_name : null,
             'cost' => $smsMessage->cost ?? 0.02, // SMS cost
             'revenue_date' => $smsMessage->sent_at ?? now(),
             'created_source' => 'system',
             'metadata' => [
                 'sms_message_id' => $smsMessage->id,
-                'provider' => $smsMessage->provider ?? 'unknown'
-            ]
+                'provider' => $smsMessage->provider ?? 'unknown',
+            ],
         ]);
     }
 
@@ -447,14 +462,14 @@ class Revenue extends Model
             'source_id' => $whatsappMessage->id,
             'channel' => self::CHANNEL_WHATSAPP,
             'contact_id' => $contact?->id,
-            'customer_name' => $contact ? $contact->first_name . ' ' . $contact->last_name : null,
+            'customer_name' => $contact ? $contact->first_name.' '.$contact->last_name : null,
             'cost' => 0.005, // WhatsApp cost
             'revenue_date' => $whatsappMessage->sent_at ?? now(),
             'created_source' => 'system',
             'metadata' => [
                 'whatsapp_message_id' => $whatsappMessage->id,
-                'session_id' => $whatsappMessage->session_id ?? null
-            ]
+                'session_id' => $whatsappMessage->session_id ?? null,
+            ],
         ]);
     }
 
@@ -468,7 +483,7 @@ class Revenue extends Model
             self::TYPE_ONE_TIME => 'One Time',
             self::TYPE_COMMISSION => 'Commission',
             self::TYPE_REFUND => 'Refund',
-            self::TYPE_BONUS => 'Bonus'
+            self::TYPE_BONUS => 'Bonus',
         ];
     }
 
@@ -478,7 +493,7 @@ class Revenue extends Model
             self::STATUS_PENDING => 'Pending',
             self::STATUS_CONFIRMED => 'Confirmed',
             self::STATUS_REFUNDED => 'Refunded',
-            self::STATUS_CANCELLED => 'Cancelled'
+            self::STATUS_CANCELLED => 'Cancelled',
         ];
     }
 
@@ -490,7 +505,7 @@ class Revenue extends Model
             self::CHANNEL_WHATSAPP => 'WhatsApp',
             self::CHANNEL_DIRECT => 'Direct',
             self::CHANNEL_API => 'API',
-            self::CHANNEL_MANUAL => 'Manual'
+            self::CHANNEL_MANUAL => 'Manual',
         ];
     }
 }

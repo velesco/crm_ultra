@@ -2,26 +2,24 @@
 
 namespace App\Providers;
 
+use App\Models\Contact;
+use App\Models\CustomReport;
+// Import Models
+use App\Models\DataImport;
+use App\Models\EmailCampaign;
+use App\Models\ExportRequest;
+use App\Models\SmsProvider;
+use App\Models\WhatsAppSession;
+use App\Policies\ContactPolicy;
+use App\Policies\CustomReportPolicy;
+// Import Policies
+use App\Policies\DataImportPolicy;
+use App\Policies\EmailCampaignPolicy;
+use App\Policies\ExportRequestPolicy;
+use App\Policies\SmsProviderPolicy;
+use App\Policies\WhatsAppSessionPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
-
-// Import Models
-use App\Models\Contact;
-use App\Models\EmailCampaign;
-use App\Models\WhatsAppSession;
-use App\Models\SmsProvider;
-use App\Models\DataImport;
-use App\Models\CustomReport;
-use App\Models\ExportRequest;
-
-// Import Policies
-use App\Policies\ContactPolicy;
-use App\Policies\EmailCampaignPolicy;
-use App\Policies\WhatsAppSessionPolicy;
-use App\Policies\SmsProviderPolicy;
-use App\Policies\DataImportPolicy;
-use App\Policies\CustomReportPolicy;
-use App\Policies\ExportRequestPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -47,10 +45,10 @@ class AuthServiceProvider extends ServiceProvider
     {
         // Register custom gates
         $this->registerCustomGates();
-        
+
         // Register role-based permissions
         $this->registerRoleBasedPermissions();
-        
+
         // Register feature gates
         $this->registerFeatureGates();
     }
@@ -69,20 +67,21 @@ class AuthServiceProvider extends ServiceProvider
 
         // Bulk operations gate
         Gate::define('bulk-operations', function ($user) {
-            return $user->hasRole(['admin', 'manager']) || 
+            return $user->hasRole(['admin', 'manager']) ||
                    $user->hasPermissionTo('bulk operations');
         });
 
         // Advanced features gate
         Gate::define('advanced-features', function ($user) {
             $plan = $user->subscription_plan ?? 'free';
-            return in_array($plan, ['pro', 'enterprise']) || 
+
+            return in_array($plan, ['pro', 'enterprise']) ||
                    $user->hasRole(['admin']);
         });
 
         // API access gate
         Gate::define('api-access', function ($user) {
-            return $user->hasPermissionTo('api access') || 
+            return $user->hasPermissionTo('api access') ||
                    $user->hasRole(['admin', 'manager']);
         });
 
@@ -93,19 +92,19 @@ class AuthServiceProvider extends ServiceProvider
 
         // Team management gate
         Gate::define('team-management', function ($user) {
-            return $user->hasRole(['admin', 'manager']) || 
+            return $user->hasRole(['admin', 'manager']) ||
                    $user->hasPermissionTo('manage team');
         });
 
         // Reports access gate
         Gate::define('reports-access', function ($user) {
-            return $user->hasPermissionTo('view reports') || 
+            return $user->hasPermissionTo('view reports') ||
                    $user->hasRole(['admin', 'manager']);
         });
 
         // Integration management gate
         Gate::define('integration-management', function ($user) {
-            return $user->hasPermissionTo('manage integrations') || 
+            return $user->hasPermissionTo('manage integrations') ||
                    $user->hasRole(['admin', 'manager']);
         });
     }
@@ -132,39 +131,39 @@ class AuthServiceProvider extends ServiceProvider
 
         // Multi-channel communication permissions
         Gate::define('send-emails', function ($user) {
-            return $user->hasPermissionTo('send emails') || 
+            return $user->hasPermissionTo('send emails') ||
                    $user->hasRole(['admin', 'manager', 'agent']);
         });
 
         Gate::define('send-sms', function ($user) {
-            return $user->hasPermissionTo('send sms') || 
+            return $user->hasPermissionTo('send sms') ||
                    $user->hasRole(['admin', 'manager']);
         });
 
         Gate::define('send-whatsapp', function ($user) {
-            return $user->hasPermissionTo('send whatsapp') || 
+            return $user->hasPermissionTo('send whatsapp') ||
                    $user->hasRole(['admin', 'manager']);
         });
 
         // Data management permissions
         Gate::define('import-data', function ($user) {
-            return $user->hasPermissionTo('import data') || 
+            return $user->hasPermissionTo('import data') ||
                    $user->hasRole(['admin', 'manager', 'agent']);
         });
 
         Gate::define('export-data', function ($user) {
-            return $user->hasPermissionTo('export data') || 
+            return $user->hasPermissionTo('export data') ||
                    $user->hasRole(['admin', 'manager']);
         });
 
         // Configuration permissions
         Gate::define('manage-smtp-configs', function ($user) {
-            return $user->hasPermissionTo('manage smtp configs') || 
+            return $user->hasPermissionTo('manage smtp configs') ||
                    $user->hasRole(['admin', 'manager']);
         });
 
         Gate::define('manage-sms-providers', function ($user) {
-            return $user->hasPermissionTo('manage sms providers') || 
+            return $user->hasPermissionTo('manage sms providers') ||
                    $user->hasRole(['admin', 'manager']);
         });
     }
@@ -176,101 +175,111 @@ class AuthServiceProvider extends ServiceProvider
     {
         // Email campaigns feature
         Gate::define('email-campaigns-enabled', function ($user) {
-            if (!config('features.email_campaigns.enabled', true)) {
+            if (! config('features.email_campaigns.enabled', true)) {
                 return false;
             }
-            
+
             $plan = $user->subscription_plan ?? 'free';
+
             return in_array($plan, ['free', 'basic', 'pro', 'enterprise']);
         });
 
         // SMS feature
         Gate::define('sms-enabled', function ($user) {
-            if (!config('features.sms.enabled', true)) {
+            if (! config('features.sms.enabled', true)) {
                 return false;
             }
-            
+
             $plan = $user->subscription_plan ?? 'free';
+
             return in_array($plan, ['basic', 'pro', 'enterprise']);
         });
 
         // WhatsApp feature
         Gate::define('whatsapp-enabled', function ($user) {
-            if (!config('features.whatsapp.enabled', true)) {
+            if (! config('features.whatsapp.enabled', true)) {
                 return false;
             }
-            
+
             $plan = $user->subscription_plan ?? 'free';
+
             return in_array($plan, ['pro', 'enterprise']);
         });
 
         // Google Sheets integration
         Gate::define('google-sheets-enabled', function ($user) {
-            if (!config('features.google_sheets.enabled', true)) {
+            if (! config('features.google_sheets.enabled', true)) {
                 return false;
             }
-            
+
             $plan = $user->subscription_plan ?? 'free';
+
             return in_array($plan, ['basic', 'pro', 'enterprise']);
         });
 
         // Advanced segments
         Gate::define('advanced-segments-enabled', function ($user) {
-            if (!config('features.advanced_segments.enabled', true)) {
+            if (! config('features.advanced_segments.enabled', true)) {
                 return false;
             }
-            
+
             $plan = $user->subscription_plan ?? 'free';
+
             return in_array($plan, ['pro', 'enterprise']);
         });
 
         // API access
         Gate::define('api-enabled', function ($user) {
-            if (!config('features.api.enabled', false)) {
+            if (! config('features.api.enabled', false)) {
                 return false;
             }
-            
+
             $plan = $user->subscription_plan ?? 'free';
+
             return in_array($plan, ['pro', 'enterprise']);
         });
 
         // Webhooks
         Gate::define('webhooks-enabled', function ($user) {
-            if (!config('features.webhooks.enabled', false)) {
+            if (! config('features.webhooks.enabled', false)) {
                 return false;
             }
-            
+
             $plan = $user->subscription_plan ?? 'free';
+
             return in_array($plan, ['pro', 'enterprise']);
         });
 
         // Custom fields
         Gate::define('custom-fields-enabled', function ($user) {
-            if (!config('features.custom_fields.enabled', true)) {
+            if (! config('features.custom_fields.enabled', true)) {
                 return false;
             }
-            
+
             $plan = $user->subscription_plan ?? 'free';
+
             return in_array($plan, ['basic', 'pro', 'enterprise']);
         });
 
         // Automation
         Gate::define('automation-enabled', function ($user) {
-            if (!config('features.automation.enabled', false)) {
+            if (! config('features.automation.enabled', false)) {
                 return false;
             }
-            
+
             $plan = $user->subscription_plan ?? 'free';
+
             return in_array($plan, ['pro', 'enterprise']);
         });
 
         // Advanced reporting
         Gate::define('advanced-reports-enabled', function ($user) {
-            if (!config('features.advanced_reports.enabled', true)) {
+            if (! config('features.advanced_reports.enabled', true)) {
                 return false;
             }
-            
+
             $plan = $user->subscription_plan ?? 'free';
+
             return in_array($plan, ['pro', 'enterprise']);
         });
     }

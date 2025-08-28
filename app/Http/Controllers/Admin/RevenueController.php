@@ -3,15 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Contact;
 use App\Models\EmailCampaign;
 use App\Models\SmsMessage;
 use App\Models\WhatsAppMessage;
-use App\Models\Contact;
-use App\Models\SystemSetting;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class RevenueController extends Controller
 {
@@ -32,9 +31,9 @@ class RevenueController extends Controller
         $channelRevenue = $this->getChannelRevenue($dateRange);
 
         return view('admin.revenue.index', compact(
-            'stats', 
-            'trends', 
-            'topCustomers', 
+            'stats',
+            'trends',
+            'topCustomers',
             'channelRevenue',
             'dateRange'
         ));
@@ -52,7 +51,7 @@ class RevenueController extends Controller
 
         return view('admin.revenue.monthly', compact(
             'monthlyStats',
-            'monthlyTrends', 
+            'monthlyTrends',
             'yearComparison',
             'year'
         ));
@@ -100,14 +99,14 @@ class RevenueController extends Controller
     public function getStats(Request $request)
     {
         $dateRange = $this->getDateRange($request);
-        $cacheKey = 'revenue_stats_' . md5(serialize($dateRange));
+        $cacheKey = 'revenue_stats_'.md5(serialize($dateRange));
 
-        return Cache::remember($cacheKey, 300, function() use ($dateRange) {
+        return Cache::remember($cacheKey, 300, function () use ($dateRange) {
             return response()->json([
                 'stats' => $this->getRevenueStats($dateRange),
                 'trends' => $this->getRevenueTrends($dateRange),
                 'channel_breakdown' => $this->getChannelRevenue($dateRange),
-                'growth_metrics' => $this->getGrowthMetrics($dateRange)
+                'growth_metrics' => $this->getGrowthMetrics($dateRange),
             ]);
         });
     }
@@ -142,14 +141,14 @@ class RevenueController extends Controller
         $type = $request->get('type', 'summary');
         $dateRange = $this->getDateRange($request);
 
-        $filename = 'revenue_' . $type . '_' . now()->format('Y-m-d') . '.csv';
-        
+        $filename = 'revenue_'.$type.'_'.now()->format('Y-m-d').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ];
 
-        $callback = function() use ($type, $dateRange) {
+        $callback = function () use ($type, $dateRange) {
             $file = fopen('php://output', 'w');
 
             switch ($type) {
@@ -179,37 +178,37 @@ class RevenueController extends Controller
     private function getDateRange(Request $request)
     {
         $period = $request->get('period', '30_days');
-        
+
         switch ($period) {
             case '7_days':
                 return [
                     'start' => now()->subDays(7)->startOfDay(),
-                    'end' => now()->endOfDay()
+                    'end' => now()->endOfDay(),
                 ];
             case '30_days':
                 return [
                     'start' => now()->subDays(30)->startOfDay(),
-                    'end' => now()->endOfDay()
+                    'end' => now()->endOfDay(),
                 ];
             case '90_days':
                 return [
                     'start' => now()->subDays(90)->startOfDay(),
-                    'end' => now()->endOfDay()
+                    'end' => now()->endOfDay(),
                 ];
             case 'this_year':
                 return [
                     'start' => now()->startOfYear(),
-                    'end' => now()->endOfYear()
+                    'end' => now()->endOfYear(),
                 ];
             case 'custom':
                 return [
                     'start' => Carbon::parse($request->get('start_date'))->startOfDay(),
-                    'end' => Carbon::parse($request->get('end_date'))->endOfDay()
+                    'end' => Carbon::parse($request->get('end_date'))->endOfDay(),
                 ];
             default:
                 return [
                     'start' => now()->subDays(30)->startOfDay(),
-                    'end' => now()->endOfDay()
+                    'end' => now()->endOfDay(),
                 ];
         }
     }
@@ -223,7 +222,7 @@ class RevenueController extends Controller
         $totalRevenue = $this->calculateTotalRevenue($dateRange);
         $previousRevenue = $this->calculateTotalRevenue([
             'start' => $dateRange['start']->copy()->subDays($dateRange['start']->diffInDays($dateRange['end'])),
-            'end' => $dateRange['start']->copy()->subDay()
+            'end' => $dateRange['start']->copy()->subDay(),
         ]);
 
         $averageOrderValue = $this->calculateAverageOrderValue($dateRange);
@@ -248,7 +247,7 @@ class RevenueController extends Controller
     {
         // This is a simplified calculation - in a real scenario, you'd have order/transaction data
         // For demonstration, we'll calculate based on campaign performance and estimated values
-        
+
         $emailRevenue = EmailCampaign::whereBetween('created_at', [$dateRange['start'], $dateRange['end']])
             ->sum(DB::raw('COALESCE(opens_count, 0) * 0.1')); // $0.1 per email open
 
@@ -323,16 +322,16 @@ class RevenueController extends Controller
 
         while ($current->lte($dateRange['end'])) {
             $next = $interval === 'week' ? $current->copy()->addWeek() : $current->copy()->addDay();
-            
+
             $revenue = $this->calculateTotalRevenue([
                 'start' => $current,
-                'end' => min($next, $dateRange['end'])
+                'end' => min($next, $dateRange['end']),
             ]);
 
             $data[] = [
                 'date' => $current->format($interval === 'week' ? 'Y-W' : 'Y-m-d'),
                 'revenue' => $revenue,
-                'formatted_date' => $current->format($interval === 'week' ? 'M d, Y' : 'M d')
+                'formatted_date' => $current->format($interval === 'week' ? 'M d, Y' : 'M d'),
             ];
 
             $current = $next;
@@ -351,20 +350,21 @@ class RevenueController extends Controller
         return Contact::select('contacts.*')
             ->selectRaw('COUNT(email_logs.id) as email_interactions')
             ->selectRaw('COUNT(sms_messages.id) as sms_interactions')
-            ->leftJoin('email_logs', function($join) use ($dateRange) {
+            ->leftJoin('email_logs', function ($join) use ($dateRange) {
                 $join->on('contacts.id', '=', 'email_logs.contact_id')
-                     ->whereBetween('email_logs.created_at', [$dateRange['start'], $dateRange['end']]);
+                    ->whereBetween('email_logs.created_at', [$dateRange['start'], $dateRange['end']]);
             })
-            ->leftJoin('sms_messages', function($join) use ($dateRange) {
+            ->leftJoin('sms_messages', function ($join) use ($dateRange) {
                 $join->on('contacts.phone', '=', 'sms_messages.to_number')
-                     ->whereBetween('sms_messages.created_at', [$dateRange['start'], $dateRange['end']]);
+                    ->whereBetween('sms_messages.created_at', [$dateRange['start'], $dateRange['end']]);
             })
             ->groupBy('contacts.id')
             ->orderByRaw('(email_interactions + sms_interactions) DESC')
             ->limit(10)
             ->get()
-            ->map(function($contact) {
+            ->map(function ($contact) {
                 $contact->estimated_revenue = ($contact->email_interactions * 0.1) + ($contact->sms_interactions * 0.05);
+
                 return $contact;
             });
     }
@@ -378,20 +378,20 @@ class RevenueController extends Controller
             'email' => [
                 'revenue' => EmailCampaign::whereBetween('created_at', [$dateRange['start'], $dateRange['end']])
                     ->sum(DB::raw('COALESCE(opens_count, 0) * 0.1')),
-                'count' => EmailCampaign::whereBetween('created_at', [$dateRange['start'], $dateRange['end']])->count()
+                'count' => EmailCampaign::whereBetween('created_at', [$dateRange['start'], $dateRange['end']])->count(),
             ],
             'sms' => [
                 'revenue' => SmsMessage::whereBetween('created_at', [$dateRange['start'], $dateRange['end']])
                     ->where('status', 'delivered')->count() * 0.05,
                 'count' => SmsMessage::whereBetween('created_at', [$dateRange['start'], $dateRange['end']])
-                    ->where('status', 'delivered')->count()
+                    ->where('status', 'delivered')->count(),
             ],
             'whatsapp' => [
                 'revenue' => WhatsAppMessage::whereBetween('created_at', [$dateRange['start'], $dateRange['end']])
                     ->where('status', 'delivered')->count() * 0.02,
                 'count' => WhatsAppMessage::whereBetween('created_at', [$dateRange['start'], $dateRange['end']])
-                    ->where('status', 'delivered')->count()
-            ]
+                    ->where('status', 'delivered')->count(),
+            ],
         ];
     }
 
@@ -404,7 +404,7 @@ class RevenueController extends Controller
         for ($month = 1; $month <= 12; $month++) {
             $dateRange = [
                 'start' => Carbon::create($year, $month, 1)->startOfMonth(),
-                'end' => Carbon::create($year, $month, 1)->endOfMonth()
+                'end' => Carbon::create($year, $month, 1)->endOfMonth(),
             ];
 
             $stats[] = [
@@ -412,7 +412,7 @@ class RevenueController extends Controller
                 'month_name' => Carbon::create($year, $month, 1)->format('F'),
                 'revenue' => $this->calculateTotalRevenue($dateRange),
                 'customers' => $this->getActiveCustomerCount($dateRange),
-                'campaigns' => EmailCampaign::whereBetween('created_at', [$dateRange['start'], $dateRange['end']])->count()
+                'campaigns' => EmailCampaign::whereBetween('created_at', [$dateRange['start'], $dateRange['end']])->count(),
             ];
         }
 
@@ -429,7 +429,7 @@ class RevenueController extends Controller
 
         return [
             'current' => $currentYear,
-            'previous' => $previousYear
+            'previous' => $previousYear,
         ];
     }
 
@@ -444,7 +444,7 @@ class RevenueController extends Controller
         return [
             'current_year' => $currentYearTotal,
             'previous_year' => $previousYearTotal,
-            'growth_percentage' => $previousYearTotal > 0 ? (($currentYearTotal - $previousYearTotal) / $previousYearTotal) * 100 : 0
+            'growth_percentage' => $previousYearTotal > 0 ? (($currentYearTotal - $previousYearTotal) / $previousYearTotal) * 100 : 0,
         ];
     }
 
@@ -461,7 +461,7 @@ class RevenueController extends Controller
             'new_customers' => $newCustomers,
             'active_customers' => $activeCustomers,
             'total_customers' => $totalCustomers,
-            'customer_growth' => $totalCustomers > 0 ? ($newCustomers / $totalCustomers) * 100 : 0
+            'customer_growth' => $totalCustomers > 0 ? ($newCustomers / $totalCustomers) * 100 : 0,
         ];
     }
 
@@ -474,7 +474,7 @@ class RevenueController extends Controller
             'vip' => Contact::where('tags', 'like', '%VIP%')->count(),
             'enterprise' => Contact::where('company_size', 'large')->count(),
             'smb' => Contact::where('company_size', 'small')->count(),
-            'individual' => Contact::whereNull('company')->count()
+            'individual' => Contact::whereNull('company')->count(),
         ];
     }
 
@@ -497,7 +497,7 @@ class RevenueController extends Controller
         // Get historical data for trend analysis
         $historical = $this->getRevenueByInterval([
             'start' => now()->subMonths(12),
-            'end' => now()
+            'end' => now(),
         ], 'month');
 
         $forecast = [];
@@ -507,13 +507,13 @@ class RevenueController extends Controller
         for ($i = 1; $i <= $months; $i++) {
             $forecastDate = now()->addMonths($i);
             $seasonalMultiplier = $this->getSeasonalMultiplier($forecastDate->month);
-            
+
             $predictedRevenue = $baseRevenue * (1 + $growth) * $seasonalMultiplier;
-            
+
             $forecast[] = [
                 'date' => $forecastDate->format('Y-m'),
                 'predicted_revenue' => round($predictedRevenue, 2),
-                'confidence' => max(0.5, 1 - ($i * 0.1)) // Confidence decreases over time
+                'confidence' => max(0.5, 1 - ($i * 0.1)), // Confidence decreases over time
             ];
         }
 
@@ -525,13 +525,15 @@ class RevenueController extends Controller
      */
     private function calculateGrowthRate($historical)
     {
-        if (count($historical) < 2) return 0.05; // Default 5% growth
+        if (count($historical) < 2) {
+            return 0.05;
+        } // Default 5% growth
 
         $firstRevenue = $historical[0]['revenue'];
         $lastRevenue = end($historical)['revenue'];
         $periods = count($historical) - 1;
 
-        return $periods > 0 && $firstRevenue > 0 ? 
+        return $periods > 0 && $firstRevenue > 0 ?
             pow(($lastRevenue / $firstRevenue), (1 / $periods)) - 1 : 0.05;
     }
 
@@ -553,7 +555,7 @@ class RevenueController extends Controller
             9 => 1.15,  // September - back to business
             10 => 1.25, // October
             11 => 1.35, // November - Black Friday
-            12 => 1.40  // December - holiday season
+            12 => 1.40,  // December - holiday season
         ];
 
         return $seasonalFactors[$month] ?? 1.0;
@@ -566,15 +568,15 @@ class RevenueController extends Controller
     {
         $last6Months = $this->getRevenueByInterval([
             'start' => now()->subMonths(6),
-            'end' => now()
+            'end' => now(),
         ], 'month');
 
         $revenues = collect($last6Months)->pluck('revenue')->toArray();
-        
+
         return [
             'trend' => $this->calculateTrend($revenues),
             'volatility' => $this->calculateVolatility($revenues),
-            'average' => array_sum($revenues) / count($revenues)
+            'average' => array_sum($revenues) / count($revenues),
         ];
     }
 
@@ -583,18 +585,28 @@ class RevenueController extends Controller
      */
     private function calculateTrend($data)
     {
-        if (count($data) < 2) return 'stable';
+        if (count($data) < 2) {
+            return 'stable';
+        }
 
         $increases = 0;
         $decreases = 0;
 
         for ($i = 1; $i < count($data); $i++) {
-            if ($data[$i] > $data[$i - 1]) $increases++;
-            else if ($data[$i] < $data[$i - 1]) $decreases++;
+            if ($data[$i] > $data[$i - 1]) {
+                $increases++;
+            } elseif ($data[$i] < $data[$i - 1]) {
+                $decreases++;
+            }
         }
 
-        if ($increases > $decreases) return 'increasing';
-        if ($decreases > $increases) return 'decreasing';
+        if ($increases > $decreases) {
+            return 'increasing';
+        }
+        if ($decreases > $increases) {
+            return 'decreasing';
+        }
+
         return 'stable';
     }
 
@@ -603,10 +615,12 @@ class RevenueController extends Controller
      */
     private function calculateVolatility($data)
     {
-        if (count($data) < 2) return 0;
+        if (count($data) < 2) {
+            return 0;
+        }
 
         $mean = array_sum($data) / count($data);
-        $variance = array_sum(array_map(function($x) use ($mean) {
+        $variance = array_sum(array_map(function ($x) use ($mean) {
             return pow($x - $mean, 2);
         }, $data)) / count($data);
 
@@ -624,7 +638,7 @@ class RevenueController extends Controller
                 'month' => $month,
                 'month_name' => Carbon::create(null, $month, 1)->format('F'),
                 'multiplier' => $this->getSeasonalMultiplier($month),
-                'description' => $this->getSeasonalDescription($month)
+                'description' => $this->getSeasonalDescription($month),
             ];
         }
 
@@ -648,7 +662,7 @@ class RevenueController extends Controller
             9 => 'Back-to-business surge',
             10 => 'Q3 strong performance',
             11 => 'Pre-holiday peak',
-            12 => 'Holiday season maximum'
+            12 => 'Holiday season maximum',
         ];
 
         return $descriptions[$month] ?? 'Standard business period';
@@ -662,13 +676,13 @@ class RevenueController extends Controller
         $currentRevenue = $this->calculateTotalRevenue($dateRange);
         $previousRevenue = $this->calculateTotalRevenue([
             'start' => $dateRange['start']->copy()->subDays($dateRange['start']->diffInDays($dateRange['end'])),
-            'end' => $dateRange['start']->copy()->subDay()
+            'end' => $dateRange['start']->copy()->subDay(),
         ]);
 
         return [
             'revenue_growth' => $previousRevenue > 0 ? (($currentRevenue - $previousRevenue) / $previousRevenue) * 100 : 0,
             'customer_growth' => $this->getCustomerGrowthRate($dateRange),
-            'campaign_efficiency' => $this->getCampaignEfficiency($dateRange)
+            'campaign_efficiency' => $this->getCampaignEfficiency($dateRange),
         ];
     }
 
@@ -680,7 +694,7 @@ class RevenueController extends Controller
         $currentCustomers = $this->getActiveCustomerCount($dateRange);
         $previousCustomers = Contact::whereBetween('created_at', [
             $dateRange['start']->copy()->subDays($dateRange['start']->diffInDays($dateRange['end'])),
-            $dateRange['start']->copy()->subDay()
+            $dateRange['start']->copy()->subDay(),
         ])->count();
 
         return $previousCustomers > 0 ? (($currentCustomers - $previousCustomers) / $previousCustomers) * 100 : 0;
@@ -716,12 +730,12 @@ class RevenueController extends Controller
     private function getChannelChartData($dateRange)
     {
         $channelData = $this->getChannelRevenue($dateRange);
-        
+
         return [
             'labels' => array_keys($channelData),
-            'data' => array_map(function($channel) {
+            'data' => array_map(function ($channel) {
                 return $channel['revenue'];
-            }, $channelData)
+            }, $channelData),
         ];
     }
 
@@ -729,13 +743,13 @@ class RevenueController extends Controller
     private function exportSummary($file, $dateRange)
     {
         fputcsv($file, ['Metric', 'Value', 'Period']);
-        
+
         $stats = $this->getRevenueStats($dateRange);
         foreach ($stats as $key => $value) {
             fputcsv($file, [
                 ucwords(str_replace('_', ' ', $key)),
                 is_numeric($value) ? number_format($value, 2) : $value,
-                $dateRange['start']->format('Y-m-d') . ' to ' . $dateRange['end']->format('Y-m-d')
+                $dateRange['start']->format('Y-m-d').' to '.$dateRange['end']->format('Y-m-d'),
             ]);
         }
     }
@@ -743,16 +757,16 @@ class RevenueController extends Controller
     private function exportCustomers($file, $dateRange)
     {
         fputcsv($file, ['Customer Name', 'Email', 'Company', 'Email Interactions', 'SMS Interactions', 'Estimated Revenue']);
-        
+
         $customers = $this->getTopCustomers($dateRange);
         foreach ($customers as $customer) {
             fputcsv($file, [
-                $customer->first_name . ' ' . $customer->last_name,
+                $customer->first_name.' '.$customer->last_name,
                 $customer->email,
                 $customer->company ?? 'N/A',
                 $customer->email_interactions,
                 $customer->sms_interactions,
-                number_format($customer->estimated_revenue, 2)
+                number_format($customer->estimated_revenue, 2),
             ]);
         }
     }
@@ -760,13 +774,13 @@ class RevenueController extends Controller
     private function exportChannels($file, $dateRange)
     {
         fputcsv($file, ['Channel', 'Revenue', 'Count']);
-        
+
         $channels = $this->getChannelRevenue($dateRange);
         foreach ($channels as $name => $data) {
             fputcsv($file, [
                 ucfirst($name),
                 number_format($data['revenue'], 2),
-                $data['count']
+                $data['count'],
             ]);
         }
     }
@@ -774,16 +788,16 @@ class RevenueController extends Controller
     private function exportMonthly($file, $dateRange)
     {
         fputcsv($file, ['Month', 'Revenue', 'Customers', 'Campaigns']);
-        
+
         $year = $dateRange['start']->year;
         $monthlyStats = $this->getMonthlyStats($year);
-        
+
         foreach ($monthlyStats as $month) {
             fputcsv($file, [
                 $month['month_name'],
                 number_format($month['revenue'], 2),
                 $month['customers'],
-                $month['campaigns']
+                $month['campaigns'],
             ]);
         }
     }

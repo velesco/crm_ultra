@@ -6,8 +6,6 @@ use App\Models\PerformanceMetric;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Carbon\Carbon;
 
 class PerformanceController extends Controller
 {
@@ -23,14 +21,14 @@ class PerformanceController extends Controller
     {
         // Get dashboard summary
         $summary = PerformanceMetric::getDashboardSummary();
-        
+
         // Get recent critical and warning metrics
         $criticalMetrics = PerformanceMetric::critical()
             ->recent(60)
             ->latest('recorded_at')
             ->limit(10)
             ->get();
-            
+
         $warningMetrics = PerformanceMetric::warning()
             ->recent(60)
             ->latest('recorded_at')
@@ -39,13 +37,13 @@ class PerformanceController extends Controller
 
         // Get current system metrics
         $currentMetrics = $this->getCurrentSystemMetrics();
-        
+
         // Get metric types for filtering
         $metricTypes = PerformanceMetric::distinct('metric_type')->pluck('metric_type');
 
         return view('admin.performance.index', compact(
             'summary',
-            'criticalMetrics', 
+            'criticalMetrics',
             'warningMetrics',
             'currentMetrics',
             'metricTypes'
@@ -59,7 +57,7 @@ class PerformanceController extends Controller
     {
         $type = $request->get('type', 'cpu');
         $period = $request->get('period', '24h');
-        
+
         // Parse period
         $hours = match ($period) {
             '1h' => 1,
@@ -98,7 +96,7 @@ class PerformanceController extends Controller
     public function getSystemMetrics()
     {
         $metrics = $this->getCurrentSystemMetrics();
-        
+
         // Record metrics in database
         foreach ($metrics as $category => $categoryMetrics) {
             foreach ($categoryMetrics as $name => $data) {
@@ -125,7 +123,7 @@ class PerformanceController extends Controller
     {
         $type = $request->get('type', 'cpu');
         $period = $request->get('period', '24h');
-        
+
         $hours = match ($period) {
             '1h' => 1,
             '6h' => 6,
@@ -137,7 +135,7 @@ class PerformanceController extends Controller
         };
 
         $trends = PerformanceMetric::getTrends($type, $hours);
-        
+
         return response()->json([
             'labels' => array_column($trends, 'time'),
             'datasets' => [
@@ -146,16 +144,16 @@ class PerformanceController extends Controller
                     'data' => array_column($trends, 'average'),
                     'borderColor' => 'rgb(75, 192, 192)',
                     'backgroundColor' => 'rgba(75, 192, 192, 0.2)',
-                    'tension' => 0.1
+                    'tension' => 0.1,
                 ],
                 [
                     'label' => 'Maximum',
                     'data' => array_column($trends, 'max'),
                     'borderColor' => 'rgb(255, 99, 132)',
                     'backgroundColor' => 'rgba(255, 99, 132, 0.2)',
-                    'tension' => 0.1
-                ]
-            ]
+                    'tension' => 0.1,
+                ],
+            ],
         ]);
     }
 
@@ -166,7 +164,7 @@ class PerformanceController extends Controller
     {
         $type = $request->get('type');
         $period = $request->get('period', '24h');
-        
+
         $hours = match ($period) {
             '1h' => 1,
             '6h' => 6,
@@ -200,13 +198,13 @@ class PerformanceController extends Controller
     public function cleanOldMetrics(Request $request)
     {
         $days = $request->get('days', 30);
-        
+
         $deleted = PerformanceMetric::cleanOldMetrics($days);
-        
+
         return response()->json([
             'success' => true,
             'message' => "Deleted {$deleted} old performance metrics",
-            'deleted_count' => $deleted
+            'deleted_count' => $deleted,
         ]);
     }
 
@@ -217,7 +215,7 @@ class PerformanceController extends Controller
     {
         $type = $request->get('type');
         $period = $request->get('period', '24h');
-        
+
         $hours = match ($period) {
             '1h' => 1,
             '6h' => 6,
@@ -230,7 +228,7 @@ class PerformanceController extends Controller
 
         $query = PerformanceMetric::where('recorded_at', '>=', now()->subHours($hours))
             ->orderBy('recorded_at', 'desc');
-            
+
         if ($type) {
             $query->byType($type);
         }
@@ -249,13 +247,13 @@ class PerformanceController extends Controller
                 $metric->unit,
                 $metric->status,
                 $metric->server_name ?? 'N/A',
-                json_encode($metric->metadata ?? [])
+                json_encode($metric->metadata ?? []),
             ];
         }
 
-        $filename = 'performance_metrics_' . ($type ? $type . '_' : '') . now()->format('Y-m-d_H-i-s') . '.csv';
-        
-        $callback = function() use ($csvData) {
+        $filename = 'performance_metrics_'.($type ? $type.'_' : '').now()->format('Y-m-d_H-i-s').'.csv';
+
+        $callback = function () use ($csvData) {
             $file = fopen('php://output', 'w');
             foreach ($csvData as $row) {
                 fputcsv($file, $row);
@@ -265,7 +263,7 @@ class PerformanceController extends Controller
 
         return response()->stream($callback, 200, [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
 
@@ -278,19 +276,19 @@ class PerformanceController extends Controller
 
         // CPU Metrics
         $metrics['cpu'] = $this->getCpuMetrics();
-        
+
         // Memory Metrics
         $metrics['memory'] = $this->getMemoryMetrics();
-        
+
         // Disk Metrics
         $metrics['disk'] = $this->getDiskMetrics();
-        
+
         // Database Metrics
         $metrics['database'] = $this->getDatabaseMetrics();
-        
+
         // Cache Metrics
         $metrics['cache'] = $this->getCacheMetrics();
-        
+
         // Queue Metrics
         $metrics['queue'] = $this->getQueueMetrics();
 
@@ -303,7 +301,7 @@ class PerformanceController extends Controller
     private function getCpuMetrics(): array
     {
         $metrics = [];
-        
+
         // Get load average (Unix/Linux only)
         if (function_exists('sys_getloadavg')) {
             $load = sys_getloadavg();
@@ -311,7 +309,7 @@ class PerformanceController extends Controller
                 'value' => round($load[0], 2),
                 'unit' => 'load',
                 'status' => $load[0] > 2 ? 'critical' : ($load[0] > 1 ? 'warning' : 'normal'),
-                'metadata' => ['description' => '1-minute load average']
+                'metadata' => ['description' => '1-minute load average'],
             ];
         }
 
@@ -320,7 +318,7 @@ class PerformanceController extends Controller
             'value' => round(microtime(true) - LARAVEL_START, 3),
             'unit' => 'seconds',
             'status' => 'normal',
-            'metadata' => ['description' => 'PHP execution time']
+            'metadata' => ['description' => 'PHP execution time'],
         ];
 
         return $metrics;
@@ -340,20 +338,20 @@ class PerformanceController extends Controller
                 'value' => round($memoryUsage / 1024 / 1024, 2),
                 'unit' => 'MB',
                 'status' => ($memoryUsage / $memoryLimit > 0.8) ? 'critical' : (($memoryUsage / $memoryLimit > 0.6) ? 'warning' : 'normal'),
-                'metadata' => ['limit_mb' => round($memoryLimit / 1024 / 1024, 2)]
+                'metadata' => ['limit_mb' => round($memoryLimit / 1024 / 1024, 2)],
             ],
             'peak_usage' => [
                 'value' => round($memoryPeak / 1024 / 1024, 2),
                 'unit' => 'MB',
                 'status' => 'normal',
-                'metadata' => ['limit_mb' => round($memoryLimit / 1024 / 1024, 2)]
+                'metadata' => ['limit_mb' => round($memoryLimit / 1024 / 1024, 2)],
             ],
             'usage_percentage' => [
                 'value' => round(($memoryUsage / $memoryLimit) * 100, 2),
                 'unit' => '%',
                 'status' => ($memoryUsage / $memoryLimit > 0.8) ? 'critical' : (($memoryUsage / $memoryLimit > 0.6) ? 'warning' : 'normal'),
-                'metadata' => ['total_limit' => round($memoryLimit / 1024 / 1024, 2) . ' MB']
-            ]
+                'metadata' => ['total_limit' => round($memoryLimit / 1024 / 1024, 2).' MB'],
+            ],
         ];
     }
 
@@ -372,20 +370,20 @@ class PerformanceController extends Controller
                 'value' => round($totalBytes / 1024 / 1024 / 1024, 2),
                 'unit' => 'GB',
                 'status' => 'normal',
-                'metadata' => ['path' => $rootPath]
+                'metadata' => ['path' => $rootPath],
             ],
             'free_space' => [
                 'value' => round($freeBytes / 1024 / 1024 / 1024, 2),
                 'unit' => 'GB',
                 'status' => ($freeBytes / $totalBytes < 0.1) ? 'critical' : (($freeBytes / $totalBytes < 0.2) ? 'warning' : 'normal'),
-                'metadata' => ['path' => $rootPath]
+                'metadata' => ['path' => $rootPath],
             ],
             'usage_percentage' => [
                 'value' => round(($usedBytes / $totalBytes) * 100, 2),
                 'unit' => '%',
                 'status' => (($usedBytes / $totalBytes) > 0.9) ? 'critical' : ((($usedBytes / $totalBytes) > 0.8) ? 'warning' : 'normal'),
-                'metadata' => ['path' => $rootPath]
-            ]
+                'metadata' => ['path' => $rootPath],
+            ],
         ];
     }
 
@@ -399,12 +397,12 @@ class PerformanceController extends Controller
         try {
             // Connection count
             $connections = DB::select("SHOW STATUS LIKE 'Threads_connected'");
-            if (!empty($connections)) {
+            if (! empty($connections)) {
                 $metrics['connections'] = [
                     'value' => (int) $connections[0]->Value,
                     'unit' => 'count',
                     'status' => ($connections[0]->Value > 100) ? 'warning' : 'normal',
-                    'metadata' => ['description' => 'Active database connections']
+                    'metadata' => ['description' => 'Active database connections'],
                 ];
             }
 
@@ -412,12 +410,12 @@ class PerformanceController extends Controller
             $startTime = microtime(true);
             DB::select('SELECT 1');
             $queryTime = (microtime(true) - $startTime) * 1000;
-            
+
             $metrics['query_response_time'] = [
                 'value' => round($queryTime, 3),
                 'unit' => 'ms',
                 'status' => ($queryTime > 1000) ? 'critical' : (($queryTime > 500) ? 'warning' : 'normal'),
-                'metadata' => ['description' => 'Database response time']
+                'metadata' => ['description' => 'Database response time'],
             ];
 
             // Table count
@@ -426,7 +424,7 @@ class PerformanceController extends Controller
                 'value' => $tableCount,
                 'unit' => 'count',
                 'status' => 'normal',
-                'metadata' => ['description' => 'Number of database tables']
+                'metadata' => ['description' => 'Number of database tables'],
             ];
 
         } catch (\Exception $e) {
@@ -434,7 +432,7 @@ class PerformanceController extends Controller
                 'value' => 1,
                 'unit' => 'error',
                 'status' => 'critical',
-                'metadata' => ['error' => $e->getMessage()]
+                'metadata' => ['error' => $e->getMessage()],
             ];
         }
 
@@ -450,41 +448,41 @@ class PerformanceController extends Controller
 
         try {
             // Cache hit test
-            $testKey = 'performance_test_' . time();
+            $testKey = 'performance_test_'.time();
             $testValue = 'test_value';
-            
+
             // Set cache
             $setTime = microtime(true);
             Cache::put($testKey, $testValue, 60);
             $setDuration = (microtime(true) - $setTime) * 1000;
-            
+
             // Get cache
             $getTime = microtime(true);
             $retrieved = Cache::get($testKey);
             $getDuration = (microtime(true) - $getTime) * 1000;
-            
+
             // Clean up
             Cache::forget($testKey);
-            
+
             $metrics['set_response_time'] = [
                 'value' => round($setDuration, 3),
                 'unit' => 'ms',
                 'status' => ($setDuration > 100) ? 'warning' : 'normal',
-                'metadata' => ['description' => 'Cache set operation time']
+                'metadata' => ['description' => 'Cache set operation time'],
             ];
-            
+
             $metrics['get_response_time'] = [
                 'value' => round($getDuration, 3),
                 'unit' => 'ms',
                 'status' => ($getDuration > 50) ? 'warning' : 'normal',
-                'metadata' => ['description' => 'Cache get operation time']
+                'metadata' => ['description' => 'Cache get operation time'],
             ];
-            
+
             $metrics['cache_hit'] = [
                 'value' => ($retrieved === $testValue) ? 1 : 0,
                 'unit' => 'boolean',
                 'status' => ($retrieved === $testValue) ? 'normal' : 'critical',
-                'metadata' => ['description' => 'Cache functionality test']
+                'metadata' => ['description' => 'Cache functionality test'],
             ];
 
         } catch (\Exception $e) {
@@ -492,7 +490,7 @@ class PerformanceController extends Controller
                 'value' => 1,
                 'unit' => 'error',
                 'status' => 'critical',
-                'metadata' => ['error' => $e->getMessage()]
+                'metadata' => ['error' => $e->getMessage()],
             ];
         }
 
@@ -513,7 +511,7 @@ class PerformanceController extends Controller
                 'value' => $failedJobs,
                 'unit' => 'count',
                 'status' => ($failedJobs > 10) ? 'critical' : (($failedJobs > 5) ? 'warning' : 'normal'),
-                'metadata' => ['description' => 'Number of failed queue jobs']
+                'metadata' => ['description' => 'Number of failed queue jobs'],
             ];
 
             // Recent jobs count (if jobs table exists)
@@ -521,12 +519,12 @@ class PerformanceController extends Controller
                 $recentJobs = DB::table('jobs')
                     ->where('created_at', '>=', now()->subHour())
                     ->count();
-                    
+
                 $metrics['recent_jobs'] = [
                     'value' => $recentJobs,
                     'unit' => 'count',
                     'status' => 'normal',
-                    'metadata' => ['description' => 'Jobs queued in last hour']
+                    'metadata' => ['description' => 'Jobs queued in last hour'],
                 ];
             }
 
@@ -535,7 +533,7 @@ class PerformanceController extends Controller
                 'value' => 1,
                 'unit' => 'error',
                 'status' => 'critical',
-                'metadata' => ['error' => $e->getMessage()]
+                'metadata' => ['error' => $e->getMessage()],
             ];
         }
 
@@ -578,10 +576,10 @@ class PerformanceController extends Controller
     private function parseBytes(string $val): int
     {
         $val = trim($val);
-        $last = strtolower($val[strlen($val)-1]);
+        $last = strtolower($val[strlen($val) - 1]);
         $val = (int) $val;
-        
-        switch($last) {
+
+        switch ($last) {
             case 'g':
                 $val *= 1024;
             case 'm':

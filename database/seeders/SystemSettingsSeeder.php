@@ -61,7 +61,7 @@ class SystemSettingsSeeder extends Seeder
                 'is_public' => true,
                 'sort_order' => 4,
             ],
-            
+
             // Email Settings
             [
                 'key' => 'email.default_from_name',
@@ -104,7 +104,7 @@ class SystemSettingsSeeder extends Seeder
                 'description' => 'Enable automatic bounce handling for emails',
                 'sort_order' => 4,
             ],
-            
+
             // SMS Settings
             [
                 'key' => 'sms.default_provider',
@@ -116,7 +116,7 @@ class SystemSettingsSeeder extends Seeder
                 'options' => [
                     'twilio' => 'Twilio',
                     'vonage' => 'Vonage (Nexmo)',
-                    'orange' => 'Orange SMS'
+                    'orange' => 'Orange SMS',
                 ],
                 'sort_order' => 1,
             ],
@@ -139,7 +139,7 @@ class SystemSettingsSeeder extends Seeder
                 'description' => 'Enable delivery report tracking for SMS messages',
                 'sort_order' => 3,
             ],
-            
+
             // WhatsApp Settings
             [
                 'key' => 'whatsapp.server_url',
@@ -180,7 +180,7 @@ class SystemSettingsSeeder extends Seeder
                 'description' => 'Automatically reconnect WhatsApp sessions when disconnected',
                 'sort_order' => 4,
             ],
-            
+
             // API Settings
             [
                 'key' => 'api.rate_limit_per_minute',
@@ -211,7 +211,7 @@ class SystemSettingsSeeder extends Seeder
                 'description' => 'List of allowed origins for CORS requests',
                 'sort_order' => 3,
             ],
-            
+
             // Security Settings
             [
                 'key' => 'security.password_min_length',
@@ -264,7 +264,7 @@ class SystemSettingsSeeder extends Seeder
                 'validation_rules' => ['required', 'integer', 'min:1'],
                 'sort_order' => 5,
             ],
-            
+
             // Integrations Settings
             [
                 'key' => 'integrations.google_sheets_enabled',
@@ -307,6 +307,6 @@ class SystemSettingsSeeder extends Seeder
             );
         }
 
-        $this->command->info('Created ' . count($settings) . ' system settings');
+        $this->command->info('Created '.count($settings).' system settings');
     }
 }

@@ -15,20 +15,20 @@ return new class extends Migration
             $table->id();
             $table->foreignId('contact_id')->nullable()->constrained('contacts')->onDelete('set null');
             $table->enum('request_type', [
-                'export', 
-                'delete', 
-                'rectification', 
-                'portability', 
-                'restriction', 
-                'objection'
+                'export',
+                'delete',
+                'rectification',
+                'portability',
+                'restriction',
+                'objection',
             ]);
             $table->enum('status', [
-                'pending', 
-                'verified', 
-                'processing', 
-                'completed', 
-                'rejected', 
-                'expired'
+                'pending',
+                'verified',
+                'processing',
+                'completed',
+                'rejected',
+                'expired',
             ])->default('pending');
             $table->string('email');
             $table->string('phone')->nullable();

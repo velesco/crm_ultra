@@ -59,5 +59,4 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
             return true; // toți utilizatorii autentificați pot vedea Telescope
         });
     }
-
 }

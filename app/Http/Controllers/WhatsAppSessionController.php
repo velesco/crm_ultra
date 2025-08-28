@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\WhatsAppSession;
 use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class WhatsAppSessionController extends Controller
 {
@@ -43,7 +43,7 @@ class WhatsAppSessionController extends Controller
         // Current active session status
         $currentSessionStatus = null;
         $activeSession = WhatsAppSession::where('is_active', true)->first();
-        
+
         if ($activeSession) {
             try {
                 $statusResult = $this->whatsappService->getSessionStatus();
@@ -63,7 +63,7 @@ class WhatsAppSessionController extends Controller
     {
         // Check if there's already an active session
         $activeSession = WhatsAppSession::where('is_active', true)->first();
-        
+
         if ($activeSession) {
             return redirect()->route('whatsapp.sessions.index')
                 ->withErrors(['error' => 'There is already an active WhatsApp session. Disconnect it first before creating a new one.']);
@@ -109,24 +109,24 @@ class WhatsAppSessionController extends Controller
 
             // Initialize WhatsApp service with new session
             $this->whatsappService->setSession($session);
-            
+
             // Test connection
             $connectionResult = $this->whatsappService->testConnection();
-            
+
             if ($connectionResult['success']) {
                 $session->update(['status' => 'connected']);
-                
+
                 return redirect()->route('whatsapp.sessions.show', $session)
                     ->with('success', 'WhatsApp session created and connected successfully. Scan the QR code to authenticate.');
             } else {
                 $session->update(['status' => 'connection_failed']);
-                
-                return back()->withErrors(['connection' => 'Session created but connection failed: ' . $connectionResult['error']])
+
+                return back()->withErrors(['connection' => 'Session created but connection failed: '.$connectionResult['error']])
                     ->with('warning', 'WhatsApp session created but connection test failed. Please verify your server configuration.');
             }
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to create WhatsApp session: ' . $e->getMessage()])->withInput();
+            return back()->withErrors(['error' => 'Failed to create WhatsApp session: '.$e->getMessage()])->withInput();
         }
     }
 
@@ -136,7 +136,7 @@ class WhatsAppSessionController extends Controller
     public function show(WhatsAppSession $whatsappSession)
     {
         $whatsappSession->loadCount(['whatsappMessages']);
-        
+
         // Get session statistics
         $stats = [
             'total_messages' => $whatsappSession->whatsappMessages()->count(),
@@ -159,13 +159,13 @@ class WhatsAppSessionController extends Controller
         // Get current session status
         $sessionStatus = 'unknown';
         $qrCode = null;
-        
+
         if ($whatsappSession->is_active) {
             try {
                 $this->whatsappService->setSession($whatsappSession);
                 $statusResult = $this->whatsappService->getSessionStatus();
                 $sessionStatus = $statusResult['status'] ?? 'unknown';
-                
+
                 // Get QR code if session is not authenticated
                 if ($sessionStatus === 'disconnected' || $sessionStatus === 'connecting') {
                     $qrResult = $this->whatsappService->getQRCode();
@@ -226,7 +226,7 @@ class WhatsAppSessionController extends Controller
                 ->with('success', 'WhatsApp session updated successfully.');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to update WhatsApp session: ' . $e->getMessage()])->withInput();
+            return back()->withErrors(['error' => 'Failed to update WhatsApp session: '.$e->getMessage()])->withInput();
         }
     }
 
@@ -248,12 +248,12 @@ class WhatsAppSessionController extends Controller
             }
 
             $whatsappSession->delete();
-            
+
             return redirect()->route('whatsapp.sessions.index')
                 ->with('success', 'WhatsApp session deleted successfully.');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to delete WhatsApp session: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to delete WhatsApp session: '.$e->getMessage()]);
         }
     }
 
@@ -265,21 +265,21 @@ class WhatsAppSessionController extends Controller
         try {
             // Deactivate all other sessions
             WhatsAppSession::where('is_active', true)->update(['is_active' => false]);
-            
+
             // Activate this session
             $whatsappSession->update([
                 'is_active' => true,
-                'status' => 'connecting'
+                'status' => 'connecting',
             ]);
 
             // Initialize service with new session
             $this->whatsappService->setSession($whatsappSession);
-            
+
             return redirect()->route('whatsapp.sessions.show', $whatsappSession)
                 ->with('success', 'WhatsApp session activated successfully.');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to activate WhatsApp session: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to activate WhatsApp session: '.$e->getMessage()]);
         }
     }
 
@@ -294,18 +294,18 @@ class WhatsAppSessionController extends Controller
                 $this->whatsappService->setSession($whatsappSession);
                 $this->whatsappService->disconnect();
             }
-            
+
             $whatsappSession->update([
                 'is_active' => false,
                 'status' => 'disconnected',
                 'disconnected_at' => now(),
             ]);
-            
+
             return redirect()->route('whatsapp.sessions.index')
                 ->with('success', 'WhatsApp session deactivated successfully.');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to deactivate WhatsApp session: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to deactivate WhatsApp session: '.$e->getMessage()]);
         }
     }
 
@@ -317,17 +317,19 @@ class WhatsAppSessionController extends Controller
         try {
             $this->whatsappService->setSession($whatsappSession);
             $result = $this->whatsappService->testConnection();
-            
+
             if ($result['success']) {
                 $whatsappSession->update(['status' => 'connected']);
+
                 return back()->with('success', 'Connection test successful. Session is working properly.');
             } else {
                 $whatsappSession->update(['status' => 'connection_failed']);
-                return back()->withErrors(['test' => 'Connection test failed: ' . $result['error']]);
+
+                return back()->withErrors(['test' => 'Connection test failed: '.$result['error']]);
             }
 
         } catch (\Exception $e) {
-            return back()->withErrors(['test' => 'Connection test failed: ' . $e->getMessage()]);
+            return back()->withErrors(['test' => 'Connection test failed: '.$e->getMessage()]);
         }
     }
 
@@ -339,24 +341,24 @@ class WhatsAppSessionController extends Controller
         try {
             $this->whatsappService->setSession($whatsappSession);
             $result = $this->whatsappService->getQRCode();
-            
+
             if ($result['success']) {
                 return response()->json([
                     'success' => true,
                     'qr_code' => $result['qr_code'],
-                    'message' => 'QR code refreshed successfully'
+                    'message' => 'QR code refreshed successfully',
                 ]);
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to get QR code: ' . $result['error']
+                    'message' => 'Failed to get QR code: '.$result['error'],
                 ], 400);
             }
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to refresh QR code: ' . $e->getMessage()
+                'message' => 'Failed to refresh QR code: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -369,23 +371,23 @@ class WhatsAppSessionController extends Controller
         try {
             $this->whatsappService->setSession($whatsappSession);
             $result = $this->whatsappService->getSessionStatus();
-            
+
             // Update session status in database
             if (isset($result['status'])) {
                 $whatsappSession->update(['status' => $result['status']]);
             }
-            
+
             return response()->json([
                 'success' => true,
                 'status' => $result['status'] ?? 'unknown',
-                'info' => $result['info'] ?? null
+                'info' => $result['info'] ?? null,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'status' => 'error',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -397,26 +399,28 @@ class WhatsAppSessionController extends Controller
     {
         try {
             $this->whatsappService->setSession($whatsappSession);
-            
+
             // Disconnect first
             $this->whatsappService->disconnect();
-            
+
             // Wait a moment
             sleep(2);
-            
+
             // Reconnect
             $result = $this->whatsappService->testConnection();
-            
+
             if ($result['success']) {
                 $whatsappSession->update(['status' => 'connected']);
+
                 return back()->with('success', 'WhatsApp session restarted successfully.');
             } else {
                 $whatsappSession->update(['status' => 'connection_failed']);
-                return back()->withErrors(['restart' => 'Session restart failed: ' . $result['error']]);
+
+                return back()->withErrors(['restart' => 'Session restart failed: '.$result['error']]);
             }
 
         } catch (\Exception $e) {
-            return back()->withErrors(['restart' => 'Failed to restart session: ' . $e->getMessage()]);
+            return back()->withErrors(['restart' => 'Failed to restart session: '.$e->getMessage()]);
         }
     }
 
@@ -427,7 +431,7 @@ class WhatsAppSessionController extends Controller
     {
         try {
             $newSession = $whatsappSession->replicate();
-            $newSession->name = $whatsappSession->name . ' (Copy)';
+            $newSession->name = $whatsappSession->name.' (Copy)';
             $newSession->is_active = false;
             $newSession->status = 'disconnected';
             $newSession->user_id = Auth::id();
@@ -437,7 +441,7 @@ class WhatsAppSessionController extends Controller
                 ->with('success', 'WhatsApp session duplicated successfully. Please review and activate.');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to duplicate session: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to duplicate session: '.$e->getMessage()]);
         }
     }
 }

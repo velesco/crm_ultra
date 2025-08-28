@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\PerformanceMetric;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class PerformanceMetricSeeder extends Seeder
 {
@@ -18,10 +17,10 @@ class PerformanceMetricSeeder extends Seeder
 
         // Generate sample performance metrics for the last 24 hours
         $now = Carbon::now();
-        
+
         for ($i = 0; $i < 24; $i++) {
             $recordedAt = $now->copy()->subHours($i)->subMinutes(rand(0, 59));
-            
+
             // Create comprehensive performance metrics
             PerformanceMetric::create([
                 'cpu_usage' => rand(20, 95),
@@ -30,7 +29,7 @@ class PerformanceMetricSeeder extends Seeder
                 'load_average' => json_encode([
                     'load_1min' => round(rand(50, 200) / 100, 2),
                     'load_5min' => round(rand(60, 180) / 100, 2),
-                    'load_15min' => round(rand(70, 160) / 100, 2)
+                    'load_15min' => round(rand(70, 160) / 100, 2),
                 ]),
                 'database_connections' => rand(5, 50),
                 'avg_query_time' => round(rand(1, 100) / 10, 2),
@@ -47,10 +46,10 @@ class PerformanceMetricSeeder extends Seeder
                 'status' => ['good', 'warning', 'critical'][rand(0, 2)],
                 'notes' => $i % 5 == 0 ? 'Scheduled maintenance window' : null,
                 'created_at' => $recordedAt,
-                'updated_at' => $recordedAt
+                'updated_at' => $recordedAt,
             ]);
         }
-        
+
         $this->command->info('Created 24 hours of performance metrics data (24 total records)');
     }
 }

@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 
 class WebhookLog extends Model
 {
@@ -47,34 +47,54 @@ class WebhookLog extends Model
 
     // Webhook types constants
     const TYPE_EMAIL = 'email';
+
     const TYPE_SMS = 'sms';
+
     const TYPE_WHATSAPP = 'whatsapp';
+
     const TYPE_GOOGLE_SHEETS = 'google_sheets';
+
     const TYPE_API = 'api';
 
     // Status constants
     const STATUS_PENDING = 'pending';
+
     const STATUS_PROCESSING = 'processing';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_FAILED = 'failed';
+
     const STATUS_RETRYING = 'retrying';
 
     // Provider constants
     const PROVIDER_SENDGRID = 'sendgrid';
+
     const PROVIDER_MAILGUN = 'mailgun';
+
     const PROVIDER_SES = 'ses';
+
     const PROVIDER_TWILIO = 'twilio';
+
     const PROVIDER_NEXMO = 'nexmo';
+
     const PROVIDER_WHATSAPP = 'whatsapp';
+
     const PROVIDER_GOOGLE = 'google';
 
     // Event types constants
     const EVENT_DELIVERED = 'delivered';
+
     const EVENT_BOUNCED = 'bounced';
+
     const EVENT_OPENED = 'opened';
+
     const EVENT_CLICKED = 'clicked';
+
     const EVENT_FAILED = 'failed';
+
     const EVENT_SPAM = 'spam';
+
     const EVENT_UNSUBSCRIBE = 'unsubscribe';
 
     /**
@@ -131,8 +151,8 @@ class WebhookLog extends Model
     public function scopeReadyForRetry($query)
     {
         return $query->where('status', self::STATUS_FAILED)
-                    ->where('next_retry_at', '<=', now())
-                    ->where('attempts', '<', 5); // Max 5 retry attempts
+            ->where('next_retry_at', '<=', now())
+            ->where('attempts', '<', 5); // Max 5 retry attempts
     }
 
     /**
@@ -142,7 +162,7 @@ class WebhookLog extends Model
     {
         return $query->whereBetween('webhook_received_at', [
             Carbon::parse($startDate)->startOfDay(),
-            Carbon::parse($endDate)->endOfDay()
+            Carbon::parse($endDate)->endOfDay(),
         ]);
     }
 
@@ -159,13 +179,13 @@ class WebhookLog extends Model
      */
     public function scopeSearch($query, $search)
     {
-        return $query->where(function($q) use ($search) {
+        return $query->where(function ($q) use ($search) {
             $q->where('webhook_type', 'like', "%{$search}%")
-              ->orWhere('provider', 'like', "%{$search}%")
-              ->orWhere('event_type', 'like', "%{$search}%")
-              ->orWhere('webhook_id', 'like', "%{$search}%")
-              ->orWhere('reference_id', 'like', "%{$search}%")
-              ->orWhere('error_message', 'like', "%{$search}%");
+                ->orWhere('provider', 'like', "%{$search}%")
+                ->orWhere('event_type', 'like', "%{$search}%")
+                ->orWhere('webhook_id', 'like', "%{$search}%")
+                ->orWhere('reference_id', 'like', "%{$search}%")
+                ->orWhere('error_message', 'like', "%{$search}%");
         });
     }
 
@@ -174,7 +194,7 @@ class WebhookLog extends Model
      */
     public function getStatusBadgeClassAttribute()
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_PENDING => 'badge-warning',
             self::STATUS_PROCESSING => 'badge-info',
             self::STATUS_COMPLETED => 'badge-success',
@@ -189,7 +209,7 @@ class WebhookLog extends Model
      */
     public function getTypeIconAttribute()
     {
-        return match($this->webhook_type) {
+        return match ($this->webhook_type) {
             self::TYPE_EMAIL => 'fas fa-envelope',
             self::TYPE_SMS => 'fas fa-sms',
             self::TYPE_WHATSAPP => 'fab fa-whatsapp',
@@ -204,7 +224,7 @@ class WebhookLog extends Model
      */
     public function getProviderIconAttribute()
     {
-        return match($this->provider) {
+        return match ($this->provider) {
             self::PROVIDER_SENDGRID => 'fas fa-paper-plane',
             self::PROVIDER_MAILGUN => 'fas fa-mail-bulk',
             self::PROVIDER_SES => 'fab fa-aws',
@@ -221,7 +241,7 @@ class WebhookLog extends Model
      */
     public function getEventTypeIconAttribute()
     {
-        return match($this->event_type) {
+        return match ($this->event_type) {
             self::EVENT_DELIVERED => 'fas fa-check-circle text-success',
             self::EVENT_BOUNCED => 'fas fa-exclamation-triangle text-warning',
             self::EVENT_OPENED => 'fas fa-envelope-open text-info',
@@ -238,10 +258,10 @@ class WebhookLog extends Model
      */
     public function getProcessingTimeAttribute()
     {
-        if (!$this->processed_at || !$this->webhook_received_at) {
+        if (! $this->processed_at || ! $this->webhook_received_at) {
             return null;
         }
-        
+
         return $this->processed_at->diffInMilliseconds($this->webhook_received_at);
     }
 
@@ -250,9 +270,9 @@ class WebhookLog extends Model
      */
     public function canRetry()
     {
-        return $this->status === self::STATUS_FAILED && 
-               $this->attempts < 5 && 
-               (!$this->next_retry_at || $this->next_retry_at <= now());
+        return $this->status === self::STATUS_FAILED &&
+               $this->attempts < 5 &&
+               (! $this->next_retry_at || $this->next_retry_at <= now());
     }
 
     /**
@@ -353,7 +373,7 @@ class WebhookLog extends Model
             'avg_processing_time' => self::whereNotNull('processed_at')
                 ->whereNotNull('webhook_received_at')
                 ->get()
-                ->avg(function($log) {
+                ->avg(function ($log) {
                     return $log->processing_time;
                 }),
         ];

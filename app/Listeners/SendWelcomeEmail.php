@@ -3,7 +3,6 @@
 namespace App\Listeners;
 
 use App\Events\ContactCreated;
-use App\Jobs\SendEmailCampaignJob;
 use App\Models\EmailTemplate;
 use App\Services\EmailService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -28,9 +27,9 @@ class SendWelcomeEmail implements ShouldQueue
     {
         try {
             $contact = $event->contact;
-            
+
             // Skip if contact doesn't have email or opted out
-            if (!$contact->email || $contact->email_opt_out) {
+            if (! $contact->email || $contact->email_opt_out) {
                 return;
             }
 
@@ -44,11 +43,12 @@ class SendWelcomeEmail implements ShouldQueue
                 ->where('is_active', true)
                 ->first();
 
-            if (!$welcomeTemplate) {
+            if (! $welcomeTemplate) {
                 Log::warning('Welcome email template not found', [
                     'contact_id' => $contact->id,
-                    'template_slug' => 'welcome-email'
+                    'template_slug' => 'welcome-email',
                 ]);
+
                 return;
             }
 
@@ -98,7 +98,7 @@ class SendWelcomeEmail implements ShouldQueue
         $variables = [
             'first_name' => $contact->first_name ?? 'there',
             'last_name' => $contact->last_name ?? '',
-            'full_name' => trim(($contact->first_name ?? '') . ' ' . ($contact->last_name ?? '')) ?: 'there',
+            'full_name' => trim(($contact->first_name ?? '').' '.($contact->last_name ?? '')) ?: 'there',
             'email' => $contact->email,
             'company' => $contact->company ?? '',
             'phone' => $contact->phone ?? '',
@@ -112,13 +112,13 @@ class SendWelcomeEmail implements ShouldQueue
         // Replace variables in subject
         $subject = $welcomeTemplate->subject;
         foreach ($variables as $key => $value) {
-            $subject = str_replace('{{' . $key . '}}', $value, $subject);
+            $subject = str_replace('{{'.$key.'}}', $value, $subject);
         }
 
         // Replace variables in HTML body
         $htmlBody = $welcomeTemplate->html_body;
         foreach ($variables as $key => $value) {
-            $htmlBody = str_replace('{{' . $key . '}}', $value, $htmlBody);
+            $htmlBody = str_replace('{{'.$key.'}}', $value, $htmlBody);
         }
 
         // Replace variables in text body if available
@@ -126,7 +126,7 @@ class SendWelcomeEmail implements ShouldQueue
         if ($welcomeTemplate->text_body) {
             $textBody = $welcomeTemplate->text_body;
             foreach ($variables as $key => $value) {
-                $textBody = str_replace('{{' . $key . '}}', $value, $textBody);
+                $textBody = str_replace('{{'.$key.'}}', $value, $textBody);
             }
         }
 

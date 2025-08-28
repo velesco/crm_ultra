@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
@@ -30,14 +29,14 @@ class UserSeeder extends Seeder
                     'notifications' => [
                         'email' => true,
                         'browser' => true,
-                        'mobile' => true
+                        'mobile' => true,
                     ],
                     'dashboard' => [
                         'quick_stats' => true,
                         'recent_activity' => true,
-                        'charts' => true
-                    ]
-                ]
+                        'charts' => true,
+                    ],
+                ],
             ]
         );
         $superAdmin->assignRole('super_admin');
@@ -58,14 +57,14 @@ class UserSeeder extends Seeder
                     'notifications' => [
                         'email' => true,
                         'browser' => true,
-                        'mobile' => false
+                        'mobile' => false,
                     ],
                     'dashboard' => [
                         'quick_stats' => true,
                         'recent_activity' => true,
-                        'charts' => true
-                    ]
-                ]
+                        'charts' => true,
+                    ],
+                ],
             ]
         );
         $admin->assignRole('admin');
@@ -86,14 +85,14 @@ class UserSeeder extends Seeder
                     'notifications' => [
                         'email' => true,
                         'browser' => true,
-                        'mobile' => true
+                        'mobile' => true,
                     ],
                     'dashboard' => [
                         'quick_stats' => true,
                         'recent_activity' => false,
-                        'charts' => true
-                    ]
-                ]
+                        'charts' => true,
+                    ],
+                ],
             ]
         );
         $manager->assignRole('manager');
@@ -114,14 +113,14 @@ class UserSeeder extends Seeder
                     'notifications' => [
                         'email' => false,
                         'browser' => true,
-                        'mobile' => false
+                        'mobile' => false,
                     ],
                     'dashboard' => [
                         'quick_stats' => true,
                         'recent_activity' => true,
-                        'charts' => false
-                    ]
-                ]
+                        'charts' => false,
+                    ],
+                ],
             ]
         );
         $agent->assignRole('agent');
@@ -142,14 +141,14 @@ class UserSeeder extends Seeder
                     'notifications' => [
                         'email' => false,
                         'browser' => false,
-                        'mobile' => false
+                        'mobile' => false,
                     ],
                     'dashboard' => [
                         'quick_stats' => true,
                         'recent_activity' => false,
-                        'charts' => false
-                    ]
-                ]
+                        'charts' => false,
+                    ],
+                ],
             ]
         );
         $viewer->assignRole('viewer');
@@ -161,29 +160,29 @@ class UserSeeder extends Seeder
                 'email' => 'john.smith@demo.com',
                 'role' => 'manager',
                 'plan' => 'pro',
-                'timezone' => 'America/New_York'
+                'timezone' => 'America/New_York',
             ],
             [
                 'name' => 'Sarah Johnson',
                 'email' => 'sarah.johnson@demo.com',
                 'role' => 'agent',
                 'plan' => 'basic',
-                'timezone' => 'Europe/London'
+                'timezone' => 'Europe/London',
             ],
             [
                 'name' => 'Mike Davis',
                 'email' => 'mike.davis@demo.com',
                 'role' => 'agent',
                 'plan' => 'basic',
-                'timezone' => 'Asia/Tokyo'
+                'timezone' => 'Asia/Tokyo',
             ],
             [
                 'name' => 'Emily Brown',
                 'email' => 'emily.brown@demo.com',
                 'role' => 'viewer',
                 'plan' => 'free',
-                'timezone' => 'Australia/Sydney'
-            ]
+                'timezone' => 'Australia/Sydney',
+            ],
         ];
 
         foreach ($demoUsers as $userData) {
@@ -203,14 +202,14 @@ class UserSeeder extends Seeder
                         'notifications' => [
                             'email' => true,
                             'browser' => true,
-                            'mobile' => false
+                            'mobile' => false,
                         ],
                         'dashboard' => [
                             'quick_stats' => true,
                             'recent_activity' => true,
-                            'charts' => true
-                        ]
-                    ]
+                            'charts' => true,
+                        ],
+                    ],
                 ]
             );
             $user->assignRole($userData['role']);

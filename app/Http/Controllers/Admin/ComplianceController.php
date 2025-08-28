@@ -3,21 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Contact;
 use App\Models\ConsentLog;
+use App\Models\Contact;
 use App\Models\DataRequest;
 use App\Models\DataRetentionPolicy;
-use App\Models\EmailLog;
-use App\Models\SmsMessage;
-use App\Models\WhatsAppMessage;
 use App\Notifications\DataExportReady;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class ComplianceController extends Controller
 {
@@ -33,21 +28,21 @@ class ComplianceController extends Controller
                 'pending' => DataRequest::pending()->count(),
                 'processing' => DataRequest::processing()->count(),
                 'completed' => DataRequest::completed()->count(),
-                'overdue' => DataRequest::overdue()->count()
+                'overdue' => DataRequest::overdue()->count(),
             ],
             'consent_logs' => [
                 'total' => ConsentLog::count(),
                 'given' => ConsentLog::given()->count(),
                 'withdrawn' => ConsentLog::withdrawn()->count(),
-                'expired' => ConsentLog::expired()->count()
+                'expired' => ConsentLog::expired()->count(),
             ],
             'retention_policies' => [
                 'total' => DataRetentionPolicy::count(),
                 'active' => DataRetentionPolicy::active()->count(),
                 'auto_delete' => DataRetentionPolicy::autoDelete()->count(),
-                'overdue_executions' => DataRetentionPolicy::overdueExecution()->count()
+                'overdue_executions' => DataRetentionPolicy::overdueExecution()->count(),
             ],
-            'compliance_score' => $this->calculateComplianceScore()
+            'compliance_score' => $this->calculateComplianceScore(),
         ];
 
         // Recent activity
@@ -74,10 +69,10 @@ class ComplianceController extends Controller
         // Apply filters
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('contact', function($q) use ($search) {
+            $query->whereHas('contact', function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -108,7 +103,7 @@ class ComplianceController extends Controller
             'email_consents' => ConsentLog::where('consent_type', 'email')->count(),
             'sms_consents' => ConsentLog::where('consent_type', 'sms')->count(),
             'whatsapp_consents' => ConsentLog::where('consent_type', 'whatsapp')->count(),
-            'marketing_consents' => ConsentLog::where('purpose', 'marketing')->count()
+            'marketing_consents' => ConsentLog::where('purpose', 'marketing')->count(),
         ];
 
         return view('admin.compliance.consent-logs', compact('consentLogs', 'stats'));
@@ -124,10 +119,10 @@ class ComplianceController extends Controller
         // Apply filters
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('contact', function($q) use ($search) {
+            $query->whereHas('contact', function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             })->orWhere('email', 'like', "%{$search}%");
         }
 
@@ -158,7 +153,7 @@ class ComplianceController extends Controller
             'processing_requests' => DataRequest::processing()->count(),
             'completed_requests' => DataRequest::completed()->count(),
             'overdue_requests' => DataRequest::overdue()->count(),
-            'avg_processing_time' => $this->getAverageProcessingTime()
+            'avg_processing_time' => $this->getAverageProcessingTime(),
         ];
 
         return view('admin.compliance.data-requests', compact('dataRequests', 'stats'));
@@ -175,7 +170,7 @@ class ComplianceController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                ->orWhere('description', 'like', "%{$search}%");
         }
 
         if ($request->filled('data_type')) {
@@ -204,7 +199,7 @@ class ComplianceController extends Controller
                 ->first()?->last_executed_at,
             'next_execution' => DataRetentionPolicy::active()
                 ->orderBy('last_executed_at')
-                ->first()?->getNextExecutionTime()
+                ->first()?->getNextExecutionTime(),
         ];
 
         return view('admin.compliance.retention-policies', compact('retentionPolicies', 'stats'));
@@ -220,7 +215,7 @@ class ComplianceController extends Controller
             $dataRequest->update([
                 'status' => DataRequest::STATUS_PROCESSING,
                 'processed_at' => now(),
-                'processed_by' => Auth::id()
+                'processed_by' => Auth::id(),
             ]);
 
             if ($dataRequest->type === DataRequest::TYPE_EXPORT) {
@@ -234,15 +229,15 @@ class ComplianceController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to process data request', [
                 'request_id' => $dataRequest->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             $dataRequest->update([
                 'status' => DataRequest::STATUS_FAILED,
-                'notes' => 'Processing failed: ' . $e->getMessage()
+                'notes' => 'Processing failed: '.$e->getMessage(),
             ]);
 
-            return redirect()->back()->with('error', 'Failed to process data request: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to process data request: '.$e->getMessage());
         }
     }
 
@@ -252,12 +247,12 @@ class ComplianceController extends Controller
     private function processExportRequest(DataRequest $dataRequest)
     {
         $contact = $dataRequest->contact;
-        
-        if (!$contact && $dataRequest->email) {
+
+        if (! $contact && $dataRequest->email) {
             $contact = Contact::where('email', $dataRequest->email)->first();
         }
 
-        if (!$contact) {
+        if (! $contact) {
             throw new \Exception('Contact not found for export request');
         }
 
@@ -265,8 +260,8 @@ class ComplianceController extends Controller
         $exportData = $this->collectContactData($contact, $dataRequest);
 
         // Generate filename
-        $filename = 'data-export-' . $contact->id . '-' . now()->format('Y-m-d-H-i-s') . '.json';
-        
+        $filename = 'data-export-'.$contact->id.'-'.now()->format('Y-m-d-H-i-s').'.json';
+
         // Store the export file
         Storage::disk('local')->put("exports/{$filename}", json_encode($exportData, JSON_PRETTY_PRINT));
 
@@ -275,7 +270,7 @@ class ComplianceController extends Controller
             'status' => DataRequest::STATUS_COMPLETED,
             'completed_at' => now(),
             'export_file_path' => "exports/{$filename}",
-            'notes' => 'Data export completed successfully'
+            'notes' => 'Data export completed successfully',
         ]);
 
         // Notify user (if contact has user account)
@@ -286,7 +281,7 @@ class ComplianceController extends Controller
         Log::info('Data export completed', [
             'request_id' => $dataRequest->id,
             'contact_id' => $contact->id,
-            'filename' => $filename
+            'filename' => $filename,
         ]);
     }
 
@@ -296,17 +291,17 @@ class ComplianceController extends Controller
     private function processDeleteRequest(DataRequest $dataRequest)
     {
         $contact = $dataRequest->contact;
-        
-        if (!$contact && $dataRequest->email) {
+
+        if (! $contact && $dataRequest->email) {
             $contact = Contact::where('email', $dataRequest->email)->first();
         }
 
-        if (!$contact) {
+        if (! $contact) {
             throw new \Exception('Contact not found for delete request');
         }
 
         DB::beginTransaction();
-        
+
         try {
             // Delete related data first
             $contact->emailLogs()->delete();
@@ -314,25 +309,25 @@ class ComplianceController extends Controller
             $contact->whatsappMessages()->delete();
             $contact->consentLogs()->delete();
             $contact->contactActivities()->delete();
-            
+
             // Remove from segments
             $contact->segments()->detach();
-            
+
             // Delete the contact
             $contact->delete();
-            
+
             // Update request status
             $dataRequest->update([
                 'status' => DataRequest::STATUS_COMPLETED,
                 'completed_at' => now(),
-                'notes' => 'Contact and all related data deleted successfully'
+                'notes' => 'Contact and all related data deleted successfully',
             ]);
 
             DB::commit();
 
             Log::info('Data deletion completed', [
                 'request_id' => $dataRequest->id,
-                'contact_id' => $contact->id
+                'contact_id' => $contact->id,
             ]);
 
         } catch (\Exception $e) {
@@ -350,7 +345,7 @@ class ComplianceController extends Controller
             abort(404);
         }
 
-        if (!$dataRequest->export_file_path || !Storage::exists($dataRequest->export_file_path)) {
+        if (! $dataRequest->export_file_path || ! Storage::exists($dataRequest->export_file_path)) {
             abort(404, 'Export file not found');
         }
 
@@ -370,10 +365,10 @@ class ComplianceController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to execute retention policy', [
                 'policy_id' => $policy->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
-            return redirect()->back()->with('error', 'Failed to execute retention policy: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to execute retention policy: '.$e->getMessage());
         }
     }
 
@@ -400,55 +395,55 @@ class ComplianceController extends Controller
                 'tags' => $contact->tags,
                 'notes' => $contact->notes,
                 'status' => $contact->status,
-                'source' => $contact->source
+                'source' => $contact->source,
             ],
-            'segments' => $contact->segments()->get()->map(function($segment) {
+            'segments' => $contact->segments()->get()->map(function ($segment) {
                 return [
                     'name' => $segment->name,
                     'description' => $segment->description,
-                    'joined_at' => $segment->pivot->created_at
+                    'joined_at' => $segment->pivot->created_at,
                 ];
             }),
-            'email_communications' => $contact->emailLogs()->get()->map(function($log) {
+            'email_communications' => $contact->emailLogs()->get()->map(function ($log) {
                 return [
                     'subject' => $log->subject,
                     'sent_at' => $log->sent_at,
                     'opened_at' => $log->opened_at,
                     'clicked_at' => $log->clicked_at,
-                    'status' => $log->status
+                    'status' => $log->status,
                 ];
             }),
-            'sms_communications' => $contact->smsMessages()->get()->map(function($sms) {
+            'sms_communications' => $contact->smsMessages()->get()->map(function ($sms) {
                 return [
                     'content' => $sms->content,
                     'sent_at' => $sms->sent_at,
                     'delivered_at' => $sms->delivered_at,
-                    'status' => $sms->status
+                    'status' => $sms->status,
                 ];
             }),
-            'whatsapp_communications' => $contact->whatsappMessages()->get()->map(function($msg) {
+            'whatsapp_communications' => $contact->whatsappMessages()->get()->map(function ($msg) {
                 return [
                     'content' => $msg->content,
                     'sent_at' => $msg->sent_at,
                     'delivered_at' => $msg->delivered_at,
-                    'status' => $msg->status
+                    'status' => $msg->status,
                 ];
             }),
-            'consent_history' => $contact->consentLogs()->get()->map(function($consent) {
+            'consent_history' => $contact->consentLogs()->get()->map(function ($consent) {
                 return [
                     'consent_type' => $consent->consent_type,
                     'status' => $consent->status,
                     'given_at' => $consent->given_at,
                     'withdrawn_at' => $consent->withdrawn_at,
                     'legal_basis' => $consent->legal_basis,
-                    'purpose' => $consent->purpose
+                    'purpose' => $consent->purpose,
                 ];
             }),
             'export_metadata' => [
                 'exported_at' => now(),
                 'request_id' => $dataRequest->id,
-                'exported_by' => Auth::user()->name ?? 'System'
-            ]
+                'exported_by' => Auth::user()->name ?? 'System',
+            ],
         ];
     }
 
@@ -463,25 +458,25 @@ class ComplianceController extends Controller
                     ->whereIn('status', ['pending', 'verified', 'processing'])
                     ->count(),
                 'pending_verification' => DataRequest::pending()->count(),
-                'pending_processing' => DataRequest::verified()->count()
+                'pending_processing' => DataRequest::verified()->count(),
             ],
             'consent_compliance' => [
-                'contacts_without_consent' => Contact::whereDoesntHave('consentLogs', function($q) {
+                'contacts_without_consent' => Contact::whereDoesntHave('consentLogs', function ($q) {
                     $q->where('status', ConsentLog::STATUS_GIVEN);
                 })->count(),
                 'expired_consents' => ConsentLog::expired()->count(),
-                'withdrawn_consents' => ConsentLog::withdrawn()->count()
+                'withdrawn_consents' => ConsentLog::withdrawn()->count(),
             ],
             'retention_compliance' => [
                 'policies_not_executed' => DataRetentionPolicy::active()
                     ->autoDelete()
-                    ->where(function($q) {
+                    ->where(function ($q) {
                         $q->whereNull('last_executed_at')
-                          ->orWhere('last_executed_at', '<', now()->subWeek());
+                            ->orWhere('last_executed_at', '<', now()->subWeek());
                     })
                     ->count(),
-                'overdue_deletions' => $this->getOverdueDeletions()
-            ]
+                'overdue_deletions' => $this->getOverdueDeletions(),
+            ],
         ];
 
         return response()->json($audit);
@@ -493,22 +488,22 @@ class ComplianceController extends Controller
     private function calculateComplianceScore()
     {
         $score = 100;
-        
+
         // Deduct points for overdue requests
         $overdueRequests = DataRequest::overdue()->count();
         $score -= min($overdueRequests * 5, 30);
-        
+
         // Deduct points for contacts without consent
         $contactsWithoutConsent = Contact::whereDoesntHave('consentLogs')->count();
         $totalContacts = Contact::count();
         if ($totalContacts > 0) {
             $score -= min(($contactsWithoutConsent / $totalContacts) * 40, 40);
         }
-        
+
         // Deduct points for overdue policy executions
         $overduePolicies = DataRetentionPolicy::overdueExecution()->count();
         $score -= min($overduePolicies * 10, 30);
-        
+
         return max($score, 0);
     }
 
@@ -530,11 +525,11 @@ class ComplianceController extends Controller
     {
         $count = 0;
         $policies = DataRetentionPolicy::active()->get();
-        
+
         foreach ($policies as $policy) {
             $count += $policy->getAffectedRecordsCount();
         }
-        
+
         return $count;
     }
 
@@ -545,11 +540,11 @@ class ComplianceController extends Controller
     {
         $count = 0;
         $policies = DataRetentionPolicy::active()->get();
-        
+
         foreach ($policies as $policy) {
             $count += $policy->getAffectedRecordsCount();
         }
-        
+
         return $count;
     }
 }

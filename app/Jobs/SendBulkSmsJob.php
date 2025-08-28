@@ -2,17 +2,17 @@
 
 namespace App\Jobs;
 
-use App\Models\SmsMessage;
 use App\Models\Contact;
 use App\Models\ContactSegment;
+use App\Models\SmsMessage;
 use App\Services\SmsService;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 class SendBulkSmsJob implements ShouldQueue
 {
@@ -51,7 +51,7 @@ class SendBulkSmsJob implements ShouldQueue
         $this->smsMessage = $smsMessage;
         $this->recipients = $recipients;
         $this->recipientsType = $recipientsType;
-        
+
         // Set queue based on urgency
         $this->onQueue($smsMessage->is_urgent ? 'sms-urgent' : 'sms');
     }
@@ -65,13 +65,14 @@ class SendBulkSmsJob implements ShouldQueue
             // Check if SMS is still pending
             if ($this->smsMessage->status !== 'pending') {
                 Log::info("SMS message {$this->smsMessage->id} is not pending, current status: {$this->smsMessage->status}");
+
                 return;
             }
 
             // Update status to sending
             $this->smsMessage->update([
                 'status' => 'sending',
-                'sent_at' => now()
+                'sent_at' => now(),
             ]);
 
             Log::info("Starting bulk SMS send for message ID: {$this->smsMessage->id}");
@@ -83,7 +84,7 @@ class SendBulkSmsJob implements ShouldQueue
             $phoneNumbers = $this->getPhoneNumbers();
 
             if (empty($phoneNumbers)) {
-                throw new Exception("No valid phone numbers found for SMS sending");
+                throw new Exception('No valid phone numbers found for SMS sending');
             }
 
             $successCount = 0;
@@ -112,9 +113,9 @@ class SendBulkSmsJob implements ShouldQueue
 
                     if ($result['success']) {
                         $successCount++;
-                        
+
                         // Update contact last_contacted if contact exists
-                        if (!empty($phoneData['contact_id'])) {
+                        if (! empty($phoneData['contact_id'])) {
                             Contact::where('id', $phoneData['contact_id'])
                                 ->update(['last_contacted_at' => now()]);
                         }
@@ -122,14 +123,14 @@ class SendBulkSmsJob implements ShouldQueue
                         Log::debug("SMS sent successfully to {$phoneData['phone']}");
                     } else {
                         $failureCount++;
-                        $errors[] = "Failed to send to {$phoneData['phone']}: " . $result['error'];
-                        Log::warning("Failed to send SMS to {$phoneData['phone']}: " . $result['error']);
+                        $errors[] = "Failed to send to {$phoneData['phone']}: ".$result['error'];
+                        Log::warning("Failed to send SMS to {$phoneData['phone']}: ".$result['error']);
                     }
 
                 } catch (Exception $e) {
                     $failureCount++;
-                    $errors[] = "Error sending to {$phoneData['phone']}: " . $e->getMessage();
-                    Log::error("Error sending SMS to {$phoneData['phone']}: " . $e->getMessage());
+                    $errors[] = "Error sending to {$phoneData['phone']}: ".$e->getMessage();
+                    Log::error("Error sending SMS to {$phoneData['phone']}: ".$e->getMessage());
                 }
 
                 // Add small delay between sends to respect rate limits
@@ -153,19 +154,19 @@ class SendBulkSmsJob implements ShouldQueue
                     'errors' => array_slice($errors, 0, 50), // Limit errors stored
                     'sent_at' => now()->toISOString(),
                 ],
-                'completed_at' => now()
+                'completed_at' => now(),
             ]);
 
             Log::info("Bulk SMS completed for message {$this->smsMessage->id}. Success: {$successCount}, Failed: {$failureCount}");
 
         } catch (Exception $e) {
-            Log::error("SendBulkSmsJob failed for message {$this->smsMessage->id}: " . $e->getMessage());
+            Log::error("SendBulkSmsJob failed for message {$this->smsMessage->id}: ".$e->getMessage());
 
             // Update SMS status to failed
             $this->smsMessage->update([
                 'status' => 'failed',
                 'error_message' => $e->getMessage(),
-                'completed_at' => now()
+                'completed_at' => now(),
             ]);
 
             throw $e;
@@ -198,7 +199,7 @@ class SendBulkSmsJob implements ShouldQueue
 
         // Filter out invalid phone numbers
         return array_filter($phoneNumbers, function ($phoneData) {
-            return !empty($phoneData['phone']) && $this->isValidPhoneNumber($phoneData['phone']);
+            return ! empty($phoneData['phone']) && $this->isValidPhoneNumber($phoneData['phone']);
         });
     }
 
@@ -235,8 +236,9 @@ class SendBulkSmsJob implements ShouldQueue
 
         foreach ($this->recipients as $segmentId) {
             $segment = ContactSegment::find($segmentId);
-            if (!$segment) {
+            if (! $segment) {
                 Log::warning("Segment {$segmentId} not found for SMS campaign");
+
                 continue;
             }
 
@@ -265,7 +267,7 @@ class SendBulkSmsJob implements ShouldQueue
         $uniquePhones = [];
         $result = [];
         foreach ($phoneNumbers as $phoneData) {
-            if (!in_array($phoneData['phone'], $uniquePhones)) {
+            if (! in_array($phoneData['phone'], $uniquePhones)) {
                 $uniquePhones[] = $phoneData['phone'];
                 $result[] = $phoneData;
             }
@@ -323,13 +325,13 @@ class SendBulkSmsJob implements ShouldQueue
         if (empty($phoneData['contact_id'])) {
             return route('sms.unsubscribe.phone', [
                 'phone' => base64_encode($phoneData['phone']),
-                'token' => hash('sha256', $phoneData['phone'] . config('app.key'))
+                'token' => hash('sha256', $phoneData['phone'].config('app.key')),
             ]);
         }
 
         return route('sms.unsubscribe.contact', [
             'contact' => $phoneData['contact_id'],
-            'token' => hash('sha256', $phoneData['contact_id'] . config('app.key'))
+            'token' => hash('sha256', $phoneData['contact_id'].config('app.key')),
         ]);
     }
 
@@ -340,7 +342,7 @@ class SendBulkSmsJob implements ShouldQueue
     {
         // Remove all non-numeric characters except +
         $cleanPhone = preg_replace('/[^0-9+]/', '', $phone);
-        
+
         // Basic validation: should have at least 10 digits
         if (strlen($cleanPhone) < 10) {
             return false;
@@ -364,12 +366,12 @@ class SendBulkSmsJob implements ShouldQueue
      */
     public function failed(Exception $exception): void
     {
-        Log::error("SendBulkSmsJob permanently failed for message {$this->smsMessage->id}: " . $exception->getMessage());
+        Log::error("SendBulkSmsJob permanently failed for message {$this->smsMessage->id}: ".$exception->getMessage());
 
         $this->smsMessage->update([
             'status' => 'failed',
             'error_message' => $exception->getMessage(),
-            'completed_at' => now()
+            'completed_at' => now(),
         ]);
     }
 

@@ -64,13 +64,13 @@ class Kernel extends HttpKernel
         'signed' => \App\Http\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-        
+
         // CRM Custom Middleware
         'feature' => \App\Http\Middleware\CheckFeatureEnabled::class,
         'rate.limit' => \App\Http\Middleware\RateLimitCommunications::class,
         'smtp.limits' => \App\Http\Middleware\CheckSmtpLimits::class,
         'whatsapp.session' => \App\Http\Middleware\ValidateWhatsAppSession::class,
-        
+
         // Role & Permission Middleware (using Spatie)
         'role' => \Spatie\Permission\Middlewares\RoleMiddleware::class,
         'permission' => \Spatie\Permission\Middlewares\PermissionMiddleware::class,

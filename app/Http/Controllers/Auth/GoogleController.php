@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -27,10 +26,10 @@ class GoogleController extends Controller
     {
         try {
             $googleUser = Socialite::driver('google')->user();
-            
+
             // Check if user already exists
             $user = User::where('email', $googleUser->getEmail())->first();
-            
+
             if ($user) {
                 // Update user info if they signed up with Google
                 $user->update([
@@ -61,8 +60,8 @@ class GoogleController extends Controller
             return redirect()->intended(route('dashboard'))->with('success', 'Successfully logged in with Google!');
 
         } catch (\Exception $e) {
-            \Log::error('Google login error: ' . $e->getMessage());
-            
+            \Log::error('Google login error: '.$e->getMessage());
+
             return redirect()->route('login')->with('error', 'Unable to login with Google. Please try again or use email/password.');
         }
     }

@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
-use Carbon\Carbon;
 
 class PerformanceMetric extends Model
 {
@@ -29,7 +29,7 @@ class PerformanceMetric extends Model
         'processed_jobs',
         'avg_processing_time',
         'status',
-        'notes'
+        'notes',
     ];
 
     protected $casts = [
@@ -50,7 +50,7 @@ class PerformanceMetric extends Model
         'processed_jobs' => 'integer',
         'avg_processing_time' => 'decimal:3',
         'created_at' => 'datetime',
-        'updated_at' => 'datetime'
+        'updated_at' => 'datetime',
     ];
 
     // ===========================
@@ -104,9 +104,9 @@ class PerformanceMetric extends Model
     {
         return $query->where(function ($q) {
             $q->where('cpu_usage', '>', 90)
-              ->orWhere('memory_usage', '>', 90)
-              ->orWhere('disk_usage', '>', 95)
-              ->orWhere('failed_jobs', '>', 10);
+                ->orWhere('memory_usage', '>', 90)
+                ->orWhere('disk_usage', '>', 95)
+                ->orWhere('failed_jobs', '>', 10);
         });
     }
 
@@ -117,10 +117,10 @@ class PerformanceMetric extends Model
     {
         return $query->where(function ($q) {
             $q->whereBetween('cpu_usage', [70, 90])
-              ->orWhereBetween('memory_usage', [80, 90])
-              ->orWhereBetween('disk_usage', [85, 95])
-              ->orWhereBetween('failed_jobs', [5, 10])
-              ->orWhere('cache_hit_rate', '<', 70);
+                ->orWhereBetween('memory_usage', [80, 90])
+                ->orWhereBetween('disk_usage', [85, 95])
+                ->orWhereBetween('failed_jobs', [5, 10])
+                ->orWhere('cache_hit_rate', '<', 70);
         });
     }
 
@@ -130,10 +130,10 @@ class PerformanceMetric extends Model
     public function scopeGood(Builder $query): Builder
     {
         return $query->where('cpu_usage', '<', 70)
-                    ->where('memory_usage', '<', 80)
-                    ->where('disk_usage', '<', 85)
-                    ->where('failed_jobs', '<=', 5)
-                    ->where('cache_hit_rate', '>=', 70);
+            ->where('memory_usage', '<', 80)
+            ->where('disk_usage', '<', 85)
+            ->where('failed_jobs', '<=', 5)
+            ->where('cache_hit_rate', '>=', 70);
     }
 
     // ===========================
@@ -145,17 +145,17 @@ class PerformanceMetric extends Model
      */
     public function getHealthStatusAttribute(): string
     {
-        if ($this->cpu_usage > 90 || $this->memory_usage > 90 || 
+        if ($this->cpu_usage > 90 || $this->memory_usage > 90 ||
             $this->disk_usage > 95 || $this->failed_jobs > 10) {
             return 'critical';
         }
-        
-        if ($this->cpu_usage > 70 || $this->memory_usage > 80 || 
-            $this->disk_usage > 85 || $this->failed_jobs > 5 || 
+
+        if ($this->cpu_usage > 70 || $this->memory_usage > 80 ||
+            $this->disk_usage > 85 || $this->failed_jobs > 5 ||
             $this->cache_hit_rate < 70) {
             return 'warning';
         }
-        
+
         return 'good';
     }
 
@@ -177,7 +177,7 @@ class PerformanceMetric extends Model
      */
     public function getFormattedCpuUsageAttribute(): string
     {
-        return number_format($this->cpu_usage, 1) . '%';
+        return number_format($this->cpu_usage, 1).'%';
     }
 
     /**
@@ -185,7 +185,7 @@ class PerformanceMetric extends Model
      */
     public function getFormattedMemoryUsageAttribute(): string
     {
-        return number_format($this->memory_usage, 1) . '%';
+        return number_format($this->memory_usage, 1).'%';
     }
 
     /**
@@ -193,7 +193,7 @@ class PerformanceMetric extends Model
      */
     public function getFormattedDiskUsageAttribute(): string
     {
-        return number_format($this->disk_usage, 1) . '%';
+        return number_format($this->disk_usage, 1).'%';
     }
 
     /**
@@ -201,7 +201,7 @@ class PerformanceMetric extends Model
      */
     public function getFormattedCacheHitRateAttribute(): string
     {
-        return number_format($this->cache_hit_rate, 1) . '%';
+        return number_format($this->cache_hit_rate, 1).'%';
     }
 
     /**
@@ -209,7 +209,7 @@ class PerformanceMetric extends Model
      */
     public function getFormattedDatabaseSizeAttribute(): string
     {
-        return number_format($this->database_size, 1) . ' MB';
+        return number_format($this->database_size, 1).' MB';
     }
 
     /**
@@ -217,7 +217,7 @@ class PerformanceMetric extends Model
      */
     public function getFormattedCacheMemoryAttribute(): string
     {
-        return number_format($this->cache_memory_usage, 1) . ' MB';
+        return number_format($this->cache_memory_usage, 1).' MB';
     }
 
     /**
@@ -225,7 +225,7 @@ class PerformanceMetric extends Model
      */
     public function getFormattedQueryTimeAttribute(): string
     {
-        return number_format($this->avg_query_time, 3) . ' ms';
+        return number_format($this->avg_query_time, 3).' ms';
     }
 
     /**
@@ -233,7 +233,7 @@ class PerformanceMetric extends Model
      */
     public function getFormattedProcessingTimeAttribute(): string
     {
-        return number_format($this->avg_processing_time, 3) . ' ms';
+        return number_format($this->avg_processing_time, 3).' ms';
     }
 
     /**
@@ -242,7 +242,8 @@ class PerformanceMetric extends Model
     public function getFormattedLoadAverageAttribute(): string
     {
         $loads = is_array($this->load_average) ? $this->load_average : [];
-        return implode(', ', array_map(fn($load) => number_format($load, 2), $loads));
+
+        return implode(', ', array_map(fn ($load) => number_format($load, 2), $loads));
     }
 
     // ===========================
@@ -266,7 +267,7 @@ class PerformanceMetric extends Model
         $todayCount = self::today()->count();
         $criticalCount = self::recent(60)->critical()->count();
         $warningCount = self::recent(60)->warning()->count();
-        
+
         return [
             'total_metrics' => self::count(),
             'today_metrics' => $todayCount,
@@ -274,7 +275,7 @@ class PerformanceMetric extends Model
             'warning_count' => $warningCount,
             'good_count' => self::recent(60)->good()->count(),
             'last_recorded' => $latest?->created_at,
-            'health_status' => $latest?->health_status ?? 'unknown'
+            'health_status' => $latest?->health_status ?? 'unknown',
         ];
     }
 
@@ -291,6 +292,7 @@ class PerformanceMetric extends Model
         $groupedMetrics = $metrics->groupBy(function ($item) use ($hours) {
             // Group by hour for 24h, by 10min for shorter periods
             $format = $hours > 6 ? 'H:00' : 'H:i';
+
             return $item->created_at->format($format);
         });
 
@@ -313,23 +315,25 @@ class PerformanceMetric extends Model
     public static function getHealthScore(): int
     {
         $latest = self::getLatest();
-        if (!$latest) return 0;
+        if (! $latest) {
+            return 0;
+        }
 
         $score = 100;
-        
+
         // Deduct points for high usage
         $score -= min($latest->cpu_usage, 100);
         $score -= min($latest->memory_usage, 100);
         $score -= min($latest->disk_usage / 2, 50); // Disk is less critical
-        
+
         // Deduct for failed jobs
         $score -= min($latest->failed_jobs * 2, 20);
-        
+
         // Deduct for low cache hit rate
         if ($latest->cache_hit_rate < 80) {
             $score -= (80 - $latest->cache_hit_rate);
         }
-        
+
         return max($score, 0);
     }
 
@@ -347,7 +351,9 @@ class PerformanceMetric extends Model
     public static function getAlerts(): array
     {
         $latest = self::getLatest();
-        if (!$latest) return [];
+        if (! $latest) {
+            return [];
+        }
 
         $alerts = [];
 
@@ -357,14 +363,14 @@ class PerformanceMetric extends Model
                 'type' => 'danger',
                 'metric' => 'CPU Usage',
                 'value' => $latest->formatted_cpu_usage,
-                'message' => 'CPU usage is critically high'
+                'message' => 'CPU usage is critically high',
             ];
         } elseif ($latest->cpu_usage > 70) {
             $alerts[] = [
                 'type' => 'warning',
                 'metric' => 'CPU Usage',
                 'value' => $latest->formatted_cpu_usage,
-                'message' => 'CPU usage is elevated'
+                'message' => 'CPU usage is elevated',
             ];
         }
 
@@ -374,14 +380,14 @@ class PerformanceMetric extends Model
                 'type' => 'danger',
                 'metric' => 'Memory Usage',
                 'value' => $latest->formatted_memory_usage,
-                'message' => 'Memory usage is critically high'
+                'message' => 'Memory usage is critically high',
             ];
         } elseif ($latest->memory_usage > 80) {
             $alerts[] = [
                 'type' => 'warning',
                 'metric' => 'Memory Usage',
                 'value' => $latest->formatted_memory_usage,
-                'message' => 'Memory usage is high'
+                'message' => 'Memory usage is high',
             ];
         }
 
@@ -391,14 +397,14 @@ class PerformanceMetric extends Model
                 'type' => 'danger',
                 'metric' => 'Disk Usage',
                 'value' => $latest->formatted_disk_usage,
-                'message' => 'Disk space is critically low'
+                'message' => 'Disk space is critically low',
             ];
         } elseif ($latest->disk_usage > 85) {
             $alerts[] = [
                 'type' => 'warning',
                 'metric' => 'Disk Usage',
                 'value' => $latest->formatted_disk_usage,
-                'message' => 'Disk space is running low'
+                'message' => 'Disk space is running low',
             ];
         }
 
@@ -408,14 +414,14 @@ class PerformanceMetric extends Model
                 'type' => 'danger',
                 'metric' => 'Failed Jobs',
                 'value' => $latest->failed_jobs,
-                'message' => 'Too many failed jobs need attention'
+                'message' => 'Too many failed jobs need attention',
             ];
         } elseif ($latest->failed_jobs > 5) {
             $alerts[] = [
                 'type' => 'warning',
                 'metric' => 'Failed Jobs',
                 'value' => $latest->failed_jobs,
-                'message' => 'Some failed jobs need review'
+                'message' => 'Some failed jobs need review',
             ];
         }
 
@@ -425,14 +431,14 @@ class PerformanceMetric extends Model
                 'type' => 'danger',
                 'metric' => 'Cache Hit Rate',
                 'value' => $latest->formatted_cache_hit_rate,
-                'message' => 'Cache hit rate is critically low'
+                'message' => 'Cache hit rate is critically low',
             ];
         } elseif ($latest->cache_hit_rate < 70) {
             $alerts[] = [
                 'type' => 'warning',
                 'metric' => 'Cache Hit Rate',
                 'value' => $latest->formatted_cache_hit_rate,
-                'message' => 'Cache hit rate could be improved'
+                'message' => 'Cache hit rate could be improved',
             ];
         }
 

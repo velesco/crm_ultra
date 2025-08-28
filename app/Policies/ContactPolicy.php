@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Contact;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class ContactPolicy
 {
@@ -118,7 +117,7 @@ class ContactPolicy
     public function sendEmail(User $user, Contact $contact): bool
     {
         // Must be able to view the contact and have email permissions
-        if (!$this->view($user, $contact)) {
+        if (! $this->view($user, $contact)) {
             return false;
         }
 
@@ -131,7 +130,7 @@ class ContactPolicy
     public function sendSms(User $user, Contact $contact): bool
     {
         // Must be able to view the contact and have SMS permissions
-        if (!$this->view($user, $contact)) {
+        if (! $this->view($user, $contact)) {
             return false;
         }
 
@@ -144,7 +143,7 @@ class ContactPolicy
     public function sendWhatsApp(User $user, Contact $contact): bool
     {
         // Must be able to view the contact and have WhatsApp permissions
-        if (!$this->view($user, $contact)) {
+        if (! $this->view($user, $contact)) {
             return false;
         }
 
@@ -188,7 +187,7 @@ class ContactPolicy
      */
     public function manageSegments(User $user, Contact $contact): bool
     {
-        if (!$this->update($user, $contact)) {
+        if (! $this->update($user, $contact)) {
             return false;
         }
 

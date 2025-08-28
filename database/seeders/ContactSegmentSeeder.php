@@ -2,11 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
+use App\Models\Contact;
 use App\Models\ContactSegment;
 use App\Models\User;
-use App\Models\Contact;
+use Illuminate\Database\Seeder;
 
 class ContactSegmentSeeder extends Seeder
 {
@@ -26,11 +25,11 @@ class ContactSegmentSeeder extends Seeder
                 'conditions' => [
                     'rules' => [
                         ['field' => 'tags', 'operator' => 'contains', 'value' => 'vip'],
-                        ['field' => 'status', 'operator' => '=', 'value' => 'active']
+                        ['field' => 'status', 'operator' => '=', 'value' => 'active'],
                     ],
-                    'logic' => 'AND'
+                    'logic' => 'AND',
                 ],
-                'color' => '#e74c3c'
+                'color' => '#e74c3c',
             ],
             [
                 'name' => 'Tech Industry Leads',
@@ -39,11 +38,11 @@ class ContactSegmentSeeder extends Seeder
                 'conditions' => [
                     'rules' => [
                         ['field' => 'custom_fields.industry', 'operator' => '=', 'value' => 'Technology'],
-                        ['field' => 'status', 'operator' => '=', 'value' => 'active']
+                        ['field' => 'status', 'operator' => '=', 'value' => 'active'],
                     ],
-                    'logic' => 'AND'
+                    'logic' => 'AND',
                 ],
-                'color' => '#3498db'
+                'color' => '#3498db',
             ],
             [
                 'name' => 'High-Value Prospects',
@@ -52,11 +51,11 @@ class ContactSegmentSeeder extends Seeder
                 'conditions' => [
                     'rules' => [
                         ['field' => 'custom_fields.budget', 'operator' => 'in', 'value' => '$25,000-50,000,$50,000+'],
-                        ['field' => 'tags', 'operator' => 'contains', 'value' => 'decision-maker']
+                        ['field' => 'tags', 'operator' => 'contains', 'value' => 'decision-maker'],
                     ],
-                    'logic' => 'AND'
+                    'logic' => 'AND',
                 ],
-                'color' => '#9b59b6'
+                'color' => '#9b59b6',
             ],
             [
                 'name' => 'Small Business Owners',
@@ -65,11 +64,11 @@ class ContactSegmentSeeder extends Seeder
                 'conditions' => [
                     'rules' => [
                         ['field' => 'custom_fields.company_size', 'operator' => 'in', 'value' => '1-10,11-50'],
-                        ['field' => 'tags', 'operator' => 'contains', 'value' => 'small-business']
+                        ['field' => 'tags', 'operator' => 'contains', 'value' => 'small-business'],
                     ],
-                    'logic' => 'AND'
+                    'logic' => 'AND',
                 ],
-                'color' => '#f39c12'
+                'color' => '#f39c12',
             ],
             [
                 'name' => 'Enterprise Clients',
@@ -78,11 +77,11 @@ class ContactSegmentSeeder extends Seeder
                 'conditions' => [
                     'rules' => [
                         ['field' => 'custom_fields.company_size', 'operator' => 'in', 'value' => '501-1000,1000+'],
-                        ['field' => 'tags', 'operator' => 'contains', 'value' => 'enterprise']
+                        ['field' => 'tags', 'operator' => 'contains', 'value' => 'enterprise'],
                     ],
-                    'logic' => 'AND'
+                    'logic' => 'AND',
                 ],
-                'color' => '#2c3e50'
+                'color' => '#2c3e50',
             ],
             [
                 'name' => 'Newsletter Subscribers',
@@ -91,11 +90,11 @@ class ContactSegmentSeeder extends Seeder
                 'conditions' => [
                     'rules' => [
                         ['field' => 'tags', 'operator' => 'contains', 'value' => 'newsletter-subscriber'],
-                        ['field' => 'status', 'operator' => '=', 'value' => 'active']
+                        ['field' => 'status', 'operator' => '=', 'value' => 'active'],
                     ],
-                    'logic' => 'AND'
+                    'logic' => 'AND',
                 ],
-                'color' => '#16a085'
+                'color' => '#16a085',
             ],
             [
                 'name' => 'High Interest Leads',
@@ -104,11 +103,11 @@ class ContactSegmentSeeder extends Seeder
                 'conditions' => [
                     'rules' => [
                         ['field' => 'custom_fields.interest_level', 'operator' => '=', 'value' => 'high'],
-                        ['field' => 'status', 'operator' => '=', 'value' => 'active']
+                        ['field' => 'status', 'operator' => '=', 'value' => 'active'],
                     ],
-                    'logic' => 'AND'
+                    'logic' => 'AND',
                 ],
-                'color' => '#e67e22'
+                'color' => '#e67e22',
             ],
             [
                 'name' => 'Inactive Contacts',
@@ -116,11 +115,11 @@ class ContactSegmentSeeder extends Seeder
                 'is_dynamic' => true,
                 'conditions' => [
                     'rules' => [
-                        ['field' => 'status', 'operator' => '=', 'value' => 'inactive']
+                        ['field' => 'status', 'operator' => '=', 'value' => 'inactive'],
                     ],
-                    'logic' => 'AND'
+                    'logic' => 'AND',
                 ],
-                'color' => '#95a5a6'
+                'color' => '#95a5a6',
             ],
             [
                 'name' => 'Referral Sources',
@@ -129,11 +128,11 @@ class ContactSegmentSeeder extends Seeder
                 'conditions' => [
                     'rules' => [
                         ['field' => 'tags', 'operator' => 'contains', 'value' => 'referral-source'],
-                        ['field' => 'status', 'operator' => '=', 'value' => 'active']
+                        ['field' => 'status', 'operator' => '=', 'value' => 'active'],
                     ],
-                    'logic' => 'AND'
+                    'logic' => 'AND',
                 ],
-                'color' => '#8e44ad'
+                'color' => '#8e44ad',
             ],
             [
                 'name' => 'Recent Contacts',
@@ -142,12 +141,12 @@ class ContactSegmentSeeder extends Seeder
                 'conditions' => [
                     'rules' => [
                         ['field' => 'created_at', 'operator' => '>=', 'value' => '30 days ago'],
-                        ['field' => 'status', 'operator' => '=', 'value' => 'active']
+                        ['field' => 'status', 'operator' => '=', 'value' => 'active'],
                     ],
-                    'logic' => 'AND'
+                    'logic' => 'AND',
                 ],
-                'color' => '#27ae60'
-            ]
+                'color' => '#27ae60',
+            ],
         ];
 
         foreach ($segments as $segmentData) {
@@ -159,12 +158,12 @@ class ContactSegmentSeeder extends Seeder
             ]);
 
             // For static segments, manually assign some contacts
-            if (!$segment->is_dynamic) {
+            if (! $segment->is_dynamic) {
                 $this->assignContactsToStaticSegment($segment);
             }
         }
 
-        $this->command->info('Created ' . count($segments) . ' contact segments successfully!');
+        $this->command->info('Created '.count($segments).' contact segments successfully!');
     }
 
     /**
@@ -198,7 +197,7 @@ class ContactSegmentSeeder extends Seeder
                     $contacts = Contact::where('status', 'active')->take(3)->get();
                     foreach ($contacts as $contact) {
                         $tags = $contact->tags ?? [];
-                        if (!in_array('referral-source', $tags)) {
+                        if (! in_array('referral-source', $tags)) {
                             $tags[] = 'referral-source';
                             $contact->update(['tags' => $tags]);
                         }
@@ -212,7 +211,7 @@ class ContactSegmentSeeder extends Seeder
                 break;
         }
 
-        if (!empty($contactsToAssign) && $segment->contacts()) {
+        if (! empty($contactsToAssign) && $segment->contacts()) {
             $segment->contacts()->sync($contactsToAssign);
         }
     }

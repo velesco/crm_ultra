@@ -30,7 +30,7 @@ class DataRequest extends Model
         'expires_at',
         'requested_at', // Alias for created_at
         'notes', // Alias for rejection_reason
-        'metadata'
+        'metadata',
     ];
 
     protected $casts = [
@@ -38,23 +38,33 @@ class DataRequest extends Model
         'verified_at' => 'datetime',
         'processed_at' => 'datetime',
         'completed_at' => 'datetime',
-        'expires_at' => 'datetime'
+        'expires_at' => 'datetime',
     ];
 
     // Request types
     const TYPE_EXPORT = 'export';
+
     const TYPE_DELETE = 'delete';
+
     const TYPE_RECTIFICATION = 'rectification';
+
     const TYPE_PORTABILITY = 'portability';
+
     const TYPE_RESTRICTION = 'restriction';
+
     const TYPE_OBJECTION = 'objection';
 
     // Status types
     const STATUS_PENDING = 'pending';
+
     const STATUS_VERIFIED = 'verified';
+
     const STATUS_PROCESSING = 'processing';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_REJECTED = 'rejected';
+
     const STATUS_EXPIRED = 'expired';
 
     /**
@@ -149,7 +159,7 @@ class DataRequest extends Model
             self::TYPE_RECTIFICATION => 'Data Rectification',
             self::TYPE_PORTABILITY => 'Data Portability',
             self::TYPE_RESTRICTION => 'Processing Restriction',
-            self::TYPE_OBJECTION => 'Processing Objection'
+            self::TYPE_OBJECTION => 'Processing Objection',
         ];
     }
 
@@ -164,7 +174,7 @@ class DataRequest extends Model
             self::STATUS_PROCESSING => 'Processing',
             self::STATUS_COMPLETED => 'Completed',
             self::STATUS_REJECTED => 'Rejected',
-            self::STATUS_EXPIRED => 'Expired'
+            self::STATUS_EXPIRED => 'Expired',
         ];
     }
 
@@ -181,7 +191,7 @@ class DataRequest extends Model
      */
     public function canBeProcessed()
     {
-        return in_array($this->status, [self::STATUS_VERIFIED, self::STATUS_PROCESSING]) && !$this->isExpired();
+        return in_array($this->status, [self::STATUS_VERIFIED, self::STATUS_PROCESSING]) && ! $this->isExpired();
     }
 
     /**

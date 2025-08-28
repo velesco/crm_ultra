@@ -2,11 +2,9 @@
 
 namespace App\Events;
 
-use App\Models\WhatsAppMessage;
 use App\Models\Contact;
-use Illuminate\Broadcasting\Channel;
+use App\Models\WhatsAppMessage;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -17,7 +15,9 @@ class WhatsAppMessageReceived implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public WhatsAppMessage $message;
+
     public ?Contact $contact;
+
     public array $messageData;
 
     /**
@@ -39,7 +39,7 @@ class WhatsAppMessageReceived implements ShouldBroadcast
     {
         return [
             new PrivateChannel('whatsapp-messages'),
-            new PrivateChannel('contact.' . ($this->contact ? $this->contact->id : 'unknown')),
+            new PrivateChannel('contact.'.($this->contact ? $this->contact->id : 'unknown')),
         ];
     }
 

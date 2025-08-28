@@ -28,7 +28,7 @@ return new class extends Migration
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
-            
+
             // Indexes for performance
             $table->index(['group', 'sort_order']);
             $table->index(['is_public']);

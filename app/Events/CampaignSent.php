@@ -3,10 +3,7 @@
 namespace App\Events;
 
 use App\Models\EmailCampaign;
-use App\Models\Contact;
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -17,7 +14,9 @@ class CampaignSent implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public EmailCampaign $campaign;
+
     public int $recipientCount;
+
     public array $statistics;
 
     /**
@@ -39,7 +38,7 @@ class CampaignSent implements ShouldBroadcast
     {
         return [
             new PrivateChannel('campaigns'),
-            new PrivateChannel('campaign.' . $this->campaign->id),
+            new PrivateChannel('campaign.'.$this->campaign->id),
             new PrivateChannel('dashboard'),
         ];
     }

@@ -24,7 +24,7 @@ class ConsentLog extends Model
         'retention_period',
         'processor_id',
         'notes',
-        'metadata'
+        'metadata',
     ];
 
     protected $casts = [
@@ -35,32 +35,50 @@ class ConsentLog extends Model
 
     // Consent types
     const TYPE_EMAIL_MARKETING = 'email_marketing';
+
     const TYPE_SMS_MARKETING = 'sms_marketing';
+
     const TYPE_WHATSAPP_MARKETING = 'whatsapp_marketing';
+
     const TYPE_DATA_PROCESSING = 'data_processing';
+
     const TYPE_PROFILING = 'profiling';
+
     const TYPE_THIRD_PARTY_SHARING = 'third_party_sharing';
+
     const TYPE_COOKIES = 'cookies';
+
     const TYPE_ANALYTICS = 'analytics';
 
     // Status types
     const STATUS_GIVEN = 'given';
+
     const STATUS_WITHDRAWN = 'withdrawn';
+
     const STATUS_EXPIRED = 'expired';
 
     // Legal basis types
     const BASIS_CONSENT = 'consent';
+
     const BASIS_CONTRACT = 'contract';
+
     const BASIS_LEGAL_OBLIGATION = 'legal_obligation';
+
     const BASIS_VITAL_INTERESTS = 'vital_interests';
+
     const BASIS_PUBLIC_TASK = 'public_task';
+
     const BASIS_LEGITIMATE_INTERESTS = 'legitimate_interests';
 
     // Source types
     const SOURCE_WEBSITE = 'website';
+
     const SOURCE_API = 'api';
+
     const SOURCE_IMPORT = 'import';
+
     const SOURCE_MANUAL = 'manual';
+
     const SOURCE_FORM = 'form';
 
     /**
@@ -124,7 +142,7 @@ class ConsentLog extends Model
             self::TYPE_PROFILING => 'Profiling',
             self::TYPE_THIRD_PARTY_SHARING => 'Third Party Sharing',
             self::TYPE_COOKIES => 'Cookies',
-            self::TYPE_ANALYTICS => 'Analytics'
+            self::TYPE_ANALYTICS => 'Analytics',
         ];
     }
 
@@ -136,7 +154,7 @@ class ConsentLog extends Model
         return [
             self::STATUS_GIVEN => 'Given',
             self::STATUS_WITHDRAWN => 'Withdrawn',
-            self::STATUS_EXPIRED => 'Expired'
+            self::STATUS_EXPIRED => 'Expired',
         ];
     }
 
@@ -151,7 +169,7 @@ class ConsentLog extends Model
             self::BASIS_LEGAL_OBLIGATION => 'Legal Obligation',
             self::BASIS_VITAL_INTERESTS => 'Vital Interests',
             self::BASIS_PUBLIC_TASK => 'Public Task',
-            self::BASIS_LEGITIMATE_INTERESTS => 'Legitimate Interests'
+            self::BASIS_LEGITIMATE_INTERESTS => 'Legitimate Interests',
         ];
     }
 
@@ -165,7 +183,7 @@ class ConsentLog extends Model
             self::SOURCE_API => 'API',
             self::SOURCE_IMPORT => 'Import',
             self::SOURCE_MANUAL => 'Manual',
-            self::SOURCE_FORM => 'Form'
+            self::SOURCE_FORM => 'Form',
         ];
     }
 
@@ -174,8 +192,8 @@ class ConsentLog extends Model
      */
     public function isActive()
     {
-        return $this->status === self::STATUS_GIVEN && 
-               (!$this->retention_period || $this->given_at->addDays($this->retention_period)->isFuture());
+        return $this->status === self::STATUS_GIVEN &&
+               (! $this->retention_period || $this->given_at->addDays($this->retention_period)->isFuture());
     }
 
     /**
@@ -217,12 +235,20 @@ class ConsentLog extends Model
         $this->status = self::STATUS_GIVEN;
         $this->given_at = now();
         $this->withdrawn_at = null;
-        
-        if ($source) $this->source = $source;
-        if ($ipAddress) $this->ip_address = $ipAddress;
-        if ($userAgent) $this->user_agent = $userAgent;
-        if ($metadata) $this->metadata = array_merge($this->metadata ?? [], $metadata);
-        
+
+        if ($source) {
+            $this->source = $source;
+        }
+        if ($ipAddress) {
+            $this->ip_address = $ipAddress;
+        }
+        if ($userAgent) {
+            $this->user_agent = $userAgent;
+        }
+        if ($metadata) {
+            $this->metadata = array_merge($this->metadata ?? [], $metadata);
+        }
+
         $this->save();
     }
 
@@ -233,10 +259,14 @@ class ConsentLog extends Model
     {
         $this->status = self::STATUS_WITHDRAWN;
         $this->withdrawn_at = now();
-        
-        if ($processorId) $this->processor_id = $processorId;
-        if ($notes) $this->notes = $notes;
-        
+
+        if ($processorId) {
+            $this->processor_id = $processorId;
+        }
+        if ($notes) {
+            $this->notes = $notes;
+        }
+
         $this->save();
     }
 

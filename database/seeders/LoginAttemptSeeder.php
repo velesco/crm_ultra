@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\LoginAttempt;
 use App\Models\User;
-use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class LoginAttemptSeeder extends Seeder
 {
@@ -16,7 +15,7 @@ class LoginAttemptSeeder extends Seeder
     {
         $users = User::all();
         $currentTime = now();
-        
+
         // Sample IP addresses and user agents
         $ipAddresses = [
             '192.168.1.100',
@@ -28,9 +27,9 @@ class LoginAttemptSeeder extends Seeder
             '85.122.45.67',
             '45.123.67.89',
             '123.45.67.89',
-            '87.65.43.21'
+            '87.65.43.21',
         ];
-        
+
         $userAgents = [
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
             'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -39,7 +38,7 @@ class LoginAttemptSeeder extends Seeder
             'Mozilla/5.0 (iPad; CPU OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
             'Mozilla/5.0 (Android 11; Mobile; rv:89.0) Gecko/89.0 Firefox/89.0',
         ];
-        
+
         $locations = [
             ['country' => 'Romania', 'city' => 'Bucharest'],
             ['country' => 'Romania', 'city' => 'Cluj-Napoca'],
@@ -50,7 +49,7 @@ class LoginAttemptSeeder extends Seeder
             ['country' => 'Italy', 'city' => 'Rome'],
             ['country' => 'Spain', 'city' => 'Madrid'],
         ];
-        
+
         $devices = [
             'Desktop - Windows',
             'Desktop - macOS',
@@ -60,7 +59,7 @@ class LoginAttemptSeeder extends Seeder
             'Tablet - iPad',
             'Tablet - Android',
         ];
-        
+
         $browsers = [
             'Chrome 91',
             'Firefox 89',
@@ -74,7 +73,7 @@ class LoginAttemptSeeder extends Seeder
             $successCount = rand(10, 50);
             for ($i = 0; $i < $successCount; $i++) {
                 $timestamp = $currentTime->copy()->subHours(rand(1, 720)); // Last 30 days
-                
+
                 LoginAttempt::create([
                     'email' => $user->email,
                     'ip_address' => $ipAddresses[array_rand($ipAddresses)],
@@ -105,7 +104,7 @@ class LoginAttemptSeeder extends Seeder
             'guest@guest.com',
             'demo@demo.com',
         ];
-        
+
         // Add some failed attempts for existing users too
         foreach ($users as $user) {
             if (rand(1, 3) === 1) { // 33% chance
@@ -118,7 +117,7 @@ class LoginAttemptSeeder extends Seeder
             for ($i = 0; $i < $failedCount; $i++) {
                 $timestamp = $currentTime->copy()->subHours(rand(1, 168)); // Last 7 days
                 $ip = $ipAddresses[array_rand($ipAddresses)];
-                
+
                 LoginAttempt::create([
                     'email' => $email,
                     'ip_address' => $ip,
@@ -140,13 +139,13 @@ class LoginAttemptSeeder extends Seeder
 
         // Create some blocked attempts
         $suspiciousIPs = ['85.122.45.67', '45.123.67.89', '123.45.67.89'];
-        
+
         foreach ($suspiciousIPs as $ip) {
             $blockedCount = rand(5, 15);
             for ($i = 0; $i < $blockedCount; $i++) {
                 $timestamp = $currentTime->copy()->subHours(rand(1, 48)); // Last 2 days
                 $blockedUntil = $timestamp->copy()->addHours(rand(1, 24));
-                
+
                 LoginAttempt::create([
                     'email' => $failedEmails[array_rand($failedEmails)],
                     'ip_address' => $ip,
@@ -191,9 +190,9 @@ class LoginAttemptSeeder extends Seeder
         }
 
         $this->command->info('Created login attempt test data:');
-        $this->command->info('- Success attempts: ' . LoginAttempt::success()->count());
-        $this->command->info('- Failed attempts: ' . LoginAttempt::failed()->count());
-        $this->command->info('- Blocked attempts: ' . LoginAttempt::blocked()->count());
-        $this->command->info('- Currently blocked: ' . LoginAttempt::currentlyBlocked()->count());
+        $this->command->info('- Success attempts: '.LoginAttempt::success()->count());
+        $this->command->info('- Failed attempts: '.LoginAttempt::failed()->count());
+        $this->command->info('- Blocked attempts: '.LoginAttempt::blocked()->count());
+        $this->command->info('- Currently blocked: '.LoginAttempt::currentlyBlocked()->count());
     }
 }

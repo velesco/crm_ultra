@@ -55,10 +55,10 @@ return [
             ],
             'include_composer_extensions' => true,
         ],
-        //\BeyondCode\SelfDiagnosis\Checks\RedisCanBeAccessed::class => [
+        // \BeyondCode\SelfDiagnosis\Checks\RedisCanBeAccessed::class => [
         //    'default_connection' => true,
         //    'connections' => [],
-        //],
+        // ],
         \BeyondCode\SelfDiagnosis\Checks\StorageDirectoryIsLinked::class,
     ],
 
@@ -83,21 +83,21 @@ return [
                 ],
             ],
             \BeyondCode\SelfDiagnosis\Checks\RoutesAreCached::class,
-            //\BeyondCode\SelfDiagnosis\Checks\ServersArePingable::class => [
+            // \BeyondCode\SelfDiagnosis\Checks\ServersArePingable::class => [
             //    'servers' => [
             //        'www.google.com',
             //        ['host' => 'www.google.com', 'port' => 8080],
             //        '8.8.8.8',
             //        ['host' => '8.8.8.8', 'port' => 8080, 'timeout' => 5],
             //    ],
-            //],
-            //\BeyondCode\SelfDiagnosis\Checks\SupervisorProgramsAreRunning::class => [
+            // ],
+            // \BeyondCode\SelfDiagnosis\Checks\SupervisorProgramsAreRunning::class => [
             //    'programs' => [
             //        'horizon',
             //    ],
             //    'restarted_within' => 300,
-            //],
-            //\BeyondCode\SelfDiagnosis\Checks\HorizonIsRunning::class,
+            // ],
+            // \BeyondCode\SelfDiagnosis\Checks\HorizonIsRunning::class,
         ],
     ],
 

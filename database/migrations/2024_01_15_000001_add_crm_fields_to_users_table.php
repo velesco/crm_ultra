@@ -23,8 +23,8 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn([
-                'phone', 'avatar', 'timezone', 'language', 
-                'is_active', 'last_login_at', 'settings'
+                'phone', 'avatar', 'timezone', 'language',
+                'is_active', 'last_login_at', 'settings',
             ]);
         });
     }

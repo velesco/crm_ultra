@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Contact;
 use App\Models\GoogleSheetsIntegration;
 use App\Models\GoogleSheetsSyncLog;
-use App\Models\Contact;
 use App\Services\GoogleSheetsService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Validator;
 
 class GoogleSheetsController extends Controller
 {
@@ -69,14 +68,14 @@ class GoogleSheetsController extends Controller
         $syncDirections = [
             'import' => 'Import from Google Sheets to CRM',
             'export' => 'Export from CRM to Google Sheets',
-            'bidirectional' => 'Bidirectional Sync'
+            'bidirectional' => 'Bidirectional Sync',
         ];
 
         $syncFrequencies = [
             'manual' => 'Manual Only',
             'hourly' => 'Every Hour',
             'daily' => 'Daily',
-            'weekly' => 'Weekly'
+            'weekly' => 'Weekly',
         ];
 
         // Available contact fields for mapping
@@ -116,10 +115,10 @@ class GoogleSheetsController extends Controller
     {
         if ($request->has('error')) {
             return redirect()->route('google-sheets.create')
-                ->withErrors(['oauth' => 'Google authorization was denied: ' . $request->error]);
+                ->withErrors(['oauth' => 'Google authorization was denied: '.$request->error]);
         }
 
-        if (!$request->has('code')) {
+        if (! $request->has('code')) {
             return redirect()->route('google-sheets.create')
                 ->withErrors(['oauth' => 'No authorization code received from Google']);
         }
@@ -136,7 +135,7 @@ class GoogleSheetsController extends Controller
 
         } catch (\Exception $e) {
             return redirect()->route('google-sheets.create')
-                ->withErrors(['oauth' => 'Failed to authorize with Google: ' . $e->getMessage()]);
+                ->withErrors(['oauth' => 'Failed to authorize with Google: '.$e->getMessage()]);
         }
     }
 
@@ -164,7 +163,7 @@ class GoogleSheetsController extends Controller
 
         // Check if OAuth tokens are available
         $tokens = session('google_oauth_tokens');
-        if (!$tokens) {
+        if (! $tokens) {
             return back()->withErrors(['oauth' => 'Google authorization is required. Please authorize first.'])
                 ->withInput();
         }
@@ -177,8 +176,8 @@ class GoogleSheetsController extends Controller
                 $request->sheet_name
             );
 
-            if (!$testResult['success']) {
-                return back()->withErrors(['spreadsheet_id' => 'Cannot access spreadsheet: ' . $testResult['error']])
+            if (! $testResult['success']) {
+                return back()->withErrors(['spreadsheet_id' => 'Cannot access spreadsheet: '.$testResult['error']])
                     ->withInput();
             }
 
@@ -208,7 +207,7 @@ class GoogleSheetsController extends Controller
                 ->with('success', 'Google Sheets integration created successfully.');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to create integration: ' . $e->getMessage()])
+            return back()->withErrors(['error' => 'Failed to create integration: '.$e->getMessage()])
                 ->withInput();
         }
     }
@@ -218,7 +217,7 @@ class GoogleSheetsController extends Controller
      */
     public function show(GoogleSheetsIntegration $googleSheet)
     {
-        $googleSheet->load(['user', 'syncLogs' => function($query) {
+        $googleSheet->load(['user', 'syncLogs' => function ($query) {
             $query->latest()->limit(10);
         }]);
 
@@ -247,14 +246,14 @@ class GoogleSheetsController extends Controller
         $syncDirections = [
             'import' => 'Import from Google Sheets to CRM',
             'export' => 'Export from CRM to Google Sheets',
-            'bidirectional' => 'Bidirectional Sync'
+            'bidirectional' => 'Bidirectional Sync',
         ];
 
         $syncFrequencies = [
             'manual' => 'Manual Only',
             'hourly' => 'Every Hour',
             'daily' => 'Daily',
-            'weekly' => 'Weekly'
+            'weekly' => 'Weekly',
         ];
 
         $contactFields = [
@@ -310,17 +309,17 @@ class GoogleSheetsController extends Controller
 
         try {
             // Test spreadsheet access if spreadsheet changed
-            if ($googleSheet->spreadsheet_id !== $request->spreadsheet_id || 
+            if ($googleSheet->spreadsheet_id !== $request->spreadsheet_id ||
                 $googleSheet->sheet_name !== $request->sheet_name) {
-                
+
                 $this->googleSheetsService->setTokens($googleSheet->oauth_tokens);
                 $testResult = $this->googleSheetsService->testSpreadsheetAccess(
                     $request->spreadsheet_id,
                     $request->sheet_name
                 );
 
-                if (!$testResult['success']) {
-                    return back()->withErrors(['spreadsheet_id' => 'Cannot access spreadsheet: ' . $testResult['error']])
+                if (! $testResult['success']) {
+                    return back()->withErrors(['spreadsheet_id' => 'Cannot access spreadsheet: '.$testResult['error']])
                         ->withInput();
                 }
             }
@@ -343,7 +342,7 @@ class GoogleSheetsController extends Controller
                 ->with('success', 'Google Sheets integration updated successfully.');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to update integration: ' . $e->getMessage()])
+            return back()->withErrors(['error' => 'Failed to update integration: '.$e->getMessage()])
                 ->withInput();
         }
     }
@@ -360,7 +359,7 @@ class GoogleSheetsController extends Controller
                 ->with('success', 'Google Sheets integration deleted successfully.');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to delete integration: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to delete integration: '.$e->getMessage()]);
         }
     }
 
@@ -371,15 +370,15 @@ class GoogleSheetsController extends Controller
     {
         try {
             $googleSheet->update([
-                'is_active' => !$googleSheet->is_active
+                'is_active' => ! $googleSheet->is_active,
             ]);
 
             $status = $googleSheet->is_active ? 'activated' : 'deactivated';
-            
+
             return back()->with('success', "Integration {$status} successfully.");
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to toggle integration status: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to toggle integration status: '.$e->getMessage()]);
         }
     }
 
@@ -388,13 +387,13 @@ class GoogleSheetsController extends Controller
      */
     public function sync(GoogleSheetsIntegration $googleSheet, Request $request)
     {
-        if (!$googleSheet->is_active) {
+        if (! $googleSheet->is_active) {
             return back()->withErrors(['error' => 'Cannot sync inactive integration.']);
         }
 
         $direction = $request->input('direction', $googleSheet->sync_direction);
-        
-        if (!in_array($direction, ['import', 'export', 'bidirectional'])) {
+
+        if (! in_array($direction, ['import', 'export', 'bidirectional'])) {
             return back()->withErrors(['error' => 'Invalid sync direction.']);
         }
 
@@ -408,11 +407,11 @@ class GoogleSheetsController extends Controller
             if ($result['success']) {
                 return back()->with('success', "Sync completed successfully. Processed {$result['contacts_processed']} contacts in {$result['duration']} seconds.");
             } else {
-                return back()->withErrors(['sync' => 'Sync failed: ' . $result['error']]);
+                return back()->withErrors(['sync' => 'Sync failed: '.$result['error']]);
             }
 
         } catch (\Exception $e) {
-            return back()->withErrors(['sync' => 'Sync failed: ' . $e->getMessage()]);
+            return back()->withErrors(['sync' => 'Sync failed: '.$e->getMessage()]);
         }
     }
 
@@ -423,7 +422,7 @@ class GoogleSheetsController extends Controller
     {
         try {
             $this->googleSheetsService->setTokens($googleSheet->oauth_tokens);
-            
+
             $result = $this->googleSheetsService->testSpreadsheetAccess(
                 $googleSheet->spreadsheet_id,
                 $googleSheet->sheet_name
@@ -432,11 +431,11 @@ class GoogleSheetsController extends Controller
             if ($result['success']) {
                 return back()->with('success', 'Connection test successful. Spreadsheet is accessible.');
             } else {
-                return back()->withErrors(['test' => 'Connection test failed: ' . $result['error']]);
+                return back()->withErrors(['test' => 'Connection test failed: '.$result['error']]);
             }
 
         } catch (\Exception $e) {
-            return back()->withErrors(['test' => 'Connection test failed: ' . $e->getMessage()]);
+            return back()->withErrors(['test' => 'Connection test failed: '.$e->getMessage()]);
         }
     }
 
@@ -447,15 +446,15 @@ class GoogleSheetsController extends Controller
     {
         try {
             $newTokens = $this->googleSheetsService->refreshTokens($googleSheet->oauth_tokens);
-            
+
             $googleSheet->update([
-                'oauth_tokens' => $newTokens
+                'oauth_tokens' => $newTokens,
             ]);
 
             return back()->with('success', 'OAuth tokens refreshed successfully.');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['refresh' => 'Failed to refresh tokens: ' . $e->getMessage()]);
+            return back()->withErrors(['refresh' => 'Failed to refresh tokens: '.$e->getMessage()]);
         }
     }
 
@@ -495,7 +494,7 @@ class GoogleSheetsController extends Controller
     {
         try {
             $this->googleSheetsService->setTokens($googleSheet->oauth_tokens);
-            
+
             $preview = $this->googleSheetsService->previewSpreadsheetData(
                 $googleSheet->spreadsheet_id,
                 $googleSheet->sheet_name,
@@ -506,19 +505,19 @@ class GoogleSheetsController extends Controller
                 return response()->json([
                     'success' => true,
                     'data' => $preview['data'],
-                    'headers' => $preview['headers'] ?? []
+                    'headers' => $preview['headers'] ?? [],
                 ]);
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => $preview['error']
+                    'message' => $preview['error'],
                 ], 400);
             }
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to preview data: ' . $e->getMessage()
+                'message' => 'Failed to preview data: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -528,7 +527,7 @@ class GoogleSheetsController extends Controller
      */
     private function calculateNextSyncTime(GoogleSheetsIntegration $integration)
     {
-        if ($integration->sync_frequency === 'manual' || !$integration->last_sync_at) {
+        if ($integration->sync_frequency === 'manual' || ! $integration->last_sync_at) {
             return null;
         }
 

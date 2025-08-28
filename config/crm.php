@@ -17,7 +17,7 @@ return [
     | Application Settings
     |--------------------------------------------------------------------------
     */
-    
+
     'app' => [
         'name' => env('APP_NAME', 'CRM Ultra'),
         'version' => env('APP_VERSION', '1.0.0'),
@@ -30,7 +30,7 @@ return [
     | Limits and Quotas
     |--------------------------------------------------------------------------
     */
-    
+
     'limits' => [
         'max_contacts_per_user' => env('CRM_MAX_CONTACTS_PER_USER', 10000),
         'max_emails_per_hour' => env('CRM_MAX_EMAILS_PER_HOUR', 1000),
@@ -44,7 +44,7 @@ return [
     | Email Configuration
     |--------------------------------------------------------------------------
     */
-    
+
     'email' => [
         'tracking_enabled' => env('CRM_EMAIL_TRACKING_ENABLED', true),
         'unsubscribe_enabled' => env('CRM_EMAIL_UNSUBSCRIBE_ENABLED', true),
@@ -58,7 +58,7 @@ return [
     | SMS Configuration
     |--------------------------------------------------------------------------
     */
-    
+
     'sms' => [
         'default_provider' => env('CRM_SMS_DEFAULT_PROVIDER', 'twilio'),
         'max_length' => env('CRM_SMS_MAX_LENGTH', 160),
@@ -71,7 +71,7 @@ return [
     | WhatsApp Configuration
     |--------------------------------------------------------------------------
     */
-    
+
     'whatsapp' => [
         'api_url' => env('WHATSAPP_API_URL', 'http://localhost:3000'),
         'api_key' => env('WHATSAPP_API_KEY'),
@@ -85,7 +85,7 @@ return [
     | Google Services Configuration
     |--------------------------------------------------------------------------
     */
-    
+
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
@@ -101,7 +101,7 @@ return [
     | Security Settings
     |--------------------------------------------------------------------------
     */
-    
+
     'security' => [
         'two_factor_enabled' => env('SECURITY_TWO_FACTOR_ENABLED', false),
         'password_reset_timeout' => env('SECURITY_PASSWORD_RESET_TIMEOUT', 60), // minutes
@@ -115,7 +115,7 @@ return [
     | Rate Limiting
     |--------------------------------------------------------------------------
     */
-    
+
     'rate_limits' => [
         'api' => env('RATE_LIMIT_API', 60), // requests per minute
         'email' => env('RATE_LIMIT_EMAIL', 100), // emails per hour
@@ -128,7 +128,7 @@ return [
     | Import/Export Settings
     |--------------------------------------------------------------------------
     */
-    
+
     'import' => [
         'max_file_size' => env('CRM_IMPORT_MAX_FILE_SIZE', 10240), // KB
         'allowed_extensions' => ['csv', 'xlsx', 'xls'],
@@ -147,7 +147,7 @@ return [
     | Backup Configuration
     |--------------------------------------------------------------------------
     */
-    
+
     'backup' => [
         'enabled' => env('BACKUP_ENABLED', true),
         'schedule' => env('BACKUP_SCHEDULE', '0 2 * * *'), // Daily at 2 AM
@@ -160,7 +160,7 @@ return [
     | Contact Settings
     |--------------------------------------------------------------------------
     */
-    
+
     'contacts' => [
         'required_fields' => ['first_name'],
         'default_status' => 'active',
@@ -174,7 +174,7 @@ return [
     | Dashboard Settings
     |--------------------------------------------------------------------------
     */
-    
+
     'dashboard' => [
         'refresh_interval' => env('CRM_DASHBOARD_REFRESH_INTERVAL', 30), // seconds
         'chart_data_points' => env('CRM_DASHBOARD_CHART_DATA_POINTS', 30),
@@ -186,7 +186,7 @@ return [
     | Feature Flags
     |--------------------------------------------------------------------------
     */
-    
+
     'features' => [
         'email_campaigns' => env('CRM_FEATURE_EMAIL_CAMPAIGNS', true),
         'sms_messaging' => env('CRM_FEATURE_SMS_MESSAGING', true),
@@ -203,7 +203,7 @@ return [
     | Notification Settings
     |--------------------------------------------------------------------------
     */
-    
+
     'notifications' => [
         'email_enabled' => env('CRM_NOTIFICATIONS_EMAIL_ENABLED', true),
         'browser_enabled' => env('CRM_NOTIFICATIONS_BROWSER_ENABLED', true),
@@ -216,7 +216,7 @@ return [
     | Theme and UI Settings
     |--------------------------------------------------------------------------
     */
-    
+
     'ui' => [
         'theme' => env('CRM_UI_THEME', 'light'), // light, dark, auto
         'sidebar_collapsed' => env('CRM_UI_SIDEBAR_COLLAPSED', false),

@@ -21,8 +21,8 @@ class RefreshContactSegments implements ShouldQueue
     {
         try {
             $contact = $this->getContactFromEvent($event);
-            
-            if (!$contact) {
+
+            if (! $contact) {
                 return;
             }
 
@@ -76,27 +76,27 @@ class RefreshContactSegments implements ShouldQueue
                 $shouldBeMember = $this->evaluateSegmentConditions($contact, $segment);
                 $isMember = $segment->contacts()->where('contact_id', $contact->id)->exists();
 
-                if ($shouldBeMember && !$isMember) {
+                if ($shouldBeMember && ! $isMember) {
                     // Add contact to segment
                     $segment->contacts()->attach($contact->id, [
                         'added_at' => now(),
                         'source' => 'automatic',
                     ]);
-                    
+
                     $segment->increment('contact_count');
-                    
+
                     Log::info('Contact added to segment', [
                         'contact_id' => $contact->id,
                         'segment_id' => $segment->id,
                         'segment_name' => $segment->name,
                     ]);
-                    
-                } elseif (!$shouldBeMember && $isMember) {
+
+                } elseif (! $shouldBeMember && $isMember) {
                     // Remove contact from segment
                     $segment->contacts()->detach($contact->id);
-                    
+
                     $segment->decrement('contact_count');
-                    
+
                     Log::info('Contact removed from segment', [
                         'contact_id' => $contact->id,
                         'segment_id' => $segment->id,
@@ -120,14 +120,14 @@ class RefreshContactSegments implements ShouldQueue
      */
     private function evaluateSegmentConditions($contact, $segment): bool
     {
-        if (!$segment->conditions) {
+        if (! $segment->conditions) {
             return false;
         }
 
         try {
             $conditions = json_decode($segment->conditions, true);
-            
-            if (!is_array($conditions) || empty($conditions)) {
+
+            if (! is_array($conditions) || empty($conditions)) {
                 return false;
             }
 
@@ -140,7 +140,7 @@ class RefreshContactSegments implements ShouldQueue
                 'segment_id' => $segment->id,
                 'conditions' => $segment->conditions,
             ]);
-            
+
             return false;
         }
     }
@@ -169,7 +169,7 @@ class RefreshContactSegments implements ShouldQueue
             }
         }
 
-        return $logic === 'or' ? in_array(true, $results) : !in_array(false, $results);
+        return $logic === 'or' ? in_array(true, $results) : ! in_array(false, $results);
     }
 
     /**
@@ -199,11 +199,11 @@ class RefreshContactSegments implements ShouldQueue
         if (str_contains($field, '.')) {
             [$mainField, $modifier] = explode('.', $field, 2);
             $value = $contact->getAttribute($mainField);
-            
+
             if ($modifier === 'date' && $value instanceof \Carbon\Carbon) {
                 return $value->format('Y-m-d');
             }
-            
+
             return $value;
         }
 
@@ -219,7 +219,7 @@ class RefreshContactSegments implements ShouldQueue
             'equals' => $contactValue == $conditionValue,
             'not_equals' => $contactValue != $conditionValue,
             'contains' => str_contains(strtolower($contactValue ?? ''), strtolower($conditionValue)),
-            'not_contains' => !str_contains(strtolower($contactValue ?? ''), strtolower($conditionValue)),
+            'not_contains' => ! str_contains(strtolower($contactValue ?? ''), strtolower($conditionValue)),
             'starts_with' => str_starts_with(strtolower($contactValue ?? ''), strtolower($conditionValue)),
             'ends_with' => str_ends_with(strtolower($contactValue ?? ''), strtolower($conditionValue)),
             'greater_than' => $contactValue > $conditionValue,
@@ -227,9 +227,9 @@ class RefreshContactSegments implements ShouldQueue
             'greater_than_or_equal' => $contactValue >= $conditionValue,
             'less_than_or_equal' => $contactValue <= $conditionValue,
             'is_empty' => empty($contactValue),
-            'is_not_empty' => !empty($contactValue),
+            'is_not_empty' => ! empty($contactValue),
             'in' => is_array($conditionValue) ? in_array($contactValue, $conditionValue) : false,
-            'not_in' => is_array($conditionValue) ? !in_array($contactValue, $conditionValue) : true,
+            'not_in' => is_array($conditionValue) ? ! in_array($contactValue, $conditionValue) : true,
             default => false,
         };
     }
@@ -241,16 +241,16 @@ class RefreshContactSegments implements ShouldQueue
     {
         // Fields that commonly affect segment conditions
         $significantFields = [
-            'status', 'email', 'phone', 'company', 'location', 
-            'engagement_score', 'last_activity', 'source', 'tags'
+            'status', 'email', 'phone', 'company', 'location',
+            'engagement_score', 'last_activity', 'source', 'tags',
         ];
 
-        $hasSignificantChanges = !empty(array_intersect(array_keys($changes), $significantFields));
+        $hasSignificantChanges = ! empty(array_intersect(array_keys($changes), $significantFields));
 
         if ($hasSignificantChanges) {
             // Dispatch job to refresh all dynamic segments
             RefreshDynamicSegmentsJob::dispatch()->delay(now()->addMinutes(1));
-            
+
             Log::info('Dynamic segments refresh job queued due to significant contact changes', [
                 'contact_id' => $contact->id,
                 'changed_fields' => array_keys($changes),

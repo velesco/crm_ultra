@@ -4,10 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\SystemSetting;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 
 class SystemSettingsController extends Controller
 {
@@ -41,8 +40,8 @@ class SystemSettingsController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('key', 'like', "%{$search}%")
-                  ->orWhere('label', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('label', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -60,7 +59,7 @@ class SystemSettingsController extends Controller
     public function create(Request $request)
     {
         $defaultGroup = $request->get('group', 'general');
-        
+
         $groups = SystemSetting::distinct('group')->pluck('group')
             ->mapWithKeys(function ($group) {
                 return [$group => ucfirst(str_replace('_', ' ', $group))];
@@ -72,7 +71,7 @@ class SystemSettingsController extends Controller
                 'whatsapp' => 'WhatsApp',
                 'api' => 'API',
                 'security' => 'Security',
-                'integrations' => 'Integrations'
+                'integrations' => 'Integrations',
             ]);
 
         return view('admin.settings.create', compact('groups', 'defaultGroup'));
@@ -95,7 +94,7 @@ class SystemSettingsController extends Controller
             'is_encrypted' => 'boolean',
             'is_public' => 'boolean',
             'requires_restart' => 'boolean',
-            'sort_order' => 'nullable|integer|min:0'
+            'sort_order' => 'nullable|integer|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -109,10 +108,10 @@ class SystemSettingsController extends Controller
             $customRules = json_decode($request->validation_rules, true);
             if ($customRules && is_array($customRules)) {
                 $valueValidator = Validator::make(
-                    ['value' => $request->value], 
+                    ['value' => $request->value],
                     ['value' => $customRules]
                 );
-                
+
                 if ($valueValidator->fails()) {
                     return redirect()->back()
                         ->withErrors($valueValidator)
@@ -151,7 +150,7 @@ class SystemSettingsController extends Controller
     public function show(SystemSetting $systemSetting)
     {
         $systemSetting->load(['createdBy', 'updatedBy']);
-        
+
         // Get related settings in the same group
         $relatedSettings = SystemSetting::byGroup($systemSetting->group)
             ->where('id', '!=', $systemSetting->id)
@@ -167,7 +166,7 @@ class SystemSettingsController extends Controller
      */
     public function edit(SystemSetting $systemSetting)
     {
-        if (!$systemSetting->isEditable()) {
+        if (! $systemSetting->isEditable()) {
             return redirect()->route('admin.settings.show', $systemSetting)
                 ->with('error', 'This setting cannot be edited.');
         }
@@ -178,12 +177,12 @@ class SystemSettingsController extends Controller
             })
             ->union([
                 'general' => 'General',
-                'email' => 'Email', 
+                'email' => 'Email',
                 'sms' => 'SMS',
                 'whatsapp' => 'WhatsApp',
                 'api' => 'API',
                 'security' => 'Security',
-                'integrations' => 'Integrations'
+                'integrations' => 'Integrations',
             ]);
 
         return view('admin.settings.edit', compact('systemSetting', 'groups'));
@@ -194,13 +193,13 @@ class SystemSettingsController extends Controller
      */
     public function update(Request $request, SystemSetting $systemSetting)
     {
-        if (!$systemSetting->isEditable()) {
+        if (! $systemSetting->isEditable()) {
             return redirect()->route('admin.settings.show', $systemSetting)
                 ->with('error', 'This setting cannot be edited.');
         }
 
         $validator = Validator::make($request->all(), [
-            'key' => 'required|string|max:255|regex:/^[a-z0-9._]+$/|unique:system_settings,key,' . $systemSetting->id,
+            'key' => 'required|string|max:255|regex:/^[a-z0-9._]+$/|unique:system_settings,key,'.$systemSetting->id,
             'label' => 'required|string|max:255',
             'value' => 'nullable',
             'type' => 'required|in:string,integer,boolean,json,text,encrypted',
@@ -211,7 +210,7 @@ class SystemSettingsController extends Controller
             'is_encrypted' => 'boolean',
             'is_public' => 'boolean',
             'requires_restart' => 'boolean',
-            'sort_order' => 'nullable|integer|min:0'
+            'sort_order' => 'nullable|integer|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -225,10 +224,10 @@ class SystemSettingsController extends Controller
             $customRules = json_decode($request->validation_rules, true);
             if ($customRules && is_array($customRules)) {
                 $valueValidator = Validator::make(
-                    ['value' => $request->value], 
+                    ['value' => $request->value],
                     ['value' => $customRules]
                 );
-                
+
                 if ($valueValidator->fails()) {
                     return redirect()->back()
                         ->withErrors($valueValidator)
@@ -266,14 +265,14 @@ class SystemSettingsController extends Controller
      */
     public function destroy(SystemSetting $systemSetting)
     {
-        if (!$systemSetting->isEditable()) {
+        if (! $systemSetting->isEditable()) {
             return redirect()->route('admin.settings.index')
                 ->with('error', 'This setting cannot be deleted.');
         }
 
         $group = $systemSetting->group;
         $label = $systemSetting->label;
-        
+
         $systemSetting->delete();
 
         return redirect()->route('admin.settings.index', ['group' => $group])
@@ -288,30 +287,30 @@ class SystemSettingsController extends Controller
         $request->validate([
             'action' => 'required|in:delete,export,toggle_public',
             'settings' => 'required|array',
-            'settings.*' => 'exists:system_settings,id'
+            'settings.*' => 'exists:system_settings,id',
         ]);
 
         $settings = SystemSetting::whereIn('id', $request->settings)->get();
         $action = $request->action;
-        
+
         $count = 0;
-        
+
         foreach ($settings as $setting) {
-            if (!$setting->isEditable() && in_array($action, ['delete'])) {
+            if (! $setting->isEditable() && in_array($action, ['delete'])) {
                 continue;
             }
-            
+
             switch ($action) {
                 case 'delete':
                     $setting->delete();
                     $count++;
                     break;
-                    
+
                 case 'toggle_public':
-                    $setting->update(['is_public' => !$setting->is_public]);
+                    $setting->update(['is_public' => ! $setting->is_public]);
                     $count++;
                     break;
-                    
+
                 case 'export':
                     // Handle in separate method
                     return $this->exportSettings($settings);
@@ -337,15 +336,15 @@ class SystemSettingsController extends Controller
         $search = $request->get('search');
 
         $query = SystemSetting::query();
-        
+
         if ($group) {
             $query->byGroup($group);
         }
-        
+
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('key', 'like', "%{$search}%")
-                  ->orWhere('label', 'like', "%{$search}%");
+                    ->orWhere('label', 'like', "%{$search}%");
             });
         }
 
@@ -362,8 +361,8 @@ class SystemSettingsController extends Controller
             ];
         });
 
-        $filename = 'system-settings-' . ($group ?: 'all') . '-' . date('Y-m-d-H-i-s') . '.json';
-        
+        $filename = 'system-settings-'.($group ?: 'all').'-'.date('Y-m-d-H-i-s').'.json';
+
         return response()->json($settings)
             ->header('Content-Disposition', "attachment; filename={$filename}");
     }
@@ -374,11 +373,11 @@ class SystemSettingsController extends Controller
     public function clearCache(Request $request)
     {
         $this->clearSystemCache();
-        
+
         if ($request->wantsJson()) {
             return response()->json(['message' => 'System cache cleared successfully']);
         }
-        
+
         return redirect()->back()
             ->with('success', 'System cache cleared successfully.');
     }
@@ -428,8 +427,8 @@ class SystemSettingsController extends Controller
             ];
         });
 
-        $filename = 'selected-settings-' . date('Y-m-d-H-i-s') . '.json';
-        
+        $filename = 'selected-settings-'.date('Y-m-d-H-i-s').'.json';
+
         return response()->json($data)
             ->header('Content-Disposition', "attachment; filename={$filename}");
     }

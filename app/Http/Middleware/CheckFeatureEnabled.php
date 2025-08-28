@@ -17,18 +17,18 @@ class CheckFeatureEnabled
     {
         // Check if feature is enabled globally
         $globallyEnabled = $this->isFeatureEnabledGlobally($feature);
-        
-        if (!$globallyEnabled) {
+
+        if (! $globallyEnabled) {
             return $this->handleDisabledFeature($request, $feature);
         }
 
         // Check if user has access to this feature
-        if (!$this->userHasFeatureAccess($request->user(), $feature)) {
+        if (! $this->userHasFeatureAccess($request->user(), $feature)) {
             return $this->handleUnauthorizedAccess($request, $feature);
         }
 
         // Check feature-specific conditions
-        if (!$this->checkFeatureConditions($request, $feature)) {
+        if (! $this->checkFeatureConditions($request, $feature)) {
             return $this->handleFeatureConditionsNotMet($request, $feature);
         }
 
@@ -41,7 +41,7 @@ class CheckFeatureEnabled
     protected function isFeatureEnabledGlobally(string $feature): bool
     {
         // Check application config first
-        if (!config("features.{$feature}.enabled", true)) {
+        if (! config("features.{$feature}.enabled", true)) {
             return false;
         }
 
@@ -72,7 +72,7 @@ class CheckFeatureEnabled
      */
     protected function userHasFeatureAccess($user, string $feature): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -83,7 +83,7 @@ class CheckFeatureEnabled
 
         // Check user's plan/subscription limits
         $plan = $user->subscription_plan ?? 'free';
-        
+
         return match ($feature) {
             'email_campaigns' => in_array($plan, ['free', 'basic', 'pro', 'enterprise']),
             'sms' => in_array($plan, ['basic', 'pro', 'enterprise']),
@@ -122,8 +122,9 @@ class CheckFeatureEnabled
     protected function checkEmailCampaignConditions($user): bool
     {
         // Check if user has at least one active SMTP config
-        if (!$user->hasActiveSmtpConfig()) {
+        if (! $user->hasActiveSmtpConfig()) {
             session()->flash('feature_warning', 'You need to configure at least one SMTP provider to use email campaigns.');
+
             return false;
         }
 
@@ -136,8 +137,9 @@ class CheckFeatureEnabled
     protected function checkSmsConditions($user): bool
     {
         // Check if user has at least one active SMS provider
-        if (!$user->hasActiveSmsProvider()) {
+        if (! $user->hasActiveSmsProvider()) {
             session()->flash('feature_warning', 'You need to configure at least one SMS provider to send SMS messages.');
+
             return false;
         }
 
@@ -150,8 +152,9 @@ class CheckFeatureEnabled
     protected function checkWhatsAppConditions($user): bool
     {
         // Check if user has at least one active WhatsApp session
-        if (!$user->hasActiveWhatsAppSession()) {
+        if (! $user->hasActiveWhatsAppSession()) {
             session()->flash('feature_warning', 'You need to set up and connect a WhatsApp session first.');
+
             return false;
         }
 
@@ -165,8 +168,9 @@ class CheckFeatureEnabled
     {
         // Check if Google Sheets integration is configured
         $integration = $user->googleSheetsIntegrations()->active()->first();
-        if (!$integration) {
+        if (! $integration) {
             session()->flash('feature_warning', 'You need to set up Google Sheets integration first.');
+
             return false;
         }
 
@@ -193,6 +197,7 @@ class CheckFeatureEnabled
 
         if ($dailyImports >= $limit) {
             session()->flash('feature_warning', "Daily import limit reached ({$limit} imports per day).");
+
             return false;
         }
 
@@ -208,7 +213,7 @@ class CheckFeatureEnabled
             return response()->json([
                 'error' => 'Feature disabled',
                 'message' => "The {$feature} feature is currently disabled.",
-                'feature' => $feature
+                'feature' => $feature,
             ], 403);
         }
 
@@ -225,7 +230,7 @@ class CheckFeatureEnabled
             return response()->json([
                 'error' => 'Feature not available',
                 'message' => "The {$feature} feature is not available in your current plan.",
-                'feature' => $feature
+                'feature' => $feature,
             ], 403);
         }
 
@@ -242,7 +247,7 @@ class CheckFeatureEnabled
             return response()->json([
                 'error' => 'Feature requirements not met',
                 'message' => session('feature_warning', "Please complete the required setup for {$feature}."),
-                'feature' => $feature
+                'feature' => $feature,
             ], 422);
         }
 

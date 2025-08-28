@@ -2,20 +2,17 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
-use App\Models\Contact;
-use App\Models\User;
-use App\Models\EmailCampaign;
-use App\Models\SmsMessage;
-use App\Models\WhatsAppMessage;
-use App\Models\DataImport;
 use App\Models\Communication;
+use App\Models\Contact;
+use App\Models\DataImport;
+use App\Models\EmailCampaign;
 use App\Models\SystemLog;
-use Carbon\Carbon;
+use App\Models\User;
 use Exception;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class AdminService
 {
@@ -70,7 +67,8 @@ class AdminService
                 ],
             ];
         } catch (Exception $e) {
-            Log::error('Failed to get system stats: ' . $e->getMessage());
+            Log::error('Failed to get system stats: '.$e->getMessage());
+
             return [];
         }
     }
@@ -96,7 +94,7 @@ class AdminService
                         'user' => $user->name,
                         'timestamp' => $user->created_at,
                         'icon' => 'user-plus',
-                        'color' => 'success'
+                        'color' => 'success',
                     ];
                 });
 
@@ -114,7 +112,7 @@ class AdminService
                         'user' => $campaign->user->name ?? 'System',
                         'timestamp' => $campaign->created_at,
                         'icon' => 'mail',
-                        'color' => 'primary'
+                        'color' => 'primary',
                     ];
                 });
 
@@ -131,7 +129,7 @@ class AdminService
                         'user' => 'System',
                         'timestamp' => $contact->created_at,
                         'icon' => 'users',
-                        'color' => 'info'
+                        'color' => 'info',
                     ];
                 });
 
@@ -149,7 +147,7 @@ class AdminService
                         'user' => $import->user->name ?? 'System',
                         'timestamp' => $import->created_at,
                         'icon' => 'download',
-                        'color' => $import->status === 'completed' ? 'success' : ($import->status === 'failed' ? 'danger' : 'warning')
+                        'color' => $import->status === 'completed' ? 'success' : ($import->status === 'failed' ? 'danger' : 'warning'),
                     ];
                 });
 
@@ -164,7 +162,8 @@ class AdminService
             return $activities->toArray();
 
         } catch (Exception $e) {
-            Log::error('Failed to get recent activity: ' . $e->getMessage());
+            Log::error('Failed to get recent activity: '.$e->getMessage());
+
             return [];
         }
     }
@@ -181,7 +180,7 @@ class AdminService
                 'queue' => $this->checkQueueHealth(),
                 'storage' => $this->checkStorageHealth(),
                 'external_apis' => $this->checkExternalApisHealth(),
-                'overall_status' => 'healthy'
+                'overall_status' => 'healthy',
             ];
 
             // Determine overall status
@@ -195,7 +194,8 @@ class AdminService
             return $health;
 
         } catch (Exception $e) {
-            Log::error('Failed to check system health: ' . $e->getMessage());
+            Log::error('Failed to check system health: '.$e->getMessage());
+
             return ['overall_status' => 'critical'];
         }
     }
@@ -219,12 +219,14 @@ class AdminService
                 ->get()
                 ->map(function ($user) {
                     $user->total_activity = $user->campaigns_count + $user->contacts_count + $user->imports_count;
+
                     return $user;
                 })
                 ->toArray();
 
         } catch (Exception $e) {
-            Log::error('Failed to get top users: ' . $e->getMessage());
+            Log::error('Failed to get top users: '.$e->getMessage());
+
             return [];
         }
     }
@@ -241,18 +243,19 @@ class AdminService
             for ($i = 0; $i < $days; $i++) {
                 $date = $startDate->copy()->addDays($i);
                 $count = User::whereDate('created_at', $date)->count();
-                
+
                 $growth[] = [
                     'date' => $date->format('Y-m-d'),
                     'count' => $count,
-                    'formatted_date' => $date->format('M j')
+                    'formatted_date' => $date->format('M j'),
                 ];
             }
 
             return $growth;
 
         } catch (Exception $e) {
-            Log::error('Failed to get user growth data: ' . $e->getMessage());
+            Log::error('Failed to get user growth data: '.$e->getMessage());
+
             return [];
         }
     }
@@ -268,20 +271,21 @@ class AdminService
 
             for ($i = 0; $i < $days; $i++) {
                 $date = $startDate->copy()->addDays($i);
-                
+
                 $usage[] = [
                     'date' => $date->format('Y-m-d'),
                     'emails' => Communication::where('type', 'email')->whereDate('created_at', $date)->count(),
                     'sms' => Communication::where('type', 'sms')->whereDate('created_at', $date)->count(),
                     'whatsapp' => Communication::where('type', 'whatsapp')->whereDate('created_at', $date)->count(),
-                    'formatted_date' => $date->format('M j')
+                    'formatted_date' => $date->format('M j'),
                 ];
             }
 
             return $usage;
 
         } catch (Exception $e) {
-            Log::error('Failed to get system usage data: ' . $e->getMessage());
+            Log::error('Failed to get system usage data: '.$e->getMessage());
+
             return [];
         }
     }
@@ -293,10 +297,10 @@ class AdminService
     {
         try {
             return Communication::select(
-                    DB::raw('DATE(created_at) as date'),
-                    'type',
-                    DB::raw('COUNT(*) as count')
-                )
+                DB::raw('DATE(created_at) as date'),
+                'type',
+                DB::raw('COUNT(*) as count')
+            )
                 ->where('created_at', '>=', now()->subDays($days))
                 ->groupBy('date', 'type')
                 ->orderBy('date')
@@ -306,19 +310,20 @@ class AdminService
                     $trends = [
                         'email' => 0,
                         'sms' => 0,
-                        'whatsapp' => 0
+                        'whatsapp' => 0,
                     ];
-                    
+
                     foreach ($dayData as $item) {
                         $trends[$item->type] = $item->count;
                     }
-                    
+
                     return $trends;
                 })
                 ->toArray();
 
         } catch (Exception $e) {
-            Log::error('Failed to get communication trends: ' . $e->getMessage());
+            Log::error('Failed to get communication trends: '.$e->getMessage());
+
             return [];
         }
     }
@@ -346,7 +351,8 @@ class AdminService
             return $alerts;
 
         } catch (Exception $e) {
-            Log::error('Failed to get system alerts count: ' . $e->getMessage());
+            Log::error('Failed to get system alerts count: '.$e->getMessage());
+
             return 0;
         }
     }
@@ -364,10 +370,10 @@ class AdminService
                 'metadata' => json_encode($metadata),
                 'ip_address' => request()->ip(),
                 'user_agent' => request()->userAgent(),
-                'created_at' => now()
+                'created_at' => now(),
             ]);
         } catch (Exception $e) {
-            Log::error('Failed to log system action: ' . $e->getMessage());
+            Log::error('Failed to log system action: '.$e->getMessage());
         }
     }
 
@@ -385,14 +391,14 @@ class AdminService
     private function getDatabaseSize(): string
     {
         try {
-            $size = DB::select("
+            $size = DB::select('
                 SELECT 
                     ROUND(SUM(data_length + index_length) / 1024 / 1024, 1) AS db_size_mb
                 FROM information_schema.tables 
                 WHERE table_schema = DATABASE()
-            ")[0]->db_size_mb ?? 0;
+            ')[0]->db_size_mb ?? 0;
 
-            return $size . ' MB';
+            return $size.' MB';
         } catch (Exception $e) {
             return '0 MB';
         }
@@ -403,14 +409,14 @@ class AdminService
         try {
             $logPath = storage_path('logs');
             $size = 0;
-            
+
             if (is_dir($logPath)) {
-                foreach (glob($logPath . '/*.log') as $file) {
+                foreach (glob($logPath.'/*.log') as $file) {
                     $size += filesize($file);
                 }
             }
-            
-            return round($size / 1024 / 1024, 1) . ' MB';
+
+            return round($size / 1024 / 1024, 1).' MB';
         } catch (Exception $e) {
             return '0 MB';
         }
@@ -421,20 +427,20 @@ class AdminService
         try {
             $uploadPath = storage_path('app/public');
             $size = 0;
-            
+
             if (is_dir($uploadPath)) {
                 $iterator = new \RecursiveIteratorIterator(
                     new \RecursiveDirectoryIterator($uploadPath)
                 );
-                
+
                 foreach ($iterator as $file) {
                     if ($file->isFile()) {
                         $size += $file->getSize();
                     }
                 }
             }
-            
-            return round($size / 1024 / 1024, 1) . ' MB';
+
+            return round($size / 1024 / 1024, 1).' MB';
         } catch (Exception $e) {
             return '0 MB';
         }
@@ -456,10 +462,10 @@ class AdminService
                 $days = floor($uptime / 86400);
                 $hours = floor(($uptime % 86400) / 3600);
                 $minutes = floor(($uptime % 3600) / 60);
-                
+
                 return "{$days}d {$hours}h {$minutes}m";
             }
-            
+
             return 'N/A';
         } catch (Exception $e) {
             return 'N/A';
@@ -476,14 +482,14 @@ class AdminService
 
             return [
                 'status' => $responseTime < 100 ? 'healthy' : ($responseTime < 500 ? 'warning' : 'critical'),
-                'response_time' => $responseTime . 'ms',
-                'message' => 'Database connection active'
+                'response_time' => $responseTime.'ms',
+                'message' => 'Database connection active',
             ];
         } catch (Exception $e) {
             return [
                 'status' => 'critical',
                 'response_time' => 'N/A',
-                'message' => 'Database connection failed: ' . $e->getMessage()
+                'message' => 'Database connection failed: '.$e->getMessage(),
             ];
         }
     }
@@ -491,19 +497,19 @@ class AdminService
     private function checkCacheHealth(): array
     {
         try {
-            $testKey = 'health_check_' . time();
+            $testKey = 'health_check_'.time();
             Cache::put($testKey, 'test', 10);
             $retrieved = Cache::get($testKey);
             Cache::forget($testKey);
 
             return [
                 'status' => $retrieved === 'test' ? 'healthy' : 'warning',
-                'message' => $retrieved === 'test' ? 'Cache working properly' : 'Cache not responding correctly'
+                'message' => $retrieved === 'test' ? 'Cache working properly' : 'Cache not responding correctly',
             ];
         } catch (Exception $e) {
             return [
                 'status' => 'critical',
-                'message' => 'Cache failed: ' . $e->getMessage()
+                'message' => 'Cache failed: '.$e->getMessage(),
             ];
         }
     }
@@ -517,12 +523,12 @@ class AdminService
             return [
                 'status' => $status,
                 'failed_jobs' => $failedJobs,
-                'message' => $failedJobs === 0 ? 'No failed jobs' : "{$failedJobs} failed jobs found"
+                'message' => $failedJobs === 0 ? 'No failed jobs' : "{$failedJobs} failed jobs found",
             ];
         } catch (Exception $e) {
             return [
                 'status' => 'critical',
-                'message' => 'Queue check failed: ' . $e->getMessage()
+                'message' => 'Queue check failed: '.$e->getMessage(),
             ];
         }
     }
@@ -539,13 +545,13 @@ class AdminService
             return [
                 'status' => $status,
                 'usage_percent' => $usagePercent,
-                'free_space' => round($freeSpace / 1024 / 1024 / 1024, 2) . ' GB',
-                'message' => "Storage usage: {$usagePercent}%"
+                'free_space' => round($freeSpace / 1024 / 1024 / 1024, 2).' GB',
+                'message' => "Storage usage: {$usagePercent}%",
             ];
         } catch (Exception $e) {
             return [
                 'status' => 'warning',
-                'message' => 'Storage check failed: ' . $e->getMessage()
+                'message' => 'Storage check failed: '.$e->getMessage(),
             ];
         }
     }
@@ -586,7 +592,7 @@ class AdminService
             return $results;
 
         } catch (Exception $e) {
-            Log::error('Failed to optimize system: ' . $e->getMessage());
+            Log::error('Failed to optimize system: '.$e->getMessage());
             throw $e;
         }
     }
@@ -608,7 +614,7 @@ class AdminService
                     'title' => 'Failed Jobs',
                     'message' => "$failedJobs failed jobs need attention",
                     'action_url' => '/admin/queue',
-                    'created_at' => now()
+                    'created_at' => now(),
                 ];
             }
 
@@ -621,7 +627,7 @@ class AdminService
                     'title' => 'Inactive SMTP Configs',
                     'message' => "$inactiveSmtp SMTP configurations are inactive",
                     'action_url' => '/email-configs',
-                    'created_at' => now()
+                    'created_at' => now(),
                 ];
             }
 
@@ -634,7 +640,7 @@ class AdminService
                     'title' => 'Disconnected WhatsApp Sessions',
                     'message' => "$disconnectedWhatsApp WhatsApp sessions are disconnected",
                     'action_url' => '/whatsapp/sessions',
-                    'created_at' => now()
+                    'created_at' => now(),
                 ];
             }
 
@@ -650,7 +656,7 @@ class AdminService
                         'title' => 'High Disk Usage',
                         'message' => "Disk usage is at $usagePercent%",
                         'action_url' => '/admin/storage',
-                        'created_at' => now()
+                        'created_at' => now(),
                     ];
                 } elseif ($usagePercent > 80) {
                     $alerts[] = [
@@ -659,7 +665,7 @@ class AdminService
                         'title' => 'Moderate Disk Usage',
                         'message' => "Disk usage is at $usagePercent%",
                         'action_url' => '/admin/storage',
-                        'created_at' => now()
+                        'created_at' => now(),
                     ];
                 }
             }
@@ -667,7 +673,8 @@ class AdminService
             return $alerts;
 
         } catch (Exception $e) {
-            Log::error('Failed to get system alerts: ' . $e->getMessage());
+            Log::error('Failed to get system alerts: '.$e->getMessage());
+
             return [];
         }
     }
@@ -679,9 +686,9 @@ class AdminService
     {
         try {
             // Store dismissed alerts in cache for 24 hours
-            $dismissedAlerts = Cache::get('dismissed_alerts_' . $userId, []);
+            $dismissedAlerts = Cache::get('dismissed_alerts_'.$userId, []);
             $dismissedAlerts[$alertId] = now()->addDay();
-            Cache::put('dismissed_alerts_' . $userId, $dismissedAlerts, now()->addDay());
+            Cache::put('dismissed_alerts_'.$userId, $dismissedAlerts, now()->addDay());
 
             // Log the action
             $this->logSystemAction(
@@ -692,7 +699,7 @@ class AdminService
             );
 
         } catch (Exception $e) {
-            Log::error('Failed to dismiss alert: ' . $e->getMessage());
+            Log::error('Failed to dismiss alert: '.$e->getMessage());
             throw $e;
         }
     }
@@ -739,11 +746,11 @@ class AdminService
             // Clean up old log files
             $logPath = storage_path('logs');
             if (is_dir($logPath)) {
-                $logFiles = glob($logPath . '/*.log');
-                $oldLogFiles = array_filter($logFiles, function($file) {
+                $logFiles = glob($logPath.'/*.log');
+                $oldLogFiles = array_filter($logFiles, function ($file) {
                     return filemtime($file) < strtotime('-30 days');
                 });
-                
+
                 foreach ($oldLogFiles as $file) {
                     $size = filesize($file);
                     if (unlink($file)) {
@@ -755,7 +762,7 @@ class AdminService
             // Clean up temporary files
             $tempPath = storage_path('app/temp');
             if (is_dir($tempPath)) {
-                $tempFiles = glob($tempPath . '/*');
+                $tempFiles = glob($tempPath.'/*');
                 foreach ($tempFiles as $file) {
                     if (is_file($file) && filemtime($file) < strtotime('-1 day')) {
                         $size = filesize($file);
@@ -766,7 +773,8 @@ class AdminService
                 }
             }
 
-            $results['storage_cleaned'] = round($totalCleaned / 1024 / 1024, 2) . ' MB';
+            $results['storage_cleaned'] = round($totalCleaned / 1024 / 1024, 2).' MB';
+
             return $results;
 
         } catch (Exception $e) {
@@ -830,10 +838,11 @@ class AdminService
                 'uploads' => $this->getUploadsSize(),
                 'logs' => $this->getLogFilesSize(),
                 'cache' => $this->getCacheSize(),
-                'temp' => $this->getTempSize()
+                'temp' => $this->getTempSize(),
             ];
         } catch (Exception $e) {
-            Log::error('Failed to get storage usage: ' . $e->getMessage());
+            Log::error('Failed to get storage usage: '.$e->getMessage());
+
             return [];
         }
     }
@@ -843,20 +852,20 @@ class AdminService
         try {
             $cachePath = storage_path('framework/cache');
             $size = 0;
-            
+
             if (is_dir($cachePath)) {
                 $iterator = new \RecursiveIteratorIterator(
                     new \RecursiveDirectoryIterator($cachePath)
                 );
-                
+
                 foreach ($iterator as $file) {
                     if ($file->isFile()) {
                         $size += $file->getSize();
                     }
                 }
             }
-            
-            return round($size / 1024 / 1024, 1) . ' MB';
+
+            return round($size / 1024 / 1024, 1).' MB';
         } catch (Exception $e) {
             return '0 MB';
         }
@@ -867,20 +876,20 @@ class AdminService
         try {
             $tempPath = storage_path('app/temp');
             $size = 0;
-            
+
             if (is_dir($tempPath)) {
                 $iterator = new \RecursiveIteratorIterator(
                     new \RecursiveDirectoryIterator($tempPath)
                 );
-                
+
                 foreach ($iterator as $file) {
                     if ($file->isFile()) {
                         $size += $file->getSize();
                     }
                 }
             }
-            
-            return round($size / 1024 / 1024, 1) . ' MB';
+
+            return round($size / 1024 / 1024, 1).' MB';
         } catch (Exception $e) {
             return '0 MB';
         }
@@ -892,7 +901,7 @@ class AdminService
         // For now, return a healthy status
         return [
             'status' => 'healthy',
-            'message' => 'External APIs responding'
+            'message' => 'External APIs responding',
         ];
     }
 
@@ -908,30 +917,31 @@ class AdminService
                     'memory_limit' => ini_get('memory_limit'),
                     'max_execution_time' => ini_get('max_execution_time'),
                     'upload_max_filesize' => ini_get('upload_max_filesize'),
-                    'post_max_size' => ini_get('post_max_size')
+                    'post_max_size' => ini_get('post_max_size'),
                 ],
                 'laravel' => [
                     'version' => app()->version(),
                     'environment' => app()->environment(),
                     'debug' => config('app.debug'),
-                    'timezone' => config('app.timezone')
+                    'timezone' => config('app.timezone'),
                 ],
                 'database' => [
                     'connection' => config('database.default'),
                     'host' => config('database.connections.mysql.host'),
-                    'database' => config('database.connections.mysql.database')
+                    'database' => config('database.connections.mysql.database'),
                 ],
                 'cache' => [
                     'driver' => config('cache.default'),
-                    'stores' => array_keys(config('cache.stores'))
+                    'stores' => array_keys(config('cache.stores')),
                 ],
                 'queue' => [
                     'connection' => config('queue.default'),
-                    'connections' => array_keys(config('queue.connections'))
-                ]
+                    'connections' => array_keys(config('queue.connections')),
+                ],
             ];
         } catch (Exception $e) {
-            Log::error('Failed to get system info: ' . $e->getMessage());
+            Log::error('Failed to get system info: '.$e->getMessage());
+
             return [];
         }
     }
@@ -943,16 +953,17 @@ class AdminService
     {
         try {
             $data = [];
-            $filename = $type . '_export_' . now()->format('Y-m-d_H-i-s') . '.' . $format;
+            $filename = $type.'_export_'.now()->format('Y-m-d_H-i-s').'.'.$format;
 
             // Apply date filters if provided
-            $dateQuery = function($query) use ($dateFrom, $dateTo) {
+            $dateQuery = function ($query) use ($dateFrom, $dateTo) {
                 if ($dateFrom) {
                     $query->where('created_at', '>=', $dateFrom);
                 }
                 if ($dateTo) {
                     $query->where('created_at', '<=', $dateTo);
                 }
+
                 return $query;
             };
 
@@ -968,7 +979,7 @@ class AdminService
                                 'email' => $user->email,
                                 'roles' => $user->roles->pluck('name')->implode(', '),
                                 'created_at' => $user->created_at,
-                                'email_verified_at' => $user->email_verified_at
+                                'email_verified_at' => $user->email_verified_at,
                             ];
                         });
                     break;
@@ -985,7 +996,7 @@ class AdminService
                                 'phone' => $contact->phone,
                                 'company' => $contact->company,
                                 'status' => $contact->status,
-                                'created_at' => $contact->created_at
+                                'created_at' => $contact->created_at,
                             ];
                         });
                     break;
@@ -1006,7 +1017,7 @@ class AdminService
                                 'clicked_count' => $campaign->clicked_count,
                                 'created_by' => $campaign->user->name ?? 'Unknown',
                                 'created_at' => $campaign->created_at,
-                                'sent_at' => $campaign->sent_at
+                                'sent_at' => $campaign->sent_at,
                             ];
                         });
                     break;
@@ -1022,7 +1033,7 @@ class AdminService
                                 'to' => $communication->to,
                                 'subject' => $communication->subject,
                                 'status' => $communication->status,
-                                'created_at' => $communication->created_at
+                                'created_at' => $communication->created_at,
                             ];
                         });
                     break;
@@ -1030,7 +1041,7 @@ class AdminService
                 case 'all':
                     return response()->json([
                         'success' => false,
-                        'message' => 'Full system export is not supported via web interface. Please use command line.'
+                        'message' => 'Full system export is not supported via web interface. Please use command line.',
                     ], 400);
             }
 
@@ -1038,7 +1049,7 @@ class AdminService
             return $this->generateExportFile($data, $filename, $format);
 
         } catch (Exception $e) {
-            Log::error('Failed to export system data: ' . $e->getMessage());
+            Log::error('Failed to export system data: '.$e->getMessage());
             throw $e;
         }
     }
@@ -1048,17 +1059,17 @@ class AdminService
      */
     private function generateExportFile($data, string $filename, string $format)
     {
-        $filePath = storage_path('app/exports/' . $filename);
-        
+        $filePath = storage_path('app/exports/'.$filename);
+
         // Create exports directory if it doesn't exist
-        if (!file_exists(dirname($filePath))) {
+        if (! file_exists(dirname($filePath))) {
             mkdir(dirname($filePath), 0755, true);
         }
 
         switch ($format) {
             case 'csv':
                 $handle = fopen($filePath, 'w');
-                if (!empty($data)) {
+                if (! empty($data)) {
                     // Write header
                     fputcsv($handle, array_keys($data[0]));
                     // Write data

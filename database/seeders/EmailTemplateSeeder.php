@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\EmailTemplate;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class EmailTemplateSeeder extends Seeder
 {
@@ -23,7 +22,7 @@ class EmailTemplateSeeder extends Seeder
                 'content' => $this->getWelcomeTemplate(),
                 'category' => 'system',
                 'is_active' => true,
-                'variables' => ['company_name', 'first_name']
+                'variables' => ['company_name', 'first_name'],
             ],
             [
                 'name' => 'Product Demo Invitation',
@@ -31,7 +30,7 @@ class EmailTemplateSeeder extends Seeder
                 'content' => $this->getDemoTemplate(),
                 'category' => 'marketing',
                 'is_active' => true,
-                'variables' => ['product_name', 'first_name']
+                'variables' => ['product_name', 'first_name'],
             ],
             [
                 'name' => 'Follow-up After Demo',
@@ -39,7 +38,7 @@ class EmailTemplateSeeder extends Seeder
                 'content' => $this->getFollowUpTemplate(),
                 'category' => 'sales',
                 'is_active' => true,
-                'variables' => ['company_name', 'first_name']
+                'variables' => ['company_name', 'first_name'],
             ],
             [
                 'name' => 'Newsletter Template',
@@ -47,7 +46,7 @@ class EmailTemplateSeeder extends Seeder
                 'content' => $this->getNewsletterTemplate(),
                 'category' => 'marketing',
                 'is_active' => true,
-                'variables' => ['company_name', 'month', 'year', 'first_name']
+                'variables' => ['company_name', 'month', 'year', 'first_name'],
             ],
             [
                 'name' => 'Event Invitation',
@@ -55,7 +54,7 @@ class EmailTemplateSeeder extends Seeder
                 'content' => $this->getEventTemplate(),
                 'category' => 'marketing',
                 'is_active' => true,
-                'variables' => ['event_name', 'event_date', 'event_time', 'event_location', 'first_name']
+                'variables' => ['event_name', 'event_date', 'event_time', 'event_location', 'first_name'],
             ],
             [
                 'name' => 'Thank You Email',
@@ -63,7 +62,7 @@ class EmailTemplateSeeder extends Seeder
                 'content' => $this->getThankYouTemplate(),
                 'category' => 'system',
                 'is_active' => true,
-                'variables' => ['first_name', 'company_name']
+                'variables' => ['first_name', 'company_name'],
             ],
             [
                 'name' => 'Proposal Follow-up',
@@ -71,7 +70,7 @@ class EmailTemplateSeeder extends Seeder
                 'content' => $this->getProposalTemplate(),
                 'category' => 'sales',
                 'is_active' => true,
-                'variables' => ['first_name', 'project_name', 'deliverable_1', 'deliverable_2', 'deliverable_3']
+                'variables' => ['first_name', 'project_name', 'deliverable_1', 'deliverable_2', 'deliverable_3'],
             ],
             [
                 'name' => 'Customer Survey',
@@ -79,7 +78,7 @@ class EmailTemplateSeeder extends Seeder
                 'content' => $this->getSurveyTemplate(),
                 'category' => 'feedback',
                 'is_active' => true,
-                'variables' => ['first_name', 'company_name']
+                'variables' => ['first_name', 'company_name'],
             ],
             [
                 'name' => 'Re-engagement Campaign',
@@ -87,7 +86,7 @@ class EmailTemplateSeeder extends Seeder
                 'content' => $this->getReEngagementTemplate(),
                 'category' => 'marketing',
                 'is_active' => true,
-                'variables' => ['first_name']
+                'variables' => ['first_name'],
             ],
             [
                 'name' => 'Monthly Report',
@@ -95,8 +94,8 @@ class EmailTemplateSeeder extends Seeder
                 'content' => $this->getMonthlyReportTemplate(),
                 'category' => 'system',
                 'is_active' => true,
-                'variables' => ['first_name', 'current_date', 'total_contacts', 'campaigns_sent']
-            ]
+                'variables' => ['first_name', 'current_date', 'total_contacts', 'campaigns_sent'],
+            ],
         ];
 
         foreach ($templates as $templateData) {
@@ -108,12 +107,12 @@ class EmailTemplateSeeder extends Seeder
             ]);
         }
 
-        $this->command->info('Created ' . count($templates) . ' email templates successfully!');
+        $this->command->info('Created '.count($templates).' email templates successfully!');
     }
 
     private function getWelcomeTemplate(): string
     {
-        return <<<HTML
+        return <<<'HTML'
 <!DOCTYPE html>
 <html>
 <head>
@@ -162,7 +161,7 @@ HTML;
 
     private function getDemoTemplate(): string
     {
-        return <<<HTML
+        return <<<'HTML'
 <!DOCTYPE html>
 <html>
 <head>
@@ -211,7 +210,7 @@ HTML;
 
     private function getFollowUpTemplate(): string
     {
-        return <<<HTML
+        return <<<'HTML'
 <!DOCTYPE html>
 <html>
 <head>
@@ -261,7 +260,7 @@ HTML;
 
     private function getNewsletterTemplate(): string
     {
-        return <<<HTML
+        return <<<'HTML'
 <!DOCTYPE html>
 <html>
 <head>
@@ -317,7 +316,7 @@ HTML;
 
     private function getEventTemplate(): string
     {
-        return <<<HTML
+        return <<<'HTML'
 <!DOCTYPE html>
 <html>
 <head>
@@ -366,7 +365,7 @@ HTML;
 
     private function getThankYouTemplate(): string
     {
-        return <<<HTML
+        return <<<'HTML'
 <!DOCTYPE html>
 <html>
 <head>
@@ -409,7 +408,7 @@ HTML;
 
     private function getProposalTemplate(): string
     {
-        return <<<HTML
+        return <<<'HTML'
 <!DOCTYPE html>
 <html>
 <head>
@@ -460,7 +459,7 @@ HTML;
 
     private function getSurveyTemplate(): string
     {
-        return <<<HTML
+        return <<<'HTML'
 <!DOCTYPE html>
 <html>
 <head>
@@ -511,7 +510,7 @@ HTML;
 
     private function getReEngagementTemplate(): string
     {
-        return <<<HTML
+        return <<<'HTML'
 <!DOCTYPE html>
 <html>
 <head>
@@ -565,7 +564,7 @@ HTML;
 
     private function getMonthlyReportTemplate(): string
     {
-        return <<<HTML
+        return <<<'HTML'
 <!DOCTYPE html>
 <html>
 <head>

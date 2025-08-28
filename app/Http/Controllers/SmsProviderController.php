@@ -33,7 +33,7 @@ class SmsProviderController extends Controller
         foreach ($providers as $provider) {
             $provider->delivered_count = $provider->smsMessages()->where('status', 'delivered')->count();
             $provider->failed_count = $provider->smsMessages()->where('status', 'failed')->count();
-            $provider->delivery_rate = $provider->sms_messages_count > 0 ? 
+            $provider->delivery_rate = $provider->sms_messages_count > 0 ?
                 round(($provider->delivered_count / $provider->sms_messages_count) * 100, 2) : 0;
             $provider->total_cost = $provider->smsMessages()->sum('cost');
         }
@@ -50,7 +50,7 @@ class SmsProviderController extends Controller
             'twilio' => 'Twilio',
             'vonage' => 'Vonage (Nexmo)',
             'orange' => 'Orange SMS',
-            'custom' => 'Custom HTTP API'
+            'custom' => 'Custom HTTP API',
         ];
 
         return view('sms.providers.create', compact('providerTypes'));
@@ -72,7 +72,7 @@ class SmsProviderController extends Controller
             'cost_per_sms' => 'nullable|numeric|min:0',
             'is_active' => 'boolean',
             'priority' => 'nullable|integer|min:1|max:100',
-            
+
             // Custom provider fields
             'custom_api_url' => 'required_if:provider,custom|nullable|url',
             'custom_method' => 'required_if:provider,custom|nullable|in:GET,POST',
@@ -102,9 +102,9 @@ class SmsProviderController extends Controller
 
             // Test the provider connection
             $testResult = $this->testProviderConnection($provider);
-            
-            if (!$testResult['success']) {
-                return back()->withErrors(['test' => 'Provider created but connection test failed: ' . $testResult['error']])
+
+            if (! $testResult['success']) {
+                return back()->withErrors(['test' => 'Provider created but connection test failed: '.$testResult['error']])
                     ->with('warning', 'SMS Provider created successfully but connection test failed. Please verify your configuration.');
             }
 
@@ -112,7 +112,7 @@ class SmsProviderController extends Controller
                 ->with('success', 'SMS Provider created and tested successfully.');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to create SMS provider: ' . $e->getMessage()])->withInput();
+            return back()->withErrors(['error' => 'Failed to create SMS provider: '.$e->getMessage()])->withInput();
         }
     }
 
@@ -122,7 +122,7 @@ class SmsProviderController extends Controller
     public function show(SmsProvider $smsProvider)
     {
         $smsProvider->loadCount(['smsMessages']);
-        
+
         // Get detailed statistics
         $stats = [
             'total_sent' => $smsProvider->smsMessages()->count(),
@@ -135,11 +135,11 @@ class SmsProviderController extends Controller
             'sent_this_month' => $smsProvider->smsMessages()->whereMonth('created_at', now()->month)->count(),
         ];
 
-        $stats['delivery_rate'] = $stats['total_sent'] > 0 ? 
+        $stats['delivery_rate'] = $stats['total_sent'] > 0 ?
             round(($stats['delivered'] / $stats['total_sent']) * 100, 2) : 0;
 
         $stats['daily_usage'] = $smsProvider->smsMessages()->whereDate('created_at', today())->count();
-        $stats['daily_remaining'] = $smsProvider->daily_limit ? 
+        $stats['daily_remaining'] = $smsProvider->daily_limit ?
             max(0, $smsProvider->daily_limit - $stats['daily_usage']) : 'Unlimited';
 
         // Recent messages
@@ -161,7 +161,7 @@ class SmsProviderController extends Controller
             'twilio' => 'Twilio',
             'vonage' => 'Vonage (Nexmo)',
             'orange' => 'Orange SMS',
-            'custom' => 'Custom HTTP API'
+            'custom' => 'Custom HTTP API',
         ];
 
         return view('sms.providers.edit', compact('smsProvider', 'providerTypes'));
@@ -183,7 +183,7 @@ class SmsProviderController extends Controller
             'cost_per_sms' => 'nullable|numeric|min:0',
             'is_active' => 'boolean',
             'priority' => 'nullable|integer|min:1|max:100',
-            
+
             // Custom provider fields
             'custom_api_url' => 'required_if:provider,custom|nullable|url',
             'custom_method' => 'required_if:provider,custom|nullable|in:GET,POST',
@@ -215,7 +215,7 @@ class SmsProviderController extends Controller
                 ->with('success', 'SMS Provider updated successfully.');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to update SMS provider: ' . $e->getMessage()])->withInput();
+            return back()->withErrors(['error' => 'Failed to update SMS provider: '.$e->getMessage()])->withInput();
         }
     }
 
@@ -231,12 +231,12 @@ class SmsProviderController extends Controller
             }
 
             $smsProvider->delete();
-            
+
             return redirect()->route('sms.providers.index')
                 ->with('success', 'SMS Provider deleted successfully.');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to delete SMS provider: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to delete SMS provider: '.$e->getMessage()]);
         }
     }
 
@@ -256,7 +256,7 @@ class SmsProviderController extends Controller
 
         try {
             $testMessage = $request->test_message ?? 'This is a test SMS from CRM Ultra.';
-            
+
             $result = $this->smsService->sendSms(
                 $request->test_phone,
                 $testMessage,
@@ -265,13 +265,13 @@ class SmsProviderController extends Controller
             );
 
             if ($result['success']) {
-                return back()->with('success', 'Test SMS sent successfully! Message ID: ' . ($result['message_id'] ?? 'N/A'));
+                return back()->with('success', 'Test SMS sent successfully! Message ID: '.($result['message_id'] ?? 'N/A'));
             } else {
-                return back()->withErrors(['test' => 'Test SMS failed: ' . ($result['error'] ?? 'Unknown error')]);
+                return back()->withErrors(['test' => 'Test SMS failed: '.($result['error'] ?? 'Unknown error')]);
             }
 
         } catch (\Exception $e) {
-            return back()->withErrors(['test' => 'Test SMS failed: ' . $e->getMessage()]);
+            return back()->withErrors(['test' => 'Test SMS failed: '.$e->getMessage()]);
         }
     }
 
@@ -282,15 +282,15 @@ class SmsProviderController extends Controller
     {
         try {
             $smsProvider->update([
-                'is_active' => !$smsProvider->is_active
+                'is_active' => ! $smsProvider->is_active,
             ]);
 
             $status = $smsProvider->is_active ? 'activated' : 'deactivated';
-            
+
             return back()->with('success', "SMS Provider {$status} successfully.");
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to toggle provider status: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to toggle provider status: '.$e->getMessage()]);
         }
     }
 
@@ -301,7 +301,7 @@ class SmsProviderController extends Controller
     {
         try {
             $newProvider = $smsProvider->replicate();
-            $newProvider->name = $smsProvider->name . ' (Copy)';
+            $newProvider->name = $smsProvider->name.' (Copy)';
             $newProvider->is_active = false; // Start as inactive
             $newProvider->save();
 
@@ -309,7 +309,7 @@ class SmsProviderController extends Controller
                 ->with('success', 'SMS Provider duplicated successfully. Please review and activate.');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to duplicate provider: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to duplicate provider: '.$e->getMessage()]);
         }
     }
 

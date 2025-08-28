@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\SystemBackup;
 use App\Services\BackupService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
-use Carbon\Carbon;
 
 class BackupController extends Controller
 {
@@ -46,12 +46,12 @@ class BackupController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhereHas('creator', function($subQ) use ($search) {
-                      $subQ->where('name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('creator', function ($subQ) use ($search) {
+                        $subQ->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -66,10 +66,10 @@ class BackupController extends Controller
 
         // Calculate additional stats
         $additionalStats = [
-            'success_rate' => $stats['total_backups'] > 0 
+            'success_rate' => $stats['total_backups'] > 0
                 ? round(($stats['successful_backups'] / $stats['total_backups']) * 100, 2)
                 : 0,
-            'avg_size' => $stats['successful_backups'] > 0 
+            'avg_size' => $stats['successful_backups'] > 0
                 ? $stats['total_size'] / $stats['successful_backups']
                 : 0,
             'oldest_backup_age' => $stats['last_backup'] ? $stats['last_backup']->age_in_days : 0,
@@ -84,8 +84,8 @@ class BackupController extends Controller
         }
 
         return view('admin.backups.index', compact(
-            'backups', 
-            'stats', 
+            'backups',
+            'stats',
             'additionalStats',
             'recentActivity'
         ));
@@ -112,15 +112,15 @@ class BackupController extends Controller
 
         try {
             $backup = null;
-            
+
             switch ($request->type) {
                 case 'full':
                     $backup = $this->backupService->createFullBackup(
-                        $request->name, 
+                        $request->name,
                         $request->description
                     );
                     break;
-                    
+
                 case 'database':
                     $backup = SystemBackup::create([
                         'name' => $request->name,
@@ -130,7 +130,7 @@ class BackupController extends Controller
                         'created_by' => auth()->id(),
                         'started_at' => now(),
                     ]);
-                    
+
                     // Create database backup
                     $dbPath = $this->backupService->createDatabaseBackup($request->name);
                     $backup->update([
@@ -140,7 +140,7 @@ class BackupController extends Controller
                         'completed_at' => now(),
                     ]);
                     break;
-                    
+
                 case 'files':
                     $backup = SystemBackup::create([
                         'name' => $request->name,
@@ -150,7 +150,7 @@ class BackupController extends Controller
                         'created_by' => auth()->id(),
                         'started_at' => now(),
                     ]);
-                    
+
                     // Create files backup
                     $filesPath = $this->backupService->createFilesBackup($request->name);
                     $backup->update([
@@ -165,7 +165,7 @@ class BackupController extends Controller
             Log::info('Manual backup created', [
                 'backup_id' => $backup->id,
                 'type' => $request->type,
-                'created_by' => auth()->id()
+                'created_by' => auth()->id(),
             ]);
 
             return redirect()
@@ -176,12 +176,12 @@ class BackupController extends Controller
             Log::error('Backup creation failed', [
                 'error' => $e->getMessage(),
                 'type' => $request->type,
-                'user' => auth()->id()
+                'user' => auth()->id(),
             ]);
 
             return back()
                 ->withInput()
-                ->with('error', 'Backup creation failed: ' . $e->getMessage());
+                ->with('error', 'Backup creation failed: '.$e->getMessage());
         }
     }
 
@@ -191,10 +191,10 @@ class BackupController extends Controller
     public function show(SystemBackup $backup)
     {
         $backup->load('creator');
-        
+
         // Validate backup integrity
         $validation = $this->backupService->validateBackup($backup);
-        
+
         // Get related backups (same type, recent)
         $relatedBackups = SystemBackup::where('type', $backup->type)
             ->where('id', '!=', $backup->id)
@@ -210,22 +210,22 @@ class BackupController extends Controller
      */
     public function download(SystemBackup $backup)
     {
-        if ($backup->status !== 'completed' || !$backup->file_path) {
+        if ($backup->status !== 'completed' || ! $backup->file_path) {
             return back()->with('error', 'Backup file is not available for download.');
         }
 
-        $filePath = storage_path('app/' . $backup->file_path);
-        
-        if (!file_exists($filePath)) {
+        $filePath = storage_path('app/'.$backup->file_path);
+
+        if (! file_exists($filePath)) {
             return back()->with('error', 'Backup file not found on disk.');
         }
 
         Log::info('Backup downloaded', [
             'backup_id' => $backup->id,
-            'downloaded_by' => auth()->id()
+            'downloaded_by' => auth()->id(),
         ]);
 
-        return Response::download($filePath, $backup->name . '_backup.zip');
+        return Response::download($filePath, $backup->name.'_backup.zip');
     }
 
     /**
@@ -247,7 +247,7 @@ class BackupController extends Controller
             $restoreDatabase = $request->boolean('restore_database');
             $restoreFiles = $request->boolean('restore_files');
 
-            if (!$restoreDatabase && !$restoreFiles) {
+            if (! $restoreDatabase && ! $restoreFiles) {
                 return back()->with('error', 'Please select at least one restore option.');
             }
 
@@ -268,10 +268,10 @@ class BackupController extends Controller
             Log::error('Backup restoration failed', [
                 'backup_id' => $backup->id,
                 'error' => $e->getMessage(),
-                'user' => auth()->id()
+                'user' => auth()->id(),
             ]);
 
-            return back()->with('error', 'Restore failed: ' . $e->getMessage());
+            return back()->with('error', 'Restore failed: '.$e->getMessage());
         }
     }
 
@@ -280,7 +280,7 @@ class BackupController extends Controller
      */
     public function destroy(SystemBackup $backup)
     {
-        if (!$backup->canBeDeleted()) {
+        if (! $backup->canBeDeleted()) {
             return back()->with('error', 'This backup cannot be deleted while in progress.');
         }
 
@@ -289,7 +289,7 @@ class BackupController extends Controller
 
             Log::info('Backup deleted', [
                 'backup_id' => $backup->id,
-                'deleted_by' => auth()->id()
+                'deleted_by' => auth()->id(),
             ]);
 
             return redirect()
@@ -299,10 +299,10 @@ class BackupController extends Controller
         } catch (\Exception $e) {
             Log::error('Backup deletion failed', [
                 'backup_id' => $backup->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
-            return back()->with('error', 'Failed to delete backup: ' . $e->getMessage());
+            return back()->with('error', 'Failed to delete backup: '.$e->getMessage());
         }
     }
 
@@ -321,13 +321,13 @@ class BackupController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Scheduled backup created successfully!',
-                'backup' => $backup
+                'backup' => $backup,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Scheduled backup failed: ' . $e->getMessage()
+                'message' => 'Scheduled backup failed: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -338,7 +338,7 @@ class BackupController extends Controller
     public function stats()
     {
         $stats = $this->backupService->getBackupStats();
-        
+
         // Add chart data
         $chartData = [
             'daily_backups' => $this->getDailyBackupStats(),
@@ -352,7 +352,7 @@ class BackupController extends Controller
     /**
      * Validate backup integrity
      */
-    public function validate(SystemBackup $backup)
+    public function validateBackup(SystemBackup $backup)
     {
         $validation = $this->backupService->validateBackup($backup);
 
@@ -374,19 +374,19 @@ class BackupController extends Controller
             Log::info('Old backups cleaned up', [
                 'deleted_count' => $deleted,
                 'days_to_keep' => $request->days_to_keep,
-                'cleaned_by' => auth()->id()
+                'cleaned_by' => auth()->id(),
             ]);
 
             return response()->json([
                 'success' => true,
                 'message' => "Cleaned up {$deleted} old backups.",
-                'deleted_count' => $deleted
+                'deleted_count' => $deleted,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cleanup failed: ' . $e->getMessage()
+                'message' => 'Cleanup failed: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -416,13 +416,13 @@ class BackupController extends Controller
                             $results[] = ['id' => $backup->id, 'success' => false, 'message' => 'Cannot delete'];
                         }
                         break;
-                        
+
                     case 'validate':
                         $validation = $this->backupService->validateBackup($backup);
                         $results[] = [
-                            'id' => $backup->id, 
-                            'success' => $validation['valid'], 
-                            'message' => $validation['valid'] ? 'Valid' : $validation['error']
+                            'id' => $backup->id,
+                            'success' => $validation['valid'],
+                            'message' => $validation['valid'] ? 'Valid' : $validation['error'],
                         ];
                         break;
                 }
@@ -433,7 +433,7 @@ class BackupController extends Controller
 
         return response()->json([
             'success' => true,
-            'results' => $results
+            'results' => $results,
         ]);
     }
 

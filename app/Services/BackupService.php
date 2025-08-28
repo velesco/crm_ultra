@@ -4,15 +4,14 @@ namespace App\Services;
 
 use App\Models\SystemBackup;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 
 class BackupService
 {
     private $backupPath;
+
     private $maxBackups = 10;
 
     public function __construct()
@@ -26,8 +25,8 @@ class BackupService
      */
     public function createFullBackup($name = null, $description = null)
     {
-        $name = $name ?? 'backup_' . Carbon::now()->format('Y_m_d_H_i_s');
-        $description = $description ?? 'Full system backup created on ' . Carbon::now()->format('Y-m-d H:i:s');
+        $name = $name ?? 'backup_'.Carbon::now()->format('Y_m_d_H_i_s');
+        $description = $description ?? 'Full system backup created on '.Carbon::now()->format('Y-m-d H:i:s');
 
         try {
             // Create backup record
@@ -42,16 +41,16 @@ class BackupService
 
             // Create database backup
             $dbBackupPath = $this->createDatabaseBackup($name);
-            
+
             // Create files backup
             $filesBackupPath = $this->createFilesBackup($name);
-            
+
             // Create combined zip
             $finalBackupPath = $this->createCombinedBackup($name, $dbBackupPath, $filesBackupPath);
-            
+
             // Calculate file size
             $fileSize = File::size($finalBackupPath);
-            
+
             // Update backup record
             $backup->update([
                 'file_path' => str_replace(storage_path('app/'), '', $finalBackupPath),
@@ -62,17 +61,17 @@ class BackupService
 
             // Clean up temporary files
             $this->cleanupTempFiles([$dbBackupPath, $filesBackupPath]);
-            
+
             // Cleanup old backups
             $this->cleanupOldBackups();
 
             Log::info('Full backup created successfully', ['backup_id' => $backup->id, 'name' => $name]);
-            
+
             return $backup;
 
         } catch (\Exception $e) {
             Log::error('Full backup failed', ['error' => $e->getMessage(), 'name' => $name]);
-            
+
             if (isset($backup)) {
                 $backup->update([
                     'status' => 'failed',
@@ -80,7 +79,7 @@ class BackupService
                     'completed_at' => now(),
                 ]);
             }
-            
+
             throw $e;
         }
     }
@@ -90,9 +89,9 @@ class BackupService
      */
     public function createDatabaseBackup($name = null)
     {
-        $name = $name ?? 'db_backup_' . Carbon::now()->format('Y_m_d_H_i_s');
-        $filename = $name . '_database.sql';
-        $filePath = $this->backupPath . '/' . $filename;
+        $name = $name ?? 'db_backup_'.Carbon::now()->format('Y_m_d_H_i_s');
+        $filename = $name.'_database.sql';
+        $filePath = $this->backupPath.'/'.$filename;
 
         $database = config('database.connections.mysql.database');
         $username = config('database.connections.mysql.username');
@@ -115,7 +114,7 @@ class BackupService
         exec($command, $output, $returnCode);
 
         if ($returnCode !== 0) {
-            throw new \Exception('Database backup failed: ' . implode("\n", $output));
+            throw new \Exception('Database backup failed: '.implode("\n", $output));
         }
 
         return $filePath;
@@ -126,11 +125,11 @@ class BackupService
      */
     public function createFilesBackup($name)
     {
-        $filename = $name . '_files.zip';
-        $filePath = $this->backupPath . '/' . $filename;
-        
-        $zip = new ZipArchive();
-        if ($zip->open($filePath, ZipArchive::CREATE) !== TRUE) {
+        $filename = $name.'_files.zip';
+        $filePath = $this->backupPath.'/'.$filename;
+
+        $zip = new ZipArchive;
+        if ($zip->open($filePath, ZipArchive::CREATE) !== true) {
             throw new \Exception('Could not create files backup zip');
         }
 
@@ -141,7 +140,7 @@ class BackupService
         $this->addDirectoryToZip($zip, base_path('.env'), '.env');
 
         $zip->close();
-        
+
         return $filePath;
     }
 
@@ -150,17 +149,17 @@ class BackupService
      */
     private function createCombinedBackup($name, $dbBackupPath, $filesBackupPath)
     {
-        $filename = $name . '_full_backup.zip';
-        $filePath = $this->backupPath . '/' . $filename;
-        
-        $zip = new ZipArchive();
-        if ($zip->open($filePath, ZipArchive::CREATE) !== TRUE) {
+        $filename = $name.'_full_backup.zip';
+        $filePath = $this->backupPath.'/'.$filename;
+
+        $zip = new ZipArchive;
+        if ($zip->open($filePath, ZipArchive::CREATE) !== true) {
             throw new \Exception('Could not create combined backup zip');
         }
 
         $zip->addFile($dbBackupPath, basename($dbBackupPath));
         $zip->addFile($filesBackupPath, basename($filesBackupPath));
-        
+
         // Add backup info
         $backupInfo = [
             'name' => $name,
@@ -171,12 +170,12 @@ class BackupService
             'includes' => [
                 'database' => basename($dbBackupPath),
                 'files' => basename($filesBackupPath),
-            ]
+            ],
         ];
-        
+
         $zip->addFromString('backup_info.json', json_encode($backupInfo, JSON_PRETTY_PRINT));
         $zip->close();
-        
+
         return $filePath;
     }
 
@@ -189,9 +188,9 @@ class BackupService
             throw new \Exception('Cannot restore from incomplete backup');
         }
 
-        $backupFilePath = storage_path('app/' . $backup->file_path);
-        
-        if (!File::exists($backupFilePath)) {
+        $backupFilePath = storage_path('app/'.$backup->file_path);
+
+        if (! File::exists($backupFilePath)) {
             throw new \Exception('Backup file not found');
         }
 
@@ -199,11 +198,11 @@ class BackupService
             $backup->update(['status' => 'restoring']);
 
             // Extract backup
-            $extractPath = $this->backupPath . '/restore_' . time();
+            $extractPath = $this->backupPath.'/restore_'.time();
             File::makeDirectory($extractPath, 0755, true);
-            
-            $zip = new ZipArchive();
-            if ($zip->open($backupFilePath) === TRUE) {
+
+            $zip = new ZipArchive;
+            if ($zip->open($backupFilePath) === true) {
                 $zip->extractTo($extractPath);
                 $zip->close();
             } else {
@@ -224,17 +223,17 @@ class BackupService
             File::deleteDirectory($extractPath);
 
             $backup->update(['status' => 'completed']);
-            
+
             Log::info('Backup restored successfully', ['backup_id' => $backup->id]);
-            
+
             return true;
 
         } catch (\Exception $e) {
             $backup->update([
                 'status' => 'failed',
-                'error_message' => $e->getMessage()
+                'error_message' => $e->getMessage(),
             ]);
-            
+
             Log::error('Backup restore failed', ['error' => $e->getMessage(), 'backup_id' => $backup->id]);
             throw $e;
         }
@@ -245,14 +244,14 @@ class BackupService
      */
     private function restoreDatabase($extractPath)
     {
-        $sqlFiles = File::glob($extractPath . '/*_database.sql');
-        
+        $sqlFiles = File::glob($extractPath.'/*_database.sql');
+
         if (empty($sqlFiles)) {
             throw new \Exception('Database backup file not found');
         }
 
         $sqlFile = $sqlFiles[0];
-        
+
         $database = config('database.connections.mysql.database');
         $username = config('database.connections.mysql.username');
         $password = config('database.connections.mysql.password');
@@ -274,7 +273,7 @@ class BackupService
         exec($command, $output, $returnCode);
 
         if ($returnCode !== 0) {
-            throw new \Exception('Database restore failed: ' . implode("\n", $output));
+            throw new \Exception('Database restore failed: '.implode("\n", $output));
         }
     }
 
@@ -283,14 +282,14 @@ class BackupService
      */
     private function restoreFiles($extractPath)
     {
-        $filesZip = File::glob($extractPath . '/*_files.zip');
-        
+        $filesZip = File::glob($extractPath.'/*_files.zip');
+
         if (empty($filesZip)) {
             throw new \Exception('Files backup not found');
         }
 
-        $zip = new ZipArchive();
-        if ($zip->open($filesZip[0]) === TRUE) {
+        $zip = new ZipArchive;
+        if ($zip->open($filesZip[0]) === true) {
             $zip->extractTo(base_path());
             $zip->close();
         } else {
@@ -303,14 +302,14 @@ class BackupService
      */
     public function deleteBackup(SystemBackup $backup)
     {
-        $filePath = storage_path('app/' . $backup->file_path);
-        
+        $filePath = storage_path('app/'.$backup->file_path);
+
         if (File::exists($filePath)) {
             File::delete($filePath);
         }
-        
+
         $backup->delete();
-        
+
         Log::info('Backup deleted', ['backup_id' => $backup->id]);
     }
 
@@ -364,16 +363,17 @@ class BackupService
     {
         if (is_file($dir)) {
             $zip->addFile($dir, $zipPath);
+
             return;
         }
 
-        if (!is_dir($dir)) {
+        if (! is_dir($dir)) {
             return;
         }
 
         $files = File::allFiles($dir);
         foreach ($files as $file) {
-            $relativePath = $zipPath ? $zipPath . '/' . $file->getRelativePathname() : $file->getRelativePathname();
+            $relativePath = $zipPath ? $zipPath.'/'.$file->getRelativePathname() : $file->getRelativePathname();
             $zip->addFile($file->getRealPath(), $relativePath);
         }
     }
@@ -384,14 +384,14 @@ class BackupService
     private function getDirectorySize($directory)
     {
         $size = 0;
-        
+
         if (is_dir($directory)) {
             $files = File::allFiles($directory);
             foreach ($files as $file) {
                 $size += $file->getSize();
             }
         }
-        
+
         return $size;
     }
 
@@ -400,7 +400,7 @@ class BackupService
      */
     private function ensureBackupDirectoryExists()
     {
-        if (!File::exists($this->backupPath)) {
+        if (! File::exists($this->backupPath)) {
             File::makeDirectory($this->backupPath, 0755, true);
         }
     }
@@ -413,7 +413,7 @@ class BackupService
         // This would integrate with Laravel's task scheduler
         // For now, just create a backup
         return $this->createFullBackup(
-            'scheduled_backup_' . Carbon::now()->format('Y_m_d_H_i_s'),
+            'scheduled_backup_'.Carbon::now()->format('Y_m_d_H_i_s'),
             "Scheduled {$frequency} backup"
         );
     }
@@ -423,17 +423,17 @@ class BackupService
      */
     public function validateBackup(SystemBackup $backup)
     {
-        $filePath = storage_path('app/' . $backup->file_path);
-        
-        if (!File::exists($filePath)) {
+        $filePath = storage_path('app/'.$backup->file_path);
+
+        if (! File::exists($filePath)) {
             return ['valid' => false, 'error' => 'Backup file not found'];
         }
 
         // Check if zip file is valid
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         $result = $zip->open($filePath, ZipArchive::CHECKCONS);
-        
-        if ($result !== TRUE) {
+
+        if ($result !== true) {
             return ['valid' => false, 'error' => 'Backup file is corrupted'];
         }
 
@@ -442,12 +442,13 @@ class BackupService
         foreach ($requiredFiles as $file) {
             if ($zip->locateName($file) === false) {
                 $zip->close();
+
                 return ['valid' => false, 'error' => "Missing required file: {$file}"];
             }
         }
 
         $zip->close();
-        
+
         return ['valid' => true, 'message' => 'Backup is valid'];
     }
 }

@@ -5,7 +5,6 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Messages\DatabaseMessage;
 use Illuminate\Notifications\Notification;
 
 class DataImportCompletedNotification extends Notification implements ShouldQueue
@@ -30,17 +29,17 @@ class DataImportCompletedNotification extends Notification implements ShouldQueu
     public function via(object $notifiable): array
     {
         $channels = ['database'];
-        
+
         // Add mail channel if email notifications are enabled and user preferences allow
         if (config('crm.notifications.import_completion.email_enabled', true)) {
             $channels[] = 'mail';
         }
-        
+
         // Add broadcast channel for real-time notifications
         if (config('crm.notifications.import_completion.broadcast_enabled', true)) {
             $channels[] = 'broadcast';
         }
-        
+
         return $channels;
     }
 
@@ -54,7 +53,7 @@ class DataImportCompletedNotification extends Notification implements ShouldQueu
         $fileName = $this->importData['file_name'];
         $importType = $this->importData['import_type'];
 
-        $subject = $hasErrors 
+        $subject = $hasErrors
             ? "Data Import Completed with Errors - {$fileName}"
             : "Data Import Completed Successfully - {$fileName}";
 
@@ -63,32 +62,32 @@ class DataImportCompletedNotification extends Notification implements ShouldQueu
             ->greeting("Hello {$notifiable->name}!")
             ->line("Your {$importType} import has been completed.");
 
-        if (!$hasErrors) {
-            $mailMessage->line("✅ Import completed successfully!");
+        if (! $hasErrors) {
+            $mailMessage->line('✅ Import completed successfully!');
         } else {
-            $mailMessage->line("⚠️ Import completed with some errors that need your attention.");
+            $mailMessage->line('⚠️ Import completed with some errors that need your attention.');
         }
 
         // Add statistics
         if (isset($results['total_rows'])) {
-            $mailMessage->line("📊 **Import Statistics:**");
+            $mailMessage->line('📊 **Import Statistics:**');
             $mailMessage->line("• Total rows processed: {$results['total_rows']}");
-            
+
             if (isset($results['created_contacts'])) {
                 $mailMessage->line("• Contacts created: {$results['created_contacts']}");
             }
-            
+
             if (isset($results['updated_contacts'])) {
                 $mailMessage->line("• Contacts updated: {$results['updated_contacts']}");
             }
-            
+
             if (isset($results['failed_rows']) && $results['failed_rows'] > 0) {
                 $mailMessage->line("• Failed rows: {$results['failed_rows']}");
             }
         }
 
         $mailMessage->action('View Import Details', route('data.history'))
-                    ->line('You can review the complete import results and any errors in your dashboard.');
+            ->line('You can review the complete import results and any errors in your dashboard.');
 
         if ($hasErrors) {
             $mailMessage->line('Please check the import history for detailed error information and consider re-importing the failed records.');
@@ -110,7 +109,7 @@ class DataImportCompletedNotification extends Notification implements ShouldQueu
         return [
             'type' => 'data_import_completed',
             'title' => $hasErrors ? 'Import Completed with Errors' : 'Import Completed Successfully',
-            'message' => "Your {$importType} import '{$fileName}' has been completed" . 
+            'message' => "Your {$importType} import '{$fileName}' has been completed".
                         ($hasErrors ? ' with some errors.' : ' successfully.'),
             'data' => [
                 'import_type' => $importType,

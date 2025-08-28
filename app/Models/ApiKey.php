@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class ApiKey extends Model
 {
@@ -30,7 +29,7 @@ class ApiKey extends Model
         'expires_at',
         'created_by',
         'updated_by',
-        'metadata'
+        'metadata',
     ];
 
     protected $casts = [
@@ -40,18 +39,18 @@ class ApiKey extends Model
         'last_used_at' => 'datetime',
         'expires_at' => 'datetime',
         'created_at' => 'datetime',
-        'updated_at' => 'datetime'
+        'updated_at' => 'datetime',
     ];
 
     protected $hidden = [
-        'key' // Hide the actual API key in JSON responses
+        'key', // Hide the actual API key in JSON responses
     ];
 
     protected $appends = [
         'masked_key',
         'is_active',
         'is_expired',
-        'days_until_expiry'
+        'days_until_expiry',
     ];
 
     // Boot method to generate API key automatically
@@ -60,7 +59,7 @@ class ApiKey extends Model
         parent::boot();
 
         static::creating(function ($apiKey) {
-            if (!$apiKey->key) {
+            if (! $apiKey->key) {
                 $apiKey->key = $apiKey->generateApiKey();
             }
             if (auth()->check()) {
@@ -91,16 +90,16 @@ class ApiKey extends Model
     public function scopeActive($query)
     {
         return $query->where('status', 'active')
-                    ->where(function($q) {
-                        $q->whereNull('expires_at')
-                          ->orWhere('expires_at', '>', now());
-                    });
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            });
     }
 
     public function scopeExpired($query)
     {
         return $query->whereNotNull('expires_at')
-                    ->where('expires_at', '<', now());
+            ->where('expires_at', '<', now());
     }
 
     public function scopeByEnvironment($query, $environment)
@@ -115,22 +114,25 @@ class ApiKey extends Model
 
     public function scopeUnused($query, $days = 30)
     {
-        return $query->where(function($q) use ($days) {
+        return $query->where(function ($q) use ($days) {
             $q->whereNull('last_used_at')
-              ->orWhere('last_used_at', '<', now()->subDays($days));
+                ->orWhere('last_used_at', '<', now()->subDays($days));
         });
     }
 
     // Accessors
     public function getMaskedKeyAttribute()
     {
-        if (!$this->key) return null;
-        return $this->prefix . '_' . substr($this->key, 0, 8) . '...' . substr($this->key, -4);
+        if (! $this->key) {
+            return null;
+        }
+
+        return $this->prefix.'_'.substr($this->key, 0, 8).'...'.substr($this->key, -4);
     }
 
     public function getIsActiveAttribute()
     {
-        return $this->status === 'active' && !$this->is_expired;
+        return $this->status === 'active' && ! $this->is_expired;
     }
 
     public function getIsExpiredAttribute()
@@ -140,13 +142,16 @@ class ApiKey extends Model
 
     public function getDaysUntilExpiryAttribute()
     {
-        if (!$this->expires_at) return null;
+        if (! $this->expires_at) {
+            return null;
+        }
+
         return $this->expires_at->diffInDays(now(), false);
     }
 
     public function getFullKeyAttribute()
     {
-        return $this->prefix . '_' . $this->key;
+        return $this->prefix.'_'.$this->key;
     }
 
     // Helper Methods
@@ -163,6 +168,7 @@ class ApiKey extends Model
     {
         $this->key = $this->generateApiKey();
         $this->save();
+
         return $this->key;
     }
 
@@ -174,26 +180,35 @@ class ApiKey extends Model
 
     public function hasPermission($permission)
     {
-        if (!$this->permissions) return false;
+        if (! $this->permissions) {
+            return false;
+        }
+
         return in_array($permission, $this->permissions);
     }
 
     public function hasScope($scope)
     {
-        if (!$this->scopes) return false;
+        if (! $this->scopes) {
+            return false;
+        }
+
         return in_array($scope, $this->scopes);
     }
 
     public function isAllowedIp($ip)
     {
-        if (!$this->allowed_ips) return true;
+        if (! $this->allowed_ips) {
+            return true;
+        }
         $allowedIps = explode(',', $this->allowed_ips);
+
         return in_array(trim($ip), array_map('trim', $allowedIps));
     }
 
     public function canMakeRequest()
     {
-        return $this->is_active && !$this->is_expired;
+        return $this->is_active && ! $this->is_expired;
     }
 
     // Rate limiting check methods
@@ -215,7 +230,7 @@ class ApiKey extends Model
             $parts = explode('_', $key, 2);
             $key = $parts[1];
         }
-        
+
         return self::where('key', $key)->first();
     }
 
@@ -236,7 +251,7 @@ class ApiKey extends Model
             'segments.create' => 'Create segments',
             'reports.read' => 'View reports',
             'settings.read' => 'View settings',
-            'api.admin' => 'Admin API access'
+            'api.admin' => 'Admin API access',
         ];
     }
 
@@ -250,7 +265,7 @@ class ApiKey extends Model
             'segments' => 'Contact Segments',
             'reports' => 'Reports & Analytics',
             'settings' => 'System Settings',
-            'admin' => 'Administrative Functions'
+            'admin' => 'Administrative Functions',
         ];
     }
 
@@ -266,7 +281,7 @@ class ApiKey extends Model
             'staging' => self::byEnvironment('staging')->count(),
             'development' => self::byEnvironment('development')->count(),
             'total_usage' => self::sum('usage_count'),
-            'last_month_usage' => self::usedInLastDays(30)->sum('usage_count')
+            'last_month_usage' => self::usedInLastDays(30)->sum('usage_count'),
         ];
     }
 }

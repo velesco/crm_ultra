@@ -3,19 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\AdminService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use App\Models\Contact;
-use App\Models\User;
-use App\Models\EmailCampaign;
-use App\Models\SmsMessage;
-use App\Models\WhatsAppMessage;
-use App\Models\DataImport;
-use App\Models\Communication;
-use App\Services\AdminService;
-use Carbon\Carbon;
 
 class AdminController extends Controller
 {
@@ -53,7 +44,7 @@ class AdminController extends Controller
 
         return view('admin.dashboard', compact(
             'stats',
-            'recentActivity', 
+            'recentActivity',
             'systemHealth',
             'topUsers',
             'alertsCount',
@@ -67,6 +58,7 @@ class AdminController extends Controller
     public function getStats(Request $request)
     {
         $stats = $this->adminService->getSystemStats();
+
         return response()->json($stats);
     }
 
@@ -76,6 +68,7 @@ class AdminController extends Controller
     public function getHealthCheck(Request $request)
     {
         $health = $this->adminService->getSystemHealth();
+
         return response()->json($health);
     }
 
@@ -86,6 +79,7 @@ class AdminController extends Controller
     {
         $limit = $request->get('limit', 20);
         $activity = $this->adminService->getRecentActivity($limit);
+
         return response()->json($activity);
     }
 
@@ -96,7 +90,7 @@ class AdminController extends Controller
     {
         try {
             $isMaintenanceMode = file_exists(storage_path('framework/maintenance.php'));
-            
+
             if ($isMaintenanceMode) {
                 // Disable maintenance mode
                 if (file_exists(storage_path('framework/maintenance.php'))) {
@@ -106,7 +100,7 @@ class AdminController extends Controller
                 $status = 'disabled';
             } else {
                 // Enable maintenance mode
-                $secret = $request->get('secret', 'admin-access-' . time());
+                $secret = $request->get('secret', 'admin-access-'.time());
                 file_put_contents(
                     storage_path('framework/maintenance.php'),
                     "<?php return ['except' => ['{$secret}']]; ?>"
@@ -127,13 +121,13 @@ class AdminController extends Controller
                 'success' => true,
                 'message' => $message,
                 'status' => $status,
-                'secret' => $secret ?? null
+                'secret' => $secret ?? null,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to toggle maintenance mode: ' . $e->getMessage()
+                'message' => 'Failed to toggle maintenance mode: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -163,13 +157,13 @@ class AdminController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'All caches cleared successfully.'
+                'message' => 'All caches cleared successfully.',
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to clear caches: ' . $e->getMessage()
+                'message' => 'Failed to clear caches: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -180,6 +174,7 @@ class AdminController extends Controller
     public function getSystemInfo(Request $request)
     {
         $systemInfo = $this->adminService->getSystemInfo();
+
         return response()->json($systemInfo);
     }
 
@@ -216,7 +211,7 @@ class AdminController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Export failed: ' . $e->getMessage()
+                'message' => 'Export failed: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -227,6 +222,7 @@ class AdminController extends Controller
     public function getSystemAlerts(Request $request)
     {
         $alerts = $this->adminService->getSystemAlerts();
+
         return response()->json($alerts);
     }
 
@@ -236,21 +232,21 @@ class AdminController extends Controller
     public function dismissAlert(Request $request)
     {
         $request->validate([
-            'alert_id' => 'required|string'
+            'alert_id' => 'required|string',
         ]);
 
         try {
             $this->adminService->dismissAlert($request->alert_id, Auth::id());
-            
+
             return response()->json([
                 'success' => true,
-                'message' => 'Alert dismissed successfully.'
+                'message' => 'Alert dismissed successfully.',
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to dismiss alert: ' . $e->getMessage()
+                'message' => 'Failed to dismiss alert: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -261,7 +257,7 @@ class AdminController extends Controller
     public function optimize(Request $request)
     {
         $request->validate([
-            'action' => 'required|in:database,storage,cache,queue,all'
+            'action' => 'required|in:database,storage,cache,queue,all',
         ]);
 
         try {
@@ -278,13 +274,13 @@ class AdminController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'System optimization completed successfully.',
-                'results' => $results
+                'results' => $results,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Optimization failed: ' . $e->getMessage()
+                'message' => 'Optimization failed: '.$e->getMessage(),
             ], 500);
         }
     }

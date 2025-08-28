@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Contact;
 use App\Models\ContactSegment;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -11,7 +12,6 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Exception;
 
 class ImportContactsJob implements ShouldQueue
 {
@@ -59,7 +59,7 @@ class ImportContactsJob implements ShouldQueue
     public function handle(): void
     {
         try {
-            Log::info("Starting contact import job with " . count($this->contactsData) . " contacts");
+            Log::info('Starting contact import job with '.count($this->contactsData).' contacts');
 
             $processedCount = 0;
             $skippedCount = 0;
@@ -75,28 +75,28 @@ class ImportContactsJob implements ShouldQueue
             foreach ($this->contactsData as $index => $contactData) {
                 try {
                     $result = $this->processContactData($contactData, $skipDuplicates, $updateExisting, $defaultSource);
-                    
+
                     switch ($result['status']) {
                         case 'created':
                         case 'updated':
                             $processedCount++;
-                            
+
                             // Add to segments if specified
-                            if (!empty($segmentIds) && $result['contact']) {
+                            if (! empty($segmentIds) && $result['contact']) {
                                 $this->addContactToSegments($result['contact'], $segmentIds);
                             }
                             break;
-                            
+
                         case 'skipped':
                             $skippedCount++;
                             break;
-                            
+
                         case 'error':
                             $errorCount++;
                             $errors[] = [
                                 'row' => $index + 1,
                                 'data' => $contactData,
-                                'error' => $result['error']
+                                'error' => $result['error'],
                             ];
                             break;
                     }
@@ -106,15 +106,15 @@ class ImportContactsJob implements ShouldQueue
                     $errors[] = [
                         'row' => $index + 1,
                         'data' => $contactData,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ];
-                    
-                    Log::error("Error processing contact at row " . ($index + 1) . ": " . $e->getMessage());
+
+                    Log::error('Error processing contact at row '.($index + 1).': '.$e->getMessage());
                 }
 
                 // Stop if too many errors
                 if ($errorCount > 100) {
-                    Log::error("Too many errors in contact import, stopping at row " . ($index + 1));
+                    Log::error('Too many errors in contact import, stopping at row '.($index + 1));
                     break;
                 }
             }
@@ -122,17 +122,17 @@ class ImportContactsJob implements ShouldQueue
             Log::info("Contact import completed. Processed: {$processedCount}, Skipped: {$skippedCount}, Errors: {$errorCount}");
 
             // Log final results
-            if (!empty($errors)) {
-                Log::warning("Contact import completed with errors", [
+            if (! empty($errors)) {
+                Log::warning('Contact import completed with errors', [
                     'processed' => $processedCount,
                     'skipped' => $skippedCount,
                     'errors' => $errorCount,
-                    'error_details' => array_slice($errors, 0, 10) // Log first 10 errors
+                    'error_details' => array_slice($errors, 0, 10), // Log first 10 errors
                 ]);
             }
 
         } catch (Exception $e) {
-            Log::error("ImportContactsJob failed: " . $e->getMessage());
+            Log::error('ImportContactsJob failed: '.$e->getMessage());
             throw $e;
         }
     }
@@ -150,8 +150,8 @@ class ImportContactsJob implements ShouldQueue
         if ($validator->fails()) {
             return [
                 'status' => 'error',
-                'error' => 'Invalid email: ' . implode(', ', $validator->errors()->all()),
-                'contact' => null
+                'error' => 'Invalid email: '.implode(', ', $validator->errors()->all()),
+                'contact' => null,
             ];
         }
 
@@ -161,11 +161,11 @@ class ImportContactsJob implements ShouldQueue
         $existingContact = Contact::where('email', $email)->first();
 
         if ($existingContact) {
-            if ($skipDuplicates && !$updateExisting) {
+            if ($skipDuplicates && ! $updateExisting) {
                 return [
                     'status' => 'skipped',
                     'error' => 'Duplicate email skipped',
-                    'contact' => $existingContact
+                    'contact' => $existingContact,
                 ];
             }
 
@@ -173,13 +173,13 @@ class ImportContactsJob implements ShouldQueue
                 // Update existing contact
                 $updateData = $this->prepareContactData($contactData, $defaultSource);
                 $existingContact->update($updateData);
-                
+
                 Log::debug("Updated existing contact: {$email}");
-                
+
                 return [
                     'status' => 'updated',
                     'error' => null,
-                    'contact' => $existingContact->fresh()
+                    'contact' => $existingContact->fresh(),
                 ];
             }
         }
@@ -188,22 +188,22 @@ class ImportContactsJob implements ShouldQueue
         try {
             $createData = $this->prepareContactData($contactData, $defaultSource);
             $createData['created_by'] = $this->userId;
-            
+
             $contact = Contact::create($createData);
-            
+
             Log::debug("Created new contact: {$email}");
-            
+
             return [
                 'status' => 'created',
                 'error' => null,
-                'contact' => $contact
+                'contact' => $contact,
             ];
-            
+
         } catch (Exception $e) {
             return [
                 'status' => 'error',
-                'error' => 'Failed to create contact: ' . $e->getMessage(),
-                'contact' => null
+                'error' => 'Failed to create contact: '.$e->getMessage(),
+                'contact' => null,
             ];
         }
     }
@@ -235,7 +235,7 @@ class ImportContactsJob implements ShouldQueue
         ];
 
         foreach ($fieldMapping as $inputField => $dbField) {
-            if (isset($rawData[$inputField]) && !empty(trim($rawData[$inputField]))) {
+            if (isset($rawData[$inputField]) && ! empty(trim($rawData[$inputField]))) {
                 $contactData[$dbField] = trim($rawData[$inputField]);
             }
         }
@@ -271,7 +271,7 @@ class ImportContactsJob implements ShouldQueue
                 $customFields[$customFieldName] = $value;
             }
         }
-        if (!empty($customFields)) {
+        if (! empty($customFields)) {
             $contactData['custom_fields'] = $customFields;
         }
 
@@ -284,13 +284,13 @@ class ImportContactsJob implements ShouldQueue
         if (empty($contactData['name'])) {
             $nameParts = array_filter([
                 $contactData['first_name'] ?? '',
-                $contactData['last_name'] ?? ''
+                $contactData['last_name'] ?? '',
             ]);
             $contactData['name'] = implode(' ', $nameParts);
         }
 
         // Split name if full name provided but first/last not mapped separately
-        if (!empty($contactData['name']) && empty($contactData['first_name']) && empty($contactData['last_name'])) {
+        if (! empty($contactData['name']) && empty($contactData['first_name']) && empty($contactData['last_name'])) {
             $nameParts = explode(' ', $contactData['name'], 2);
             $contactData['first_name'] = $nameParts[0] ?? '';
             $contactData['last_name'] = $nameParts[1] ?? '';
@@ -313,7 +313,7 @@ class ImportContactsJob implements ShouldQueue
         }
 
         if (is_numeric($value)) {
-            return (int)$value === 1;
+            return (int) $value === 1;
         }
 
         return false;
@@ -326,9 +326,10 @@ class ImportContactsJob implements ShouldQueue
     {
         foreach ($segmentIds as $segmentId) {
             $segment = ContactSegment::find($segmentId);
-            
-            if (!$segment) {
+
+            if (! $segment) {
                 Log::warning("Segment {$segmentId} not found when adding contact {$contact->id}");
+
                 continue;
             }
 
@@ -340,7 +341,7 @@ class ImportContactsJob implements ShouldQueue
             // Add contact to segment
             $segment->contacts()->attach($contact->id, [
                 'added_at' => now(),
-                'added_by' => $this->userId
+                'added_by' => $this->userId,
             ]);
 
             Log::debug("Added contact {$contact->id} to segment {$segment->name}");
@@ -349,7 +350,7 @@ class ImportContactsJob implements ShouldQueue
         // Update segment contact counts
         ContactSegment::whereIn('id', $segmentIds)->each(function ($segment) {
             $segment->update([
-                'contact_count' => $segment->contacts()->count()
+                'contact_count' => $segment->contacts()->count(),
             ]);
         });
     }
@@ -359,10 +360,10 @@ class ImportContactsJob implements ShouldQueue
      */
     public function failed(Exception $exception): void
     {
-        Log::error("ImportContactsJob permanently failed: " . $exception->getMessage(), [
+        Log::error('ImportContactsJob permanently failed: '.$exception->getMessage(), [
             'contacts_count' => count($this->contactsData),
             'user_id' => $this->userId,
-            'options' => $this->options
+            'options' => $this->options,
         ]);
     }
 

@@ -21,7 +21,7 @@ class SmsProvider extends Model
         'sent_today',
         'cost_per_sms',
         'settings',
-        'created_by'
+        'created_by',
     ];
 
     protected $casts = [
@@ -34,7 +34,7 @@ class SmsProvider extends Model
 
     protected $hidden = [
         'api_key',
-        'api_secret'
+        'api_secret',
     ];
 
     // Relationships
@@ -59,14 +59,14 @@ class SmsProvider extends Model
         return $query->where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('daily_limit')
-                  ->orWhere('sent_today', '<', 'daily_limit');
+                    ->orWhere('sent_today', '<', 'daily_limit');
             });
     }
 
     // Methods
     public function canSend()
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return false;
         }
 
@@ -98,5 +98,4 @@ class SmsProvider extends Model
         // Implementation will be added in SMS service
         return app('sms.service')->send($this, $to, $message);
     }
-
 }

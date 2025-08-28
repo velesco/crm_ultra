@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Carbon\Carbon;
 
 class SystemLog extends Model
 {
@@ -34,19 +34,30 @@ class SystemLog extends Model
 
     // Log levels constants
     const LEVEL_DEBUG = 'debug';
+
     const LEVEL_INFO = 'info';
+
     const LEVEL_WARNING = 'warning';
+
     const LEVEL_ERROR = 'error';
+
     const LEVEL_CRITICAL = 'critical';
 
     // Categories constants
     const CATEGORY_AUTHENTICATION = 'authentication';
+
     const CATEGORY_EMAIL = 'email';
+
     const CATEGORY_SMS = 'sms';
+
     const CATEGORY_WHATSAPP = 'whatsapp';
+
     const CATEGORY_SYSTEM = 'system';
+
     const CATEGORY_CONTACT = 'contact';
+
     const CATEGORY_CAMPAIGN = 'campaign';
+
     const CATEGORY_API = 'api';
 
     /**
@@ -88,7 +99,7 @@ class SystemLog extends Model
     {
         return $query->whereBetween('occurred_at', [
             Carbon::parse($startDate)->startOfDay(),
-            Carbon::parse($endDate)->endOfDay()
+            Carbon::parse($endDate)->endOfDay(),
         ]);
     }
 
@@ -113,14 +124,14 @@ class SystemLog extends Model
      */
     public function scopeSearch($query, $search)
     {
-        return $query->where(function($q) use ($search) {
+        return $query->where(function ($q) use ($search) {
             $q->where('message', 'like', "%{$search}%")
-              ->orWhere('description', 'like', "%{$search}%")
-              ->orWhere('action', 'like', "%{$search}%")
-              ->orWhereHas('user', function($userQuery) use ($search) {
-                  $userQuery->where('name', 'like', "%{$search}%")
-                           ->orWhere('email', 'like', "%{$search}%");
-              });
+                ->orWhere('description', 'like', "%{$search}%")
+                ->orWhere('action', 'like', "%{$search}%")
+                ->orWhereHas('user', function ($userQuery) use ($search) {
+                    $userQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
         });
     }
 
@@ -129,7 +140,7 @@ class SystemLog extends Model
      */
     public function getLevelBadgeClassAttribute()
     {
-        return match($this->level) {
+        return match ($this->level) {
             self::LEVEL_DEBUG => 'badge-secondary',
             self::LEVEL_INFO => 'badge-primary',
             self::LEVEL_WARNING => 'badge-warning',
@@ -144,7 +155,7 @@ class SystemLog extends Model
      */
     public function getCategoryIconAttribute()
     {
-        return match($this->category) {
+        return match ($this->category) {
             self::CATEGORY_AUTHENTICATION => 'fas fa-shield-alt',
             self::CATEGORY_EMAIL => 'fas fa-envelope',
             self::CATEGORY_SMS => 'fas fa-sms',

@@ -18,18 +18,18 @@ class RateLimitCommunications
     public function handle(Request $request, Closure $next, string $type = 'general'): Response
     {
         $user = $request->user();
-        
-        if (!$user) {
+
+        if (! $user) {
             return $next($request);
         }
 
         // Get rate limits based on user plan and communication type
         $limits = $this->getRateLimits($user, $type);
-        
+
         // Check each limit tier
         foreach ($limits as $limitKey => $limitData) {
             $key = $this->buildRateLimitKey($user->id, $type, $limitKey);
-            
+
             if (RateLimiter::tooManyAttempts($key, $limitData['max_attempts'])) {
                 return $this->handleRateLimitExceeded($request, $type, $limitData);
             }
@@ -233,14 +233,14 @@ class RateLimitCommunications
     protected function handleRateLimitExceeded(Request $request, string $type, array $limitData): Response
     {
         $retryAfter = $limitData['decay_seconds'];
-        $message = "Rate limit exceeded for {$type}. Try again in " . $this->formatTime($retryAfter) . ".";
+        $message = "Rate limit exceeded for {$type}. Try again in ".$this->formatTime($retryAfter).'.';
 
         if ($request->expectsJson()) {
             return response()->json([
                 'error' => 'Rate limit exceeded',
                 'message' => $message,
                 'retry_after' => $retryAfter,
-                'type' => $type
+                'type' => $type,
             ], 429)->header('Retry-After', $retryAfter);
         }
 
@@ -254,15 +254,15 @@ class RateLimitCommunications
      */
     protected function logCommunication($user, string $type, Request $request): void
     {
-        $cacheKey = "comm_stats:{$user->id}:" . now()->format('Y-m-d');
+        $cacheKey = "comm_stats:{$user->id}:".now()->format('Y-m-d');
         $stats = Cache::get($cacheKey, []);
-        
-        if (!isset($stats[$type])) {
+
+        if (! isset($stats[$type])) {
             $stats[$type] = 0;
         }
-        
+
         $stats[$type]++;
-        
+
         Cache::put($cacheKey, $stats, now()->addDays(7));
 
         // Log to database for detailed analytics (async)
@@ -273,7 +273,7 @@ class RateLimitCommunications
                 'endpoint' => $request->path(),
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
-                'created_at' => now()
+                'created_at' => now(),
             ]);
         })->afterResponse();
     }
@@ -284,16 +284,18 @@ class RateLimitCommunications
     protected function formatTime(int $seconds): string
     {
         if ($seconds < 60) {
-            return $seconds . ' seconds';
+            return $seconds.' seconds';
         }
-        
+
         if ($seconds < 3600) {
             $minutes = ceil($seconds / 60);
-            return $minutes . ' minute' . ($minutes > 1 ? 's' : '');
+
+            return $minutes.' minute'.($minutes > 1 ? 's' : '');
         }
-        
+
         $hours = ceil($seconds / 3600);
-        return $hours . ' hour' . ($hours > 1 ? 's' : '');
+
+        return $hours.' hour'.($hours > 1 ? 's' : '');
     }
 
     /**
@@ -303,23 +305,23 @@ class RateLimitCommunications
     {
         $usage = [];
         $periods = ['per_minute', 'per_hour', 'per_day'];
-        
+
         foreach ($periods as $period) {
             $key = "rate_limit:{$type}:{$userId}:{$period}";
             $usage[$period] = RateLimiter::attempts($key);
         }
-        
+
         return $usage;
     }
 
     /**
      * Clear rate limits for user (admin function).
      */
-    public static function clearRateLimit(int $userId, string $type = null): void
+    public static function clearRateLimit(int $userId, ?string $type = null): void
     {
         $types = $type ? [$type] : ['email', 'sms', 'whatsapp', 'api', 'general'];
         $periods = ['per_minute', 'per_hour', 'per_day'];
-        
+
         foreach ($types as $commType) {
             foreach ($periods as $period) {
                 $key = "rate_limit:{$commType}:{$userId}:{$period}";

@@ -6,9 +6,9 @@ use App\Models\Contact;
 use App\Models\ContactSegment;
 use App\Models\DataImport;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use League\Csv\Reader;
 use League\Csv\Statement;
@@ -92,21 +92,22 @@ class DataImportController extends Controller
         try {
             // Store uploaded file
             $file = $request->file('import_file');
-            $filename = 'contacts_' . time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+            $filename = 'contacts_'.time().'_'.Str::random(10).'.'.$file->getClientOriginalExtension();
             $path = $file->storeAs('imports', $filename);
 
             // Analyze file to detect columns and preview data
             $analysis = $this->analyzeContactFile($path, $request->boolean('has_headers', true));
 
-            if (!$analysis['success']) {
+            if (! $analysis['success']) {
                 Storage::delete($path);
+
                 return back()->withErrors(['import_file' => $analysis['error']]);
             }
 
             // Store import record
             $import = DataImport::create([
                 'user_id' => Auth::id(),
-                'name' => $request->import_name ?: 'Contact Import ' . now()->format('Y-m-d H:i'),
+                'name' => $request->import_name ?: 'Contact Import '.now()->format('Y-m-d H:i'),
                 'type' => 'contacts',
                 'file_path' => $path,
                 'file_name' => $file->getClientOriginalName(),
@@ -130,7 +131,8 @@ class DataImportController extends Controller
             if (isset($path)) {
                 Storage::delete($path);
             }
-            return back()->withErrors(['import_file' => 'Failed to process file: ' . $e->getMessage()]);
+
+            return back()->withErrors(['import_file' => 'Failed to process file: '.$e->getMessage()]);
         }
     }
 
@@ -195,7 +197,7 @@ class DataImportController extends Controller
         $hasEmail = in_array('email', $mapping);
         $hasPhone = in_array('phone', $mapping);
 
-        if (!$hasEmail && !$hasPhone) {
+        if (! $hasEmail && ! $hasPhone) {
             return back()->withErrors(['field_mapping' => 'At least Email or Phone field must be mapped.']);
         }
 
@@ -213,7 +215,7 @@ class DataImportController extends Controller
                 ->with('success', 'Column mapping saved and import started.');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to start import: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to start import: '.$e->getMessage()]);
         }
     }
 
@@ -280,7 +282,7 @@ class DataImportController extends Controller
             'tags',
             'date_of_birth',
             'gender',
-            'status'
+            'status',
         ];
 
         $sampleData = [
@@ -303,13 +305,13 @@ class DataImportController extends Controller
                 'vip,customer',
                 '1990-01-15',
                 'male',
-                'active'
-            ]
+                'active',
+            ],
         ];
 
-        $filename = 'contact_import_template_' . date('Y-m-d') . '.csv';
+        $filename = 'contact_import_template_'.date('Y-m-d').'.csv';
 
-        $callback = function() use ($headers, $sampleData) {
+        $callback = function () use ($headers, $sampleData) {
             $file = fopen('php://output', 'w');
 
             // Write headers
@@ -325,7 +327,7 @@ class DataImportController extends Controller
 
         return response()->stream($callback, 200, [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
 
@@ -351,7 +353,7 @@ class DataImportController extends Controller
                 ->with('success', 'Import deleted successfully.');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to delete import: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to delete import: '.$e->getMessage()]);
         }
     }
 
@@ -383,7 +385,7 @@ class DataImportController extends Controller
                 ->with('success', 'Import retry started.');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to retry import: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to retry import: '.$e->getMessage()]);
         }
     }
 
@@ -395,7 +397,7 @@ class DataImportController extends Controller
         try {
             $fullPath = Storage::path($filePath);
 
-            if (!file_exists($fullPath)) {
+            if (! file_exists($fullPath)) {
                 return ['success' => false, 'error' => 'File not found'];
             }
 
@@ -404,7 +406,7 @@ class DataImportController extends Controller
                 $csv = Reader::createFromPath($fullPath, 'r');
                 $csv->setHeaderOffset($hasHeaders ? 0 : null);
 
-                $records = (new Statement())
+                $records = (new Statement)
                     ->limit(10) // Preview first 10 rows
                     ->process($csv);
 
@@ -431,14 +433,14 @@ class DataImportController extends Controller
                     'total_rows' => 0, // Will be calculated during actual import
                     'detected_columns' => [],
                     'preview_data' => [],
-                    'message' => 'Excel file detected. Column mapping will be available after processing.'
+                    'message' => 'Excel file detected. Column mapping will be available after processing.',
                 ];
             }
 
             return ['success' => false, 'error' => 'Unsupported file format'];
 
         } catch (\Exception $e) {
-            return ['success' => false, 'error' => 'Failed to analyze file: ' . $e->getMessage()];
+            return ['success' => false, 'error' => 'Failed to analyze file: '.$e->getMessage()];
         }
     }
 
@@ -461,7 +463,7 @@ class DataImportController extends Controller
             $csv = Reader::createFromPath($filePath, 'r');
             $csv->setHeaderOffset($settings['has_headers'] ? 0 : null);
 
-            $records = (new Statement())->process($csv);
+            $records = (new Statement)->process($csv);
 
             $importedCount = 0;
             $skippedCount = 0;
@@ -471,13 +473,13 @@ class DataImportController extends Controller
 
             // Create segment if requested
             $segment = null;
-            if (!empty($settings['create_segment'])) {
+            if (! empty($settings['create_segment'])) {
                 $segment = ContactSegment::create([
                     'name' => $settings['create_segment'],
                     'type' => 'static',
-                    'description' => 'Auto-created from import: ' . $import->name,
+                    'description' => 'Auto-created from import: '.$import->name,
                 ]);
-            } elseif (!empty($settings['segment_id'])) {
+            } elseif (! empty($settings['segment_id'])) {
                 $segment = ContactSegment::find($settings['segment_id']);
             }
 
@@ -487,7 +489,8 @@ class DataImportController extends Controller
 
                     if (empty($contactData['email']) && empty($contactData['phone'])) {
                         $skippedCount++;
-                        $errors[] = "Row " . ($index + 1) . ": No email or phone provided";
+                        $errors[] = 'Row '.($index + 1).': No email or phone provided';
+
                         continue;
                     }
 
@@ -498,6 +501,7 @@ class DataImportController extends Controller
                         switch ($settings['duplicate_handling']) {
                             case 'skip':
                                 $skippedCount++;
+
                                 continue 2;
 
                             case 'update':
@@ -505,9 +509,10 @@ class DataImportController extends Controller
                                 $updatedCount++;
 
                                 // Add to segment if specified
-                                if ($segment && !$segment->contacts()->where('contact_id', $existingContact->id)->exists()) {
+                                if ($segment && ! $segment->contacts()->where('contact_id', $existingContact->id)->exists()) {
                                     $segment->contacts()->attach($existingContact->id);
                                 }
+
                                 continue 2;
 
                             case 'duplicate':
@@ -527,7 +532,7 @@ class DataImportController extends Controller
 
                 } catch (\Exception $e) {
                     $failedCount++;
-                    $errors[] = "Row " . ($index + 1) . ": " . $e->getMessage();
+                    $errors[] = 'Row '.($index + 1).': '.$e->getMessage();
                 }
             }
 
@@ -545,13 +550,13 @@ class DataImportController extends Controller
         } catch (\Exception $e) {
             $import->update([
                 'status' => 'failed',
-                'errors' => ['General error: ' . $e->getMessage()],
+                'errors' => ['General error: '.$e->getMessage()],
                 'completed_at' => now(),
             ]);
 
-            \Log::error('Import failed: ' . $e->getMessage(), [
+            \Log::error('Import failed: '.$e->getMessage(), [
                 'import_id' => $import->id,
-                'file_path' => $import->file_path
+                'file_path' => $import->file_path,
             ]);
         }
     }
@@ -564,7 +569,7 @@ class DataImportController extends Controller
         $contactData = [];
 
         foreach ($mapping as $columnIndex => $field) {
-            if (empty($field) || !isset($record[$columnIndex])) {
+            if (empty($field) || ! isset($record[$columnIndex])) {
                 continue;
             }
 
@@ -577,7 +582,7 @@ class DataImportController extends Controller
             // Special handling for certain fields
             switch ($field) {
                 case 'email':
-                    if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                    if (! filter_var($value, FILTER_VALIDATE_EMAIL)) {
                         continue 2; // Skip invalid email
                     }
                     $contactData[$field] = strtolower($value);
@@ -606,8 +611,8 @@ class DataImportController extends Controller
 
                 case 'website':
                     // Ensure URL has protocol
-                    if (!empty($value) && !str_starts_with($value, 'http')) {
-                        $value = 'https://' . $value;
+                    if (! empty($value) && ! str_starts_with($value, 'http')) {
+                        $value = 'https://'.$value;
                     }
                     $contactData[$field] = $value;
                     break;
@@ -627,11 +632,11 @@ class DataImportController extends Controller
     {
         $query = Contact::query();
 
-        if (!empty($contactData['email'])) {
+        if (! empty($contactData['email'])) {
             $query->orWhere('email', $contactData['email']);
         }
 
-        if (!empty($contactData['phone'])) {
+        if (! empty($contactData['phone'])) {
             $query->orWhere('phone', $contactData['phone']);
         }
 
@@ -647,7 +652,7 @@ class DataImportController extends Controller
             'total_contacts' => Contact::count(),
             'active_contacts' => Contact::where('status', 'active')->count(),
             'total_communications' => \App\Models\Communication::count(),
-            'recent_exports' => DataImport::where('type', 'export')->latest()->limit(5)->get()
+            'recent_exports' => DataImport::where('type', 'export')->latest()->limit(5)->get(),
         ];
 
         return view('data.exports.index', compact('stats'));
@@ -666,7 +671,7 @@ class DataImportController extends Controller
             'format' => 'required|in:csv,xlsx',
             'fields' => 'sometimes|array',
             'include_custom_fields' => 'boolean',
-            'include_tags' => 'boolean'
+            'include_tags' => 'boolean',
         ]);
 
         if ($validator->fails()) {
@@ -682,7 +687,7 @@ class DataImportController extends Controller
             }
 
             if ($request->filled('segment_id')) {
-                $query->whereHas('segments', function($q) use ($request) {
+                $query->whereHas('segments', function ($q) use ($request) {
                     $q->where('contact_segments.id', $request->segment_id);
                 });
             }
@@ -692,9 +697,9 @@ class DataImportController extends Controller
             }
 
             // Add user filtering
-            $query->where(function($q) {
+            $query->where(function ($q) {
                 $q->where('created_by', auth()->id())
-                  ->orWhere('assigned_to', auth()->id());
+                    ->orWhere('assigned_to', auth()->id());
             });
 
             $contacts = $query->get();
@@ -714,7 +719,7 @@ class DataImportController extends Controller
             }
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Export failed: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Export failed: '.$e->getMessage()]);
         }
     }
 
@@ -729,7 +734,7 @@ class DataImportController extends Controller
             'status' => 'sometimes|in:sent,delivered,failed,pending',
             'date_from' => 'sometimes|date',
             'date_to' => 'sometimes|date|after_or_equal:date_from',
-            'format' => 'required|in:csv,xlsx'
+            'format' => 'required|in:csv,xlsx',
         ]);
 
         if ($validator->fails()) {
@@ -777,7 +782,7 @@ class DataImportController extends Controller
             }
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Export failed: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Export failed: '.$e->getMessage()]);
         }
     }
 
@@ -786,14 +791,14 @@ class DataImportController extends Controller
      */
     private function exportContactsAsCsv($contacts, $filename, $request)
     {
-        $callback = function() use ($contacts, $request) {
+        $callback = function () use ($contacts, $request) {
             $file = fopen('php://output', 'w');
 
             // CSV headers
             $headers = [
                 'First Name', 'Last Name', 'Email', 'Phone', 'WhatsApp', 'Company',
                 'Position', 'Address', 'City', 'Country', 'Status', 'Source',
-                'Created At', 'Last Updated'
+                'Created At', 'Last Updated',
             ];
 
             if ($request->boolean('include_tags')) {
@@ -826,7 +831,7 @@ class DataImportController extends Controller
                     $contact->status,
                     $contact->source,
                     $contact->created_at->format('Y-m-d H:i:s'),
-                    $contact->updated_at->format('Y-m-d H:i:s')
+                    $contact->updated_at->format('Y-m-d H:i:s'),
                 ];
 
                 if ($request->boolean('include_tags')) {
@@ -851,7 +856,7 @@ class DataImportController extends Controller
 
         return response()->stream($callback, 200, [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
 
@@ -869,13 +874,13 @@ class DataImportController extends Controller
      */
     private function exportCommunicationsAsCsv($communications, $filename)
     {
-        $callback = function() use ($communications) {
+        $callback = function () use ($communications) {
             $file = fopen('php://output', 'w');
 
             // CSV headers
             fputcsv($file, [
                 'Date', 'Type', 'Direction', 'Contact Name', 'Contact Email',
-                'Subject', 'Status', 'User', 'Message Preview'
+                'Subject', 'Status', 'User', 'Message Preview',
             ]);
 
             // CSV data
@@ -889,7 +894,7 @@ class DataImportController extends Controller
                     $comm->subject,
                     ucfirst($comm->status),
                     $comm->user ? $comm->user->name : 'System',
-                    Str::limit(strip_tags($comm->content), 100)
+                    Str::limit(strip_tags($comm->content), 100),
                 ]);
             }
 
@@ -898,7 +903,7 @@ class DataImportController extends Controller
 
         return response()->stream($callback, 200, [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
 

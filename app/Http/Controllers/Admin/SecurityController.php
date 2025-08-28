@@ -7,7 +7,6 @@ use App\Models\LoginAttempt;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class SecurityController extends Controller
 {
@@ -22,7 +21,7 @@ class SecurityController extends Controller
     public function index(Request $request)
     {
         $stats = $this->getSecurityStats();
-        
+
         $recentAttempts = LoginAttempt::with('user')
             ->latest()
             ->take(50)
@@ -43,7 +42,7 @@ class SecurityController extends Controller
 
         return view('admin.security.index', compact(
             'stats',
-            'recentAttempts', 
+            'recentAttempts',
             'suspiciousIps',
             'blockedUsers',
             'topFailedEmails'
@@ -63,11 +62,11 @@ class SecurityController extends Controller
         }
 
         if ($request->filled('email')) {
-            $query->where('email', 'like', '%' . $request->email . '%');
+            $query->where('email', 'like', '%'.$request->email.'%');
         }
 
         if ($request->filled('ip_address')) {
-            $query->where('ip_address', 'like', '%' . $request->ip_address . '%');
+            $query->where('ip_address', 'like', '%'.$request->ip_address.'%');
         }
 
         if ($request->filled('date_from')) {
@@ -75,7 +74,7 @@ class SecurityController extends Controller
         }
 
         if ($request->filled('date_to')) {
-            $query->where('created_at', '<=', $request->date_to . ' 23:59:59');
+            $query->where('created_at', '<=', $request->date_to.' 23:59:59');
         }
 
         $attempts = $query->paginate(50);
@@ -113,7 +112,7 @@ class SecurityController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "IP {$request->ip_address} a fost blocat până la " . $blockedUntil->format('d/m/Y H:i'),
+            'message' => "IP {$request->ip_address} a fost blocat până la ".$blockedUntil->format('d/m/Y H:i'),
         ]);
     }
 
@@ -132,9 +131,9 @@ class SecurityController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => $updated > 0 
+            'message' => $updated > 0
                 ? "IP {$request->ip_address} a fost deblocat"
-                : "IP-ul nu era blocat",
+                : 'IP-ul nu era blocat',
         ]);
     }
 
@@ -165,7 +164,7 @@ class SecurityController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "Email {$request->email} a fost blocat până la " . $blockedUntil->format('d/m/Y H:i'),
+            'message' => "Email {$request->email} a fost blocat până la ".$blockedUntil->format('d/m/Y H:i'),
         ]);
     }
 
@@ -184,9 +183,9 @@ class SecurityController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => $updated > 0 
+            'message' => $updated > 0
                 ? "Email {$request->email} a fost deblocat"
-                : "Email-ul nu era blocat",
+                : 'Email-ul nu era blocat',
         ]);
     }
 
@@ -196,7 +195,7 @@ class SecurityController extends Controller
     public function chartData(Request $request)
     {
         $period = $request->get('period', 'week'); // day, week, month
-        
+
         switch ($period) {
             case 'day':
                 $data = $this->getDailyChartData();
@@ -241,35 +240,35 @@ class SecurityController extends Controller
             $query->where('type', $request->type);
         }
         if ($request->filled('email')) {
-            $query->where('email', 'like', '%' . $request->email . '%');
+            $query->where('email', 'like', '%'.$request->email.'%');
         }
         if ($request->filled('ip_address')) {
-            $query->where('ip_address', 'like', '%' . $request->ip_address . '%');
+            $query->where('ip_address', 'like', '%'.$request->ip_address.'%');
         }
         if ($request->filled('date_from')) {
             $query->where('created_at', '>=', $request->date_from);
         }
         if ($request->filled('date_to')) {
-            $query->where('created_at', '<=', $request->date_to . ' 23:59:59');
+            $query->where('created_at', '<=', $request->date_to.' 23:59:59');
         }
 
         $attempts = $query->get();
 
-        $filename = 'security_log_' . now()->format('Y_m_d_H_i_s') . '.csv';
-        
+        $filename = 'security_log_'.now()->format('Y_m_d_H_i_s').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ];
 
-        $callback = function() use ($attempts) {
+        $callback = function () use ($attempts) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV Header
             fputcsv($file, [
-                'ID', 'Email', 'IP Address', 'Type', 'User Agent', 
+                'ID', 'Email', 'IP Address', 'Type', 'User Agent',
                 'Location', 'Device', 'Browser', 'User ID', 'Username',
-                'Blocked Until', 'Created At'
+                'Blocked Until', 'Created At',
             ]);
 
             foreach ($attempts as $attempt) {
@@ -366,10 +365,10 @@ class SecurityController extends Controller
         }
 
         $attempts = LoginAttempt::select(
-                DB::raw('DATE_FORMAT(created_at, "%Y-%m-%d %H") as hour'),
-                DB::raw('type'),
-                DB::raw('COUNT(*) as count')
-            )
+            DB::raw('DATE_FORMAT(created_at, "%Y-%m-%d %H") as hour'),
+            DB::raw('type'),
+            DB::raw('COUNT(*) as count')
+        )
             ->where('created_at', '>=', now()->subHours(24))
             ->groupBy('hour', 'type')
             ->get()
@@ -378,7 +377,7 @@ class SecurityController extends Controller
         return $hours->map(function ($hour) use ($attempts) {
             $hourKey = $hour['timestamp']->format('Y-m-d H');
             $hourAttempts = $attempts->get($hourKey, collect());
-            
+
             return [
                 'label' => $hour['label'],
                 'failed' => $hourAttempts->where('type', 'failed')->sum('count'),
@@ -403,10 +402,10 @@ class SecurityController extends Controller
         }
 
         $attempts = LoginAttempt::select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('type'),
-                DB::raw('COUNT(*) as count')
-            )
+            DB::raw('DATE(created_at) as date'),
+            DB::raw('type'),
+            DB::raw('COUNT(*) as count')
+        )
             ->where('created_at', '>=', now()->subDays(7))
             ->groupBy('date', 'type')
             ->get()
@@ -415,7 +414,7 @@ class SecurityController extends Controller
         return $days->map(function ($day) use ($attempts) {
             $dateKey = $day['timestamp']->format('Y-m-d');
             $dayAttempts = $attempts->get($dateKey, collect());
-            
+
             return [
                 'label' => $day['label'],
                 'failed' => $dayAttempts->where('type', 'failed')->sum('count'),
@@ -440,10 +439,10 @@ class SecurityController extends Controller
         }
 
         $attempts = LoginAttempt::select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('type'),
-                DB::raw('COUNT(*) as count')
-            )
+            DB::raw('DATE(created_at) as date'),
+            DB::raw('type'),
+            DB::raw('COUNT(*) as count')
+        )
             ->where('created_at', '>=', now()->subDays(30))
             ->groupBy('date', 'type')
             ->get()
@@ -452,7 +451,7 @@ class SecurityController extends Controller
         return $days->map(function ($day) use ($attempts) {
             $dateKey = $day['timestamp']->format('Y-m-d');
             $dayAttempts = $attempts->get($dateKey, collect());
-            
+
             return [
                 'label' => $day['label'],
                 'failed' => $dayAttempts->where('type', 'failed')->sum('count'),

@@ -2,33 +2,33 @@
 
 namespace App\Services;
 
-use App\Models\SmsProvider;
-use App\Models\SmsMessage;
 use App\Models\Contact;
+use App\Models\SmsMessage;
+use App\Models\SmsProvider;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Twilio\Rest\Client as TwilioClient;
 use Vonage\Client as VonageClient;
 use Vonage\Client\Credentials\Basic as VonageBasic;
 use Vonage\SMS\Message\SMS;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http;
 
 class SmsService
 {
-    public function send(SmsProvider $provider, string $to, string $message, Contact $contact = null)
+    public function send(SmsProvider $provider, string $to, string $message, ?Contact $contact = null)
     {
-        if (!$provider->canSend()) {
+        if (! $provider->canSend()) {
             return [
                 'success' => false,
-                'message' => 'Provider cannot send SMS (limit reached or inactive)'
+                'message' => 'Provider cannot send SMS (limit reached or inactive)',
             ];
         }
 
         try {
             $result = $this->sendBySmsProvider($provider, $to, $message);
-            
+
             if ($result['success']) {
                 // Find or create contact if not provided
-                if (!$contact) {
+                if (! $contact) {
                     $contact = $this->findOrCreateContact($to);
                 }
 
@@ -41,7 +41,7 @@ class SmsService
                     'status' => 'sent',
                     'external_id' => $result['external_id'] ?? null,
                     'cost' => $result['cost'] ?? $provider->cost_per_sms,
-                    'metadata' => $result['metadata'] ?? []
+                    'metadata' => $result['metadata'] ?? [],
                 ]);
 
                 // Update provider stats
@@ -53,22 +53,22 @@ class SmsService
                 return [
                     'success' => true,
                     'sms_message' => $smsMessage,
-                    'external_id' => $result['external_id'] ?? null
+                    'external_id' => $result['external_id'] ?? null,
                 ];
             }
 
             return $result;
 
         } catch (\Exception $e) {
-            Log::error('SMS send error: ' . $e->getMessage(), [
+            Log::error('SMS send error: '.$e->getMessage(), [
                 'provider_id' => $provider->id,
                 'to' => $to,
-                'message' => substr($message, 0, 100)
+                'message' => substr($message, 0, 100),
             ]);
 
             return [
                 'success' => false,
-                'message' => 'Error sending SMS: ' . $e->getMessage()
+                'message' => 'Error sending SMS: '.$e->getMessage(),
             ];
         }
     }
@@ -87,7 +87,7 @@ class SmsService
             default:
                 return [
                     'success' => false,
-                    'message' => 'Unsupported SMS provider: ' . $provider->provider
+                    'message' => 'Unsupported SMS provider: '.$provider->provider,
                 ];
         }
     }
@@ -102,7 +102,7 @@ class SmsService
 
             $sms = $twilio->messages->create($to, [
                 'from' => $provider->sender_id,
-                'body' => $message
+                'body' => $message,
             ]);
 
             return [
@@ -112,16 +112,16 @@ class SmsService
                 'metadata' => [
                     'sid' => $sms->sid,
                     'status' => $sms->status,
-                    'price_unit' => $sms->priceUnit
-                ]
+                    'price_unit' => $sms->priceUnit,
+                ],
             ];
 
         } catch (\Exception $e) {
-            Log::error('Twilio SMS error: ' . $e->getMessage());
-            
+            Log::error('Twilio SMS error: '.$e->getMessage());
+
             return [
                 'success' => false,
-                'message' => 'Twilio error: ' . $e->getMessage()
+                'message' => 'Twilio error: '.$e->getMessage(),
             ];
         }
     }
@@ -147,22 +147,22 @@ class SmsService
                         'status' => $smsMessage->getStatus(),
                         'remaining_balance' => $smsMessage->getRemainingBalance(),
                         'message_price' => $smsMessage->getMessagePrice(),
-                        'network' => $smsMessage->getNetwork()
-                    ]
+                        'network' => $smsMessage->getNetwork(),
+                    ],
                 ];
             }
 
             return [
                 'success' => false,
-                'message' => 'Vonage error: ' . $smsMessage->getStatusText()
+                'message' => 'Vonage error: '.$smsMessage->getStatusText(),
             ];
 
         } catch (\Exception $e) {
-            Log::error('Vonage SMS error: ' . $e->getMessage());
-            
+            Log::error('Vonage SMS error: '.$e->getMessage());
+
             return [
                 'success' => false,
-                'message' => 'Vonage error: ' . $e->getMessage()
+                'message' => 'Vonage error: '.$e->getMessage(),
             ];
         }
     }
@@ -172,39 +172,39 @@ class SmsService
         try {
             // Orange API implementation
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . decrypt($provider->api_key),
-                'Content-Type' => 'application/json'
+                'Authorization' => 'Bearer '.decrypt($provider->api_key),
+                'Content-Type' => 'application/json',
             ])->post($provider->settings['api_url'] ?? 'https://api.orange.com/smsmessaging/v1/outbound/sms', [
                 'outboundSMSMessageRequest' => [
                     'address' => [$to],
                     'senderAddress' => $provider->sender_id,
                     'outboundSMSTextMessage' => [
-                        'message' => $message
-                    ]
-                ]
+                        'message' => $message,
+                    ],
+                ],
             ]);
 
             if ($response->successful()) {
                 $data = $response->json();
-                
+
                 return [
                     'success' => true,
                     'external_id' => $data['outboundSMSMessageRequest']['resourceURL'] ?? null,
-                    'metadata' => $data
+                    'metadata' => $data,
                 ];
             }
 
             return [
                 'success' => false,
-                'message' => 'Orange API error: ' . $response->body()
+                'message' => 'Orange API error: '.$response->body(),
             ];
 
         } catch (\Exception $e) {
-            Log::error('Orange SMS error: ' . $e->getMessage());
-            
+            Log::error('Orange SMS error: '.$e->getMessage());
+
             return [
                 'success' => false,
-                'message' => 'Orange error: ' . $e->getMessage()
+                'message' => 'Orange error: '.$e->getMessage(),
             ];
         }
     }
@@ -216,28 +216,28 @@ class SmsService
             $apiUrl = $settings['api_url'] ?? null;
             $method = $settings['method'] ?? 'POST';
             $headers = $settings['headers'] ?? [];
-            
-            if (!$apiUrl) {
+
+            if (! $apiUrl) {
                 return [
                     'success' => false,
-                    'message' => 'Custom provider API URL not configured'
+                    'message' => 'Custom provider API URL not configured',
                 ];
             }
 
             // Replace placeholders in API URL and payload
             $apiUrl = str_replace(['{to}', '{message}', '{sender}'], [$to, urlencode($message), $provider->sender_id], $apiUrl);
-            
+
             $payload = $settings['payload'] ?? [];
             $payload = $this->replacePlaceholders($payload, [
                 'to' => $to,
                 'message' => $message,
                 'sender' => $provider->sender_id,
                 'api_key' => decrypt($provider->api_key),
-                'api_secret' => decrypt($provider->api_secret ?? '')
+                'api_secret' => decrypt($provider->api_secret ?? ''),
             ]);
 
             $request = Http::withHeaders($headers);
-            
+
             if ($method === 'GET') {
                 $response = $request->get($apiUrl, $payload);
             } else {
@@ -248,21 +248,21 @@ class SmsService
                 return [
                     'success' => true,
                     'external_id' => $response->json()['id'] ?? null,
-                    'metadata' => $response->json()
+                    'metadata' => $response->json(),
                 ];
             }
 
             return [
                 'success' => false,
-                'message' => 'Custom provider error: ' . $response->body()
+                'message' => 'Custom provider error: '.$response->body(),
             ];
 
         } catch (\Exception $e) {
-            Log::error('Custom SMS provider error: ' . $e->getMessage());
-            
+            Log::error('Custom SMS provider error: '.$e->getMessage());
+
             return [
                 'success' => false,
-                'message' => 'Custom provider error: ' . $e->getMessage()
+                'message' => 'Custom provider error: '.$e->getMessage(),
             ];
         }
     }
@@ -270,11 +270,11 @@ class SmsService
     protected function replacePlaceholders(array $data, array $placeholders)
     {
         $json = json_encode($data);
-        
+
         foreach ($placeholders as $key => $value) {
-            $json = str_replace('{' . $key . '}', $value, $json);
+            $json = str_replace('{'.$key.'}', $value, $json);
         }
-        
+
         return json_decode($json, true);
     }
 
@@ -292,8 +292,8 @@ class SmsService
                     return $this->handleCustomWebhook($provider, $data);
             }
         } catch (\Exception $e) {
-            Log::error('SMS webhook error: ' . $e->getMessage(), $data);
-            
+            Log::error('SMS webhook error: '.$e->getMessage(), $data);
+
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
@@ -303,13 +303,13 @@ class SmsService
         $messageSid = $data['MessageSid'] ?? null;
         $messageStatus = $data['MessageStatus'] ?? null;
 
-        if (!$messageSid) {
+        if (! $messageSid) {
             return ['success' => false, 'message' => 'MessageSid not provided'];
         }
 
         $smsMessage = SmsMessage::where('external_id', $messageSid)->first();
-        
-        if (!$smsMessage) {
+
+        if (! $smsMessage) {
             return ['success' => false, 'message' => 'SMS message not found'];
         }
 
@@ -331,13 +331,13 @@ class SmsService
         $messageId = $data['messageId'] ?? null;
         $status = $data['status'] ?? null;
 
-        if (!$messageId) {
+        if (! $messageId) {
             return ['success' => false, 'message' => 'messageId not provided'];
         }
 
         $smsMessage = SmsMessage::where('external_id', $messageId)->first();
-        
-        if (!$smsMessage) {
+
+        if (! $smsMessage) {
             return ['success' => false, 'message' => 'SMS message not found'];
         }
 
@@ -381,13 +381,13 @@ class SmsService
                 default:
                     return [
                         'success' => false,
-                        'message' => 'Unsupported provider: ' . $provider->provider
+                        'message' => 'Unsupported provider: '.$provider->provider,
                     ];
             }
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Test failed: ' . $e->getMessage()
+                'message' => 'Test failed: '.$e->getMessage(),
             ];
         }
     }
@@ -402,18 +402,18 @@ class SmsService
 
             // Test by fetching account information
             $account = $twilio->api->v2010->account->fetch();
-            
+
             return [
                 'success' => true,
                 'message' => 'Twilio connection successful',
                 'account_sid' => $account->sid,
-                'account_name' => $account->friendlyName
+                'account_name' => $account->friendlyName,
             ];
 
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Twilio test failed: ' . $e->getMessage()
+                'message' => 'Twilio test failed: '.$e->getMessage(),
             ];
         }
     }
@@ -426,18 +426,18 @@ class SmsService
 
             // Test by fetching account balance
             $balance = $client->account()->getBalance();
-            
+
             return [
                 'success' => true,
                 'message' => 'Vonage connection successful',
                 'balance' => $balance->getBalance(),
-                'currency' => 'EUR'
+                'currency' => 'EUR',
             ];
 
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Vonage test failed: ' . $e->getMessage()
+                'message' => 'Vonage test failed: '.$e->getMessage(),
             ];
         }
     }
@@ -447,7 +447,7 @@ class SmsService
         // Orange test implementation
         return [
             'success' => true,
-            'message' => 'Orange connection test not implemented yet'
+            'message' => 'Orange connection test not implemented yet',
         ];
     }
 
@@ -456,7 +456,7 @@ class SmsService
         // Custom provider test implementation
         return [
             'success' => true,
-            'message' => 'Custom provider connection test not implemented yet'
+            'message' => 'Custom provider connection test not implemented yet',
         ];
     }
 
@@ -464,15 +464,15 @@ class SmsService
     {
         // Clean phone number
         $cleanPhone = preg_replace('/[^0-9]/', '', $phoneNumber);
-        
+
         $contact = Contact::where('phone', $cleanPhone)->first();
 
-        if (!$contact) {
+        if (! $contact) {
             $contact = Contact::create([
                 'first_name' => 'Unknown',
                 'phone' => $cleanPhone,
                 'source' => 'sms',
-                'created_by' => 1 // System user
+                'created_by' => 1, // System user
             ]);
         }
 
@@ -489,7 +489,7 @@ class SmsService
             'content' => $content,
             'status' => 'sent',
             'external_id' => $smsMessageId,
-            'sent_at' => now()
+            'sent_at' => now(),
         ]);
     }
 
@@ -499,7 +499,7 @@ class SmsService
             'total' => count($recipients),
             'sent' => 0,
             'failed' => 0,
-            'details' => []
+            'details' => [],
         ];
 
         foreach ($recipients as $recipient) {
@@ -507,7 +507,7 @@ class SmsService
             $phoneNumber = is_array($recipient) ? $recipient['phone'] : $recipient;
 
             $result = $this->send($provider, $phoneNumber, $message, $contact);
-            
+
             if ($result['success']) {
                 $results['sent']++;
             } else {
@@ -518,7 +518,7 @@ class SmsService
                 'phone' => $phoneNumber,
                 'success' => $result['success'],
                 'message' => $result['message'] ?? null,
-                'sms_id' => $result['sms_message']->id ?? null
+                'sms_id' => $result['sms_message']->id ?? null,
             ];
         }
 

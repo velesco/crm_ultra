@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\EmailCampaign;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class EmailCampaignPolicy
 {
@@ -82,8 +81,8 @@ class EmailCampaignPolicy
 
         // Managers can delete campaigns, but not from other managers unless they created them
         if ($user->hasRole('manager')) {
-            return $emailCampaign->created_by === $user->id || 
-                   !$emailCampaign->creator->hasRole('manager');
+            return $emailCampaign->created_by === $user->id ||
+                   ! $emailCampaign->creator->hasRole('manager');
         }
 
         // Agents can only delete campaigns they created
@@ -116,12 +115,12 @@ class EmailCampaignPolicy
     public function send(User $user, EmailCampaign $emailCampaign): bool
     {
         // Campaign must be in draft or scheduled status
-        if (!in_array($emailCampaign->status, ['draft', 'scheduled'])) {
+        if (! in_array($emailCampaign->status, ['draft', 'scheduled'])) {
             return false;
         }
 
         // Must be able to view the campaign
-        if (!$this->view($user, $emailCampaign)) {
+        if (! $this->view($user, $emailCampaign)) {
             return false;
         }
 
@@ -181,7 +180,7 @@ class EmailCampaignPolicy
      */
     public function sendTest(User $user, EmailCampaign $emailCampaign): bool
     {
-        return $this->view($user, $emailCampaign) && 
+        return $this->view($user, $emailCampaign) &&
                ($user->hasPermissionTo('send test emails') || $user->hasRole(['admin', 'manager', 'agent']));
     }
 
@@ -212,7 +211,7 @@ class EmailCampaignPolicy
     public function viewReports(User $user, EmailCampaign $emailCampaign): bool
     {
         // Must be able to view campaign and have reports permission
-        if (!$this->view($user, $emailCampaign)) {
+        if (! $this->view($user, $emailCampaign)) {
             return false;
         }
 
@@ -224,7 +223,7 @@ class EmailCampaignPolicy
      */
     public function exportReports(User $user, EmailCampaign $emailCampaign): bool
     {
-        return $this->viewReports($user, $emailCampaign) && 
+        return $this->viewReports($user, $emailCampaign) &&
                ($user->hasPermissionTo('export reports') || $user->hasRole(['admin', 'manager']));
     }
 
@@ -234,7 +233,7 @@ class EmailCampaignPolicy
     public function cancel(User $user, EmailCampaign $emailCampaign): bool
     {
         // Can only cancel scheduled or paused campaigns
-        if (!in_array($emailCampaign->status, ['scheduled', 'paused'])) {
+        if (! in_array($emailCampaign->status, ['scheduled', 'paused'])) {
             return false;
         }
 

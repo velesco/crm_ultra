@@ -2,10 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\SmtpConfig;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use App\Models\SmtpConfig;
 
 class CheckSmtpLimits
 {
@@ -14,28 +14,28 @@ class CheckSmtpLimits
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, string $smtpConfigId = null): Response
+    public function handle(Request $request, Closure $next, ?string $smtpConfigId = null): Response
     {
         $user = $request->user();
-        
-        if (!$user) {
+
+        if (! $user) {
             return $this->handleUnauthenticated($request);
         }
 
         // Get SMTP config from parameter or request
         $smtpConfig = $this->getSmtpConfig($request, $smtpConfigId);
-        
-        if (!$smtpConfig) {
+
+        if (! $smtpConfig) {
             return $this->handleMissingSmtpConfig($request);
         }
 
         // Check if SMTP config is active
-        if (!$smtpConfig->is_active) {
+        if (! $smtpConfig->is_active) {
             return $this->handleInactiveSmtpConfig($request, $smtpConfig);
         }
 
         // Check if user owns or has access to this SMTP config
-        if (!$this->userCanUseSmtpConfig($user, $smtpConfig)) {
+        if (! $this->userCanUseSmtpConfig($user, $smtpConfig)) {
             return $this->handleUnauthorizedSmtpConfig($request, $smtpConfig);
         }
 
@@ -49,13 +49,13 @@ class CheckSmtpLimits
         ];
 
         foreach ($limitChecks as $type => $check) {
-            if (!$check['allowed']) {
+            if (! $check['allowed']) {
                 return $this->handleLimitExceeded($request, $type, $check, $smtpConfig);
             }
         }
 
         // Check SMTP health
-        if (!$this->isSmtpHealthy($smtpConfig)) {
+        if (! $this->isSmtpHealthy($smtpConfig)) {
             return $this->handleUnhealthySmtp($request, $smtpConfig);
         }
 
@@ -87,6 +87,7 @@ class CheckSmtpLimits
 
         // Get user's default active SMTP config
         $user = $request->user();
+
         return $user->smtpConfigs()->active()->first();
     }
 
@@ -107,7 +108,7 @@ class CheckSmtpLimits
 
         // Managers can use SMTP configs from their team
         if ($user->hasRole('manager')) {
-            return $smtpConfig->creator->hasRole(['agent']) || 
+            return $smtpConfig->creator->hasRole(['agent']) ||
                    $smtpConfig->is_shared;
         }
 
@@ -128,7 +129,7 @@ class CheckSmtpLimits
             'current' => $sentToday,
             'limit' => $dailyLimit,
             'remaining' => max(0, $dailyLimit - $sentToday),
-            'reset_at' => now()->endOfDay()
+            'reset_at' => now()->endOfDay(),
         ];
     }
 
@@ -145,7 +146,7 @@ class CheckSmtpLimits
             'current' => $sentThisHour,
             'limit' => $hourlyLimit,
             'remaining' => max(0, $hourlyLimit - $sentThisHour),
-            'reset_at' => now()->endOfHour()
+            'reset_at' => now()->endOfHour(),
         ];
     }
 
@@ -162,7 +163,7 @@ class CheckSmtpLimits
             'current' => $sentThisMonth,
             'limit' => $monthlyLimit,
             'remaining' => max(0, $monthlyLimit - $sentThisMonth),
-            'reset_at' => now()->endOfMonth()
+            'reset_at' => now()->endOfMonth(),
         ];
     }
 
@@ -178,7 +179,7 @@ class CheckSmtpLimits
             'allowed' => $currentlySending < $concurrentLimit,
             'current' => $currentlySending,
             'limit' => $concurrentLimit,
-            'remaining' => max(0, $concurrentLimit - $currentlySending)
+            'remaining' => max(0, $concurrentLimit - $currentlySending),
         ];
     }
 
@@ -205,7 +206,7 @@ class CheckSmtpLimits
         // SendGrid has reputation-based limits
         $reputationScore = $smtpConfig->reputation_score ?? 100;
         $baseLimit = $this->getDefaultDailyLimit('sendgrid');
-        
+
         $adjustedLimit = (int) ($baseLimit * ($reputationScore / 100));
         $sentToday = $smtpConfig->getSentCountForPeriod('today');
 
@@ -213,7 +214,7 @@ class CheckSmtpLimits
             'allowed' => $sentToday < $adjustedLimit,
             'current' => $sentToday,
             'limit' => $adjustedLimit,
-            'reputation_score' => $reputationScore
+            'reputation_score' => $reputationScore,
         ];
     }
 
@@ -229,7 +230,7 @@ class CheckSmtpLimits
         return [
             'allowed' => $sentToday < $domainLimit,
             'current' => $sentToday,
-            'limit' => $domainLimit
+            'limit' => $domainLimit,
         ];
     }
 
@@ -241,12 +242,12 @@ class CheckSmtpLimits
         // AWS SES has sending rate limits
         $sendingRate = $smtpConfig->sending_rate ?? 1; // emails per second
         $lastSent = $smtpConfig->last_sent_at;
-        
+
         if ($lastSent && $lastSent->diffInSeconds(now()) < (1 / $sendingRate)) {
             return [
                 'allowed' => false,
                 'rate_limit' => true,
-                'wait_seconds' => ceil(1 / $sendingRate)
+                'wait_seconds' => ceil(1 / $sendingRate),
             ];
         }
 
@@ -265,7 +266,7 @@ class CheckSmtpLimits
         return [
             'allowed' => $sentToday < $dailyLimit,
             'current' => $sentToday,
-            'limit' => $dailyLimit
+            'limit' => $dailyLimit,
         ];
     }
 
@@ -281,7 +282,7 @@ class CheckSmtpLimits
         return [
             'allowed' => $sentToday < $recipientLimit,
             'current' => $sentToday,
-            'limit' => $recipientLimit
+            'limit' => $recipientLimit,
         ];
     }
 
@@ -377,7 +378,7 @@ class CheckSmtpLimits
         if ($request->expectsJson()) {
             return response()->json([
                 'error' => 'SMTP configuration required',
-                'message' => 'Please configure an SMTP provider first.'
+                'message' => 'Please configure an SMTP provider first.',
             ], 422);
         }
 
@@ -393,7 +394,7 @@ class CheckSmtpLimits
         if ($request->expectsJson()) {
             return response()->json([
                 'error' => 'SMTP configuration inactive',
-                'message' => 'The selected SMTP configuration is inactive.'
+                'message' => 'The selected SMTP configuration is inactive.',
             ], 422);
         }
 
@@ -409,7 +410,7 @@ class CheckSmtpLimits
         if ($request->expectsJson()) {
             return response()->json([
                 'error' => 'Unauthorized SMTP configuration',
-                'message' => 'You do not have permission to use this SMTP configuration.'
+                'message' => 'You do not have permission to use this SMTP configuration.',
             ], 403);
         }
 
@@ -429,7 +430,7 @@ class CheckSmtpLimits
                 'error' => 'SMTP limit exceeded',
                 'message' => $message,
                 'type' => $type,
-                'details' => $check
+                'details' => $check,
             ], 429);
         }
 
@@ -448,7 +449,7 @@ class CheckSmtpLimits
         if ($request->expectsJson()) {
             return response()->json([
                 'error' => 'SMTP configuration unhealthy',
-                'message' => $message
+                'message' => $message,
             ], 503);
         }
 
@@ -464,11 +465,11 @@ class CheckSmtpLimits
     {
         return match ($type) {
             'daily' => "Daily email limit reached ({$check['current']}/{$check['limit']}). Limit resets at midnight.",
-            'hourly' => "Hourly email limit reached ({$check['current']}/{$check['limit']}). Try again in " . now()->diffInMinutes($check['reset_at']) . " minutes.",
+            'hourly' => "Hourly email limit reached ({$check['current']}/{$check['limit']}). Try again in ".now()->diffInMinutes($check['reset_at']).' minutes.',
             'monthly' => "Monthly email limit reached ({$check['current']}/{$check['limit']}). Limit resets next month.",
             'concurrent' => "Too many emails being sent concurrently ({$check['current']}/{$check['limit']}). Please wait and try again.",
             'provider' => "Provider-specific limit exceeded for {$smtpConfig->provider}.",
-            default => "Email sending limit exceeded."
+            default => 'Email sending limit exceeded.'
         };
     }
 }

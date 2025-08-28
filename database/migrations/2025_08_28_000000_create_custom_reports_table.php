@@ -30,7 +30,7 @@ return new class extends Migration
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->timestamps();
-            
+
             $table->index(['created_by', 'visibility']);
             $table->index(['category', 'is_active']);
             $table->index(['data_source', 'is_active']);

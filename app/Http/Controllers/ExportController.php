@@ -2,25 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ProcessExportJob;
 use App\Models\Contact;
 use App\Models\EmailCampaign;
-use App\Models\SmsMessage;
-use App\Models\WhatsAppMessage;
-use App\Models\Revenue;
-use App\Models\SystemLog;
 use App\Models\ExportRequest;
+use App\Models\Revenue;
+use App\Models\SmsMessage;
+use App\Models\SystemLog;
+use App\Models\WhatsAppMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Carbon\Carbon;
-use League\Csv\Writer;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\ContactsExport;
-use App\Exports\CampaignsExport;
-use App\Exports\RevenueExport;
-use App\Exports\CommunicationsExport;
-use App\Exports\CustomDataExport;
-use App\Jobs\ProcessExportJob;
 
 class ExportController extends Controller
 {
@@ -36,10 +28,10 @@ class ExportController extends Controller
     {
         $user = Auth::user();
         $exports = ExportRequest::with(['user', 'createdBy'])
-            ->when(!$user->hasRole('super_admin'), function ($query) use ($user) {
+            ->when(! $user->hasRole('super_admin'), function ($query) use ($user) {
                 return $query->where(function ($q) use ($user) {
                     $q->where('user_id', $user->id)
-                      ->orWhere('is_public', true);
+                        ->orWhere('is_public', true);
                 });
             })
             ->orderBy('created_at', 'desc')
@@ -101,14 +93,14 @@ class ExportController extends Controller
             'revenue' => 'Revenue Data',
             'communications' => 'All Communications',
             'system_logs' => 'System Logs',
-            'custom' => 'Custom Query'
+            'custom' => 'Custom Query',
         ];
 
         $format_types = [
             'csv' => 'CSV',
             'xlsx' => 'Excel (XLSX)',
             'json' => 'JSON',
-            'pdf' => 'PDF Report'
+            'pdf' => 'PDF Report',
         ];
 
         return view('exports.create', compact('data_types', 'format_types'));
@@ -133,7 +125,7 @@ class ExportController extends Controller
             'recurring_frequency' => 'nullable|string|in:daily,weekly,monthly',
             'is_public' => 'nullable|boolean',
             'notify_on_completion' => 'nullable|boolean',
-            'include_attachments' => 'nullable|boolean'
+            'include_attachments' => 'nullable|boolean',
         ]);
 
         $export = ExportRequest::create([
@@ -162,7 +154,7 @@ class ExportController extends Controller
         SystemLog::info('export', 'export_created', "Export request '{$export->name}' created", [
             'export_id' => $export->id,
             'data_type' => $export->data_type,
-            'format' => $export->format
+            'format' => $export->format,
         ]);
 
         return redirect()->route('exports.show', $export)
@@ -175,7 +167,7 @@ class ExportController extends Controller
     public function show(ExportRequest $export)
     {
         $this->authorize('view', $export);
-        
+
         $export->load(['user', 'createdBy']);
 
         // Related exports
@@ -183,7 +175,7 @@ class ExportController extends Controller
             ->where('id', '!=', $export->id)
             ->where(function ($query) use ($export) {
                 $query->where('user_id', $export->user_id)
-                      ->orWhere('is_public', true);
+                    ->orWhere('is_public', true);
             })
             ->orderBy('created_at', 'desc')
             ->limit(5)
@@ -211,14 +203,14 @@ class ExportController extends Controller
             'revenue' => 'Revenue Data',
             'communications' => 'All Communications',
             'system_logs' => 'System Logs',
-            'custom' => 'Custom Query'
+            'custom' => 'Custom Query',
         ];
 
         $format_types = [
             'csv' => 'CSV',
             'xlsx' => 'Excel (XLSX)',
             'json' => 'JSON',
-            'pdf' => 'PDF Report'
+            'pdf' => 'PDF Report',
         ];
 
         return view('exports.edit', compact('export', 'data_types', 'format_types'));
@@ -247,7 +239,7 @@ class ExportController extends Controller
             'recurring_frequency' => 'nullable|string|in:daily,weekly,monthly',
             'is_public' => 'nullable|boolean',
             'notify_on_completion' => 'nullable|boolean',
-            'include_attachments' => 'nullable|boolean'
+            'include_attachments' => 'nullable|boolean',
         ]);
 
         $export->update([
@@ -266,7 +258,7 @@ class ExportController extends Controller
         ]);
 
         SystemLog::info('export', 'export_updated', "Export request '{$export->name}' updated", [
-            'export_id' => $export->id
+            'export_id' => $export->id,
         ]);
 
         return redirect()->route('exports.show', $export)
@@ -317,14 +309,14 @@ class ExportController extends Controller
     {
         $this->authorize('update', $export);
 
-        if (!in_array($export->status, ['pending', 'processing'])) {
+        if (! in_array($export->status, ['pending', 'processing'])) {
             return back()->with('error', 'Cannot cancel completed export.');
         }
 
         $export->update([
             'status' => 'cancelled',
             'completed_at' => now(),
-            'error_message' => 'Cancelled by user'
+            'error_message' => 'Cancelled by user',
         ]);
 
         SystemLog::info('export', 'export_cancelled', "Export '{$export->name}' cancelled by user");
@@ -340,11 +332,11 @@ class ExportController extends Controller
         $this->authorize('create', ExportRequest::class);
 
         $newExport = $export->replicate([
-            'file_path', 'file_size', 'status', 'started_at', 
-            'completed_at', 'error_message', 'download_count'
+            'file_path', 'file_size', 'status', 'started_at',
+            'completed_at', 'error_message', 'download_count',
         ]);
-        
-        $newExport->name = $export->name . ' (Copy)';
+
+        $newExport->name = $export->name.' (Copy)';
         $newExport->status = 'pending';
         $newExport->user_id = Auth::id();
         $newExport->created_by = Auth::id();
@@ -361,11 +353,11 @@ class ExportController extends Controller
     {
         $this->authorize('view', $export);
 
-        if ($export->status !== 'completed' || !$export->file_path) {
+        if ($export->status !== 'completed' || ! $export->file_path) {
             return back()->with('error', 'Export file not available.');
         }
 
-        if (!Storage::exists($export->file_path)) {
+        if (! Storage::exists($export->file_path)) {
             return back()->with('error', 'Export file not found.');
         }
 
@@ -374,7 +366,7 @@ class ExportController extends Controller
 
         SystemLog::info('export', 'export_downloaded', "Export '{$export->name}' downloaded", [
             'export_id' => $export->id,
-            'download_count' => $export->download_count
+            'download_count' => $export->download_count,
         ]);
 
         return Storage::download($export->file_path, $export->getFileName());
@@ -395,9 +387,9 @@ class ExportController extends Controller
             'completed_at' => $export->completed_at?->format('Y-m-d H:i:s'),
             'error_message' => $export->error_message,
             'file_size' => $export->file_size,
-            'download_url' => $export->status === 'completed' && $export->file_path 
-                ? route('exports.download', $export) 
-                : null
+            'download_url' => $export->status === 'completed' && $export->file_path
+                ? route('exports.download', $export)
+                : null,
         ]);
     }
 
@@ -411,7 +403,7 @@ class ExportController extends Controller
         $validated = $request->validate([
             'action' => 'required|in:start,cancel,delete',
             'export_ids' => 'required|array',
-            'export_ids.*' => 'exists:export_requests,id'
+            'export_ids.*' => 'exists:export_requests,id',
         ]);
 
         $exports = ExportRequest::whereIn('id', $validated['export_ids'])->get();
@@ -425,18 +417,18 @@ class ExportController extends Controller
                         $count++;
                     }
                     break;
-                
+
                 case 'cancel':
                     if (in_array($export->status, ['pending', 'processing'])) {
                         $export->update([
                             'status' => 'cancelled',
                             'completed_at' => now(),
-                            'error_message' => 'Cancelled by user'
+                            'error_message' => 'Cancelled by user',
                         ]);
                         $count++;
                     }
                     break;
-                
+
                 case 'delete':
                     if ($export->file_path && Storage::exists($export->file_path)) {
                         Storage::delete($export->file_path);
@@ -448,9 +440,10 @@ class ExportController extends Controller
         }
 
         $action = ucfirst($validated['action']);
+
         return response()->json([
             'success' => true,
-            'message' => "{$count} exports {$action}d successfully!"
+            'message' => "{$count} exports {$action}d successfully!",
         ]);
     }
 
@@ -474,10 +467,10 @@ class ExportController extends Controller
                     'position' => 'Position',
                     'industry' => 'Industry',
                     'status' => 'Status',
-                    'created_at' => 'Created At'
+                    'created_at' => 'Created At',
                 ];
                 break;
-            
+
             case 'email_campaigns':
                 $columns = [
                     'id' => 'ID',
@@ -487,7 +480,7 @@ class ExportController extends Controller
                     'sent_count' => 'Sent Count',
                     'open_rate' => 'Open Rate',
                     'click_rate' => 'Click Rate',
-                    'created_at' => 'Created At'
+                    'created_at' => 'Created At',
                 ];
                 break;
 
@@ -500,7 +493,7 @@ class ExportController extends Controller
                     'source' => 'Source',
                     'status' => 'Status',
                     'transaction_date' => 'Transaction Date',
-                    'created_at' => 'Created At'
+                    'created_at' => 'Created At',
                 ];
                 break;
         }
@@ -550,7 +543,7 @@ class ExportController extends Controller
         return response()->json([
             'stats' => $stats,
             'hourly_activity' => $recent,
-            'export_types' => $types
+            'export_types' => $types,
         ]);
     }
 }

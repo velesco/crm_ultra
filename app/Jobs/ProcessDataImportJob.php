@@ -2,19 +2,18 @@
 
 namespace App\Jobs;
 
-use App\Models\DataImport;
 use App\Models\Contact;
 use App\Models\ContactSegment;
+use App\Models\DataImport;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
-use Exception;
 
 class ProcessDataImportJob implements ShouldQueue
 {
@@ -54,22 +53,22 @@ class ProcessDataImportJob implements ShouldQueue
             $this->dataImport->update([
                 'status' => 'processing',
                 'started_at' => now(),
-                'progress' => 0
+                'progress' => 0,
             ]);
 
             Log::info("Starting data import processing for import ID: {$this->dataImport->id}");
 
             // Check if file exists
-            if (!Storage::disk('local')->exists($this->dataImport->file_path)) {
+            if (! Storage::disk('local')->exists($this->dataImport->file_path)) {
                 throw new Exception("Import file not found: {$this->dataImport->file_path}");
             }
 
             // Get file path
             $filePath = Storage::disk('local')->path($this->dataImport->file_path);
-            
+
             // Determine file type and process accordingly
             $fileExtension = pathinfo($this->dataImport->original_filename, PATHINFO_EXTENSION);
-            
+
             if (in_array(strtolower($fileExtension), ['csv', 'txt'])) {
                 $this->processCsvFile($filePath);
             } elseif (in_array(strtolower($fileExtension), ['xlsx', 'xls'])) {
@@ -82,7 +81,7 @@ class ProcessDataImportJob implements ShouldQueue
             $this->dataImport->update([
                 'status' => 'completed',
                 'completed_at' => now(),
-                'progress' => 100
+                'progress' => 100,
             ]);
 
             // Assign contacts to segments if specified
@@ -98,12 +97,12 @@ class ProcessDataImportJob implements ShouldQueue
             Log::info("Data import {$this->dataImport->id} completed successfully. Processed {$this->dataImport->processed_records} records.");
 
         } catch (Exception $e) {
-            Log::error("ProcessDataImportJob failed for import {$this->dataImport->id}: " . $e->getMessage());
+            Log::error("ProcessDataImportJob failed for import {$this->dataImport->id}: ".$e->getMessage());
 
             $this->dataImport->update([
                 'status' => 'failed',
                 'error_message' => $e->getMessage(),
-                'failed_at' => now()
+                'failed_at' => now(),
             ]);
 
             throw $e;
@@ -116,8 +115,8 @@ class ProcessDataImportJob implements ShouldQueue
     protected function processCsvFile(string $filePath): void
     {
         $handle = fopen($filePath, 'r');
-        if (!$handle) {
-            throw new Exception("Cannot open CSV file for reading");
+        if (! $handle) {
+            throw new Exception('Cannot open CSV file for reading');
         }
 
         $headers = [];
@@ -128,7 +127,7 @@ class ProcessDataImportJob implements ShouldQueue
 
         // Get field mapping
         $fieldMapping = $this->dataImport->field_mapping ?? [];
-        
+
         // Get import settings
         $settings = $this->dataImport->import_settings ?? [];
         $skipDuplicates = $settings['skip_duplicates'] ?? true;
@@ -136,20 +135,21 @@ class ProcessDataImportJob implements ShouldQueue
 
         while (($row = fgetcsv($handle)) !== false) {
             $rowIndex++;
-            
+
             // First row contains headers
             if ($rowIndex === 1) {
                 $headers = $row;
+
                 continue;
             }
 
             try {
                 // Create associative array from row data
                 $rowData = array_combine($headers, $row);
-                
+
                 // Map fields according to mapping configuration
                 $contactData = $this->mapFieldsToContact($rowData, $fieldMapping);
-                
+
                 // Validate required fields
                 if (empty($contactData['email'])) {
                     throw new Exception("Email is required but missing in row {$rowIndex}");
@@ -157,13 +157,14 @@ class ProcessDataImportJob implements ShouldQueue
 
                 // Check for duplicates
                 $existingContact = Contact::where('email', $contactData['email'])->first();
-                
+
                 if ($existingContact) {
-                    if ($skipDuplicates && !$updateExisting) {
+                    if ($skipDuplicates && ! $updateExisting) {
                         Log::debug("Skipping duplicate contact: {$contactData['email']} at row {$rowIndex}");
+
                         continue;
                     }
-                    
+
                     if ($updateExisting) {
                         $existingContact->update($contactData);
                         $processedCount++;
@@ -176,7 +177,7 @@ class ProcessDataImportJob implements ShouldQueue
                         'import_id' => $this->dataImport->id,
                         'created_by' => $this->dataImport->user_id,
                     ]));
-                    
+
                     $processedCount++;
                     Log::debug("Created new contact: {$contactData['email']}");
                 }
@@ -186,14 +187,14 @@ class ProcessDataImportJob implements ShouldQueue
                 $errors[] = [
                     'row' => $rowIndex,
                     'error' => $e->getMessage(),
-                    'data' => $rowData ?? []
+                    'data' => $rowData ?? [],
                 ];
-                
-                Log::warning("Error processing row {$rowIndex}: " . $e->getMessage());
-                
+
+                Log::warning("Error processing row {$rowIndex}: ".$e->getMessage());
+
                 // Stop if too many errors
                 if ($errorCount > 100) {
-                    throw new Exception("Too many errors encountered during import (>100). Stopping processing.");
+                    throw new Exception('Too many errors encountered during import (>100). Stopping processing.');
                 }
             }
 
@@ -203,7 +204,7 @@ class ProcessDataImportJob implements ShouldQueue
                 $this->dataImport->update([
                     'progress' => $progress,
                     'processed_records' => $processedCount,
-                    'error_count' => $errorCount
+                    'error_count' => $errorCount,
                 ]);
             }
         }
@@ -215,7 +216,7 @@ class ProcessDataImportJob implements ShouldQueue
             'processed_records' => $processedCount,
             'error_count' => $errorCount,
             'errors' => $errors,
-            'progress' => 95
+            'progress' => 95,
         ]);
     }
 
@@ -226,14 +227,14 @@ class ProcessDataImportJob implements ShouldQueue
     {
         // Use Laravel Excel to process Excel files
         $data = Excel::toArray([], $filePath);
-        
+
         if (empty($data) || empty($data[0])) {
-            throw new Exception("Excel file is empty or cannot be read");
+            throw new Exception('Excel file is empty or cannot be read');
         }
 
         $worksheet = $data[0]; // First worksheet
         $headers = array_shift($worksheet); // First row as headers
-        
+
         $processedCount = 0;
         $errorCount = 0;
         $errors = [];
@@ -248,23 +249,23 @@ class ProcessDataImportJob implements ShouldQueue
             try {
                 // Create associative array from row data
                 $rowData = array_combine($headers, $row);
-                
+
                 // Map fields according to mapping configuration
                 $contactData = $this->mapFieldsToContact($rowData, $fieldMapping);
-                
+
                 // Validate required fields
                 if (empty($contactData['email'])) {
-                    throw new Exception("Email is required but missing in row " . ($rowIndex + 2));
+                    throw new Exception('Email is required but missing in row '.($rowIndex + 2));
                 }
 
                 // Check for duplicates
                 $existingContact = Contact::where('email', $contactData['email'])->first();
-                
+
                 if ($existingContact) {
-                    if ($skipDuplicates && !$updateExisting) {
+                    if ($skipDuplicates && ! $updateExisting) {
                         continue;
                     }
-                    
+
                     if ($updateExisting) {
                         $existingContact->update($contactData);
                         $processedCount++;
@@ -276,7 +277,7 @@ class ProcessDataImportJob implements ShouldQueue
                         'import_id' => $this->dataImport->id,
                         'created_by' => $this->dataImport->user_id,
                     ]));
-                    
+
                     $processedCount++;
                 }
 
@@ -285,12 +286,12 @@ class ProcessDataImportJob implements ShouldQueue
                 $errors[] = [
                     'row' => $rowIndex + 2,
                     'error' => $e->getMessage(),
-                    'data' => $rowData ?? []
+                    'data' => $rowData ?? [],
                 ];
-                
+
                 // Stop if too many errors
                 if ($errorCount > 100) {
-                    throw new Exception("Too many errors encountered during import (>100). Stopping processing.");
+                    throw new Exception('Too many errors encountered during import (>100). Stopping processing.');
                 }
             }
 
@@ -300,7 +301,7 @@ class ProcessDataImportJob implements ShouldQueue
                 $this->dataImport->update([
                     'progress' => $progress,
                     'processed_records' => $processedCount,
-                    'error_count' => $errorCount
+                    'error_count' => $errorCount,
                 ]);
             }
         }
@@ -310,7 +311,7 @@ class ProcessDataImportJob implements ShouldQueue
             'processed_records' => $processedCount,
             'error_count' => $errorCount,
             'errors' => $errors,
-            'progress' => 95
+            'progress' => 95,
         ]);
     }
 
@@ -320,11 +321,11 @@ class ProcessDataImportJob implements ShouldQueue
     protected function mapFieldsToContact(array $rowData, array $fieldMapping): array
     {
         $contactData = [];
-        
+
         foreach ($fieldMapping as $csvField => $contactField) {
-            if (isset($rowData[$csvField]) && !empty(trim($rowData[$csvField]))) {
+            if (isset($rowData[$csvField]) && ! empty(trim($rowData[$csvField]))) {
                 $value = trim($rowData[$csvField]);
-                
+
                 // Special handling for different field types
                 switch ($contactField) {
                     case 'is_active':
@@ -354,17 +355,17 @@ class ProcessDataImportJob implements ShouldQueue
         // Ensure we have required fields with defaults
         $contactData['is_active'] = $contactData['is_active'] ?? true;
         $contactData['is_unsubscribed'] = $contactData['is_unsubscribed'] ?? false;
-        
+
         // Split name if full name provided and first/last not mapped separately
-        if (!empty($contactData['name']) && empty($contactData['first_name']) && empty($contactData['last_name'])) {
+        if (! empty($contactData['name']) && empty($contactData['first_name']) && empty($contactData['last_name'])) {
             $nameParts = explode(' ', $contactData['name'], 2);
             $contactData['first_name'] = $nameParts[0] ?? '';
             $contactData['last_name'] = $nameParts[1] ?? '';
         }
 
         // Generate full name if not provided
-        if (empty($contactData['name']) && (!empty($contactData['first_name']) || !empty($contactData['last_name']))) {
-            $contactData['name'] = trim(($contactData['first_name'] ?? '') . ' ' . ($contactData['last_name'] ?? ''));
+        if (empty($contactData['name']) && (! empty($contactData['first_name']) || ! empty($contactData['last_name']))) {
+            $contactData['name'] = trim(($contactData['first_name'] ?? '').' '.($contactData['last_name'] ?? ''));
         }
 
         return $contactData;
@@ -379,8 +380,8 @@ class ProcessDataImportJob implements ShouldQueue
             return;
         }
 
-        $segmentIds = is_array($this->dataImport->auto_assign_segments) 
-            ? $this->dataImport->auto_assign_segments 
+        $segmentIds = is_array($this->dataImport->auto_assign_segments)
+            ? $this->dataImport->auto_assign_segments
             : [$this->dataImport->auto_assign_segments];
 
         // Get all contacts from this import
@@ -388,25 +389,27 @@ class ProcessDataImportJob implements ShouldQueue
 
         foreach ($segmentIds as $segmentId) {
             $segment = ContactSegment::find($segmentId);
-            if (!$segment) continue;
+            if (! $segment) {
+                continue;
+            }
 
             foreach ($contacts as $contact) {
                 // Add contact to segment if not already a member
-                if (!$segment->contacts()->where('contact_id', $contact->id)->exists()) {
+                if (! $segment->contacts()->where('contact_id', $contact->id)->exists()) {
                     $segment->contacts()->attach($contact->id, [
                         'added_at' => now(),
-                        'added_by' => $this->dataImport->user_id
+                        'added_by' => $this->dataImport->user_id,
                     ]);
                 }
             }
 
             // Update segment contact count
             $segment->update([
-                'contact_count' => $segment->contacts()->count()
+                'contact_count' => $segment->contacts()->count(),
             ]);
         }
 
-        Log::info("Assigned {$contacts->count()} imported contacts to " . count($segmentIds) . " segments");
+        Log::info("Assigned {$contacts->count()} imported contacts to ".count($segmentIds).' segments');
     }
 
     /**
@@ -414,12 +417,12 @@ class ProcessDataImportJob implements ShouldQueue
      */
     public function failed(Exception $exception): void
     {
-        Log::error("ProcessDataImportJob permanently failed for import {$this->dataImport->id}: " . $exception->getMessage());
+        Log::error("ProcessDataImportJob permanently failed for import {$this->dataImport->id}: ".$exception->getMessage());
 
         $this->dataImport->update([
             'status' => 'failed',
             'error_message' => $exception->getMessage(),
-            'failed_at' => now()
+            'failed_at' => now(),
         ]);
     }
 }

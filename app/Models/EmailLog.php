@@ -27,7 +27,7 @@ class EmailLog extends Model
         'tracking_id',
         'user_agent',
         'ip_address',
-        'metadata'
+        'metadata',
     ];
 
     protected $casts = [
@@ -101,11 +101,11 @@ class EmailLog extends Model
 
     public function markAsRead($userAgent = null, $ipAddress = null)
     {
-        if (!$this->read_at) {
+        if (! $this->read_at) {
             $this->update([
                 'read_at' => now(),
                 'user_agent' => $userAgent,
-                'ip_address' => $ipAddress
+                'ip_address' => $ipAddress,
             ]);
         }
     }
@@ -113,7 +113,7 @@ class EmailLog extends Model
     // Methods
     public function markAsDelivered()
     {
-        if (!$this->delivered_at) {
+        if (! $this->delivered_at) {
             $this->update(['delivered_at' => now(), 'status' => 'delivered']);
         }
     }
@@ -124,9 +124,9 @@ class EmailLog extends Model
             'opened_at' => now(),
             'status' => 'opened',
             'user_agent' => $userAgent,
-            'ip_address' => $ipAddress
+            'ip_address' => $ipAddress,
         ]);
-        
+
         // Update campaign stats
         if ($this->campaign) {
             $this->campaign->increment('opened_count');
@@ -139,9 +139,9 @@ class EmailLog extends Model
             'clicked_at' => now(),
             'status' => 'clicked',
             'user_agent' => $userAgent,
-            'ip_address' => $ipAddress
+            'ip_address' => $ipAddress,
         ]);
-        
+
         // Update campaign stats
         if ($this->campaign) {
             $this->campaign->increment('clicked_count');
@@ -153,9 +153,9 @@ class EmailLog extends Model
         $this->update([
             'bounced_at' => now(),
             'status' => 'bounced',
-            'error_message' => $errorMessage
+            'error_message' => $errorMessage,
         ]);
-        
+
         // Update campaign stats
         if ($this->campaign) {
             $this->campaign->increment('bounced_count');
@@ -164,7 +164,7 @@ class EmailLog extends Model
 
     public function getStatusColorAttribute()
     {
-        return match($this->status) {
+        return match ($this->status) {
             'sent' => 'green',
             'delivered' => 'blue',
             'opened' => 'purple',

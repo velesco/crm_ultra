@@ -1,36 +1,37 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminController;
-use App\Http\Controllers\Admin\SystemLogController;
-use App\Http\Controllers\Admin\BackupController;
-use App\Http\Controllers\Admin\SecurityController;
-use App\Http\Controllers\Admin\ApiKeyController;
-use App\Http\Controllers\Admin\WebhookLogController;
-use App\Http\Controllers\Admin\QueueMonitorController;
-use App\Http\Controllers\UserManagementController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Admin\PerformanceController;
 use App\Http\Controllers\Admin\AnalyticsController;
-use App\Http\Controllers\Admin\RevenueController;
+use App\Http\Controllers\Admin\ApiKeyController;
+use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\ComplianceController;
-use App\Http\Controllers\CustomReportController;
-use App\Http\Controllers\ExportController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Admin\PerformanceController;
+use App\Http\Controllers\Admin\QueueMonitorController;
+use App\Http\Controllers\Admin\RevenueController;
+use App\Http\Controllers\Admin\SecurityController;
+use App\Http\Controllers\Admin\SystemLogController;
+use App\Http\Controllers\Admin\WebhookLogController;
+use App\Http\Controllers\CommunicationController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ContactSegmentController;
+use App\Http\Controllers\CustomReportController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DataImportController;
 use App\Http\Controllers\EmailCampaignController;
 use App\Http\Controllers\EmailTemplateController;
-use App\Http\Controllers\SmtpConfigController;
+use App\Http\Controllers\ExportController;
+use App\Http\Controllers\GoogleSheetsController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SmsController;
+use App\Http\Controllers\SmsProviderController;
+use App\Http\Controllers\SmtpConfigController;
+use App\Http\Controllers\SystemSettingsController;
+use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\WhatsAppController;
 use App\Http\Controllers\WhatsAppSessionController;
-use App\Http\Controllers\ContactSegmentController;
-use App\Http\Controllers\SmsProviderController;
-use App\Http\Controllers\CommunicationController;
-use App\Http\Controllers\ReportController;
-use App\Http\Controllers\DataImportController;
-use App\Http\Controllers\GoogleSheetsController;
-use App\Http\Controllers\SettingsController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -67,7 +68,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    
+
     // Dashboard API endpoints
     Route::prefix('api/dashboard')->name('dashboard.')->group(function () {
         Route::get('/stats', [DashboardController::class, 'getStats'])->name('stats');
@@ -112,7 +113,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'show' => 'email.campaigns.show',
         'edit' => 'email.campaigns.edit',
         'update' => 'email.campaigns.update',
-        'destroy' => 'email.campaigns.destroy'
+        'destroy' => 'email.campaigns.destroy',
     ]);
 
     Route::prefix('email-campaigns')->name('email.campaigns.')->group(function () {
@@ -143,7 +144,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'show' => 'email.templates.show',
         'edit' => 'email.templates.edit',
         'update' => 'email.templates.update',
-        'destroy' => 'email.templates.destroy'
+        'destroy' => 'email.templates.destroy',
     ])->parameters(['email-templates' => 'email_template']);
 
     Route::prefix('email-templates')->name('email.templates.')->group(function () {
@@ -164,7 +165,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'show' => 'smtp-configs.show',
         'edit' => 'smtp-configs.edit',
         'update' => 'smtp-configs.update',
-        'destroy' => 'smtp-configs.destroy'
+        'destroy' => 'smtp-configs.destroy',
     ]);
 
     Route::prefix('smtp-configs')->name('smtp-configs.')->group(function () {
@@ -193,7 +194,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'show' => 'sms.providers.show',
         'edit' => 'sms.providers.edit',
         'update' => 'sms.providers.update',
-        'destroy' => 'sms.providers.destroy'
+        'destroy' => 'sms.providers.destroy',
     ]);
 
     Route::prefix('sms-providers')->name('sms.providers.')->group(function () {
@@ -219,7 +220,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'show' => 'whatsapp.sessions.show',
         'edit' => 'whatsapp.sessions.edit',
         'update' => 'whatsapp.sessions.update',
-        'destroy' => 'whatsapp.sessions.destroy'
+        'destroy' => 'whatsapp.sessions.destroy',
     ]);
 
     Route::prefix('whatsapp-sessions')->name('whatsapp.sessions.')->group(function () {
@@ -341,14 +342,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('admin')->name('admin.')->middleware(['role:super_admin|admin'])->group(function () {
         // Main admin dashboard
         Route::get('/', [AdminController::class, 'index'])->name('dashboard');
-        
+
         // User Management
         Route::resource('user-management', UserManagementController::class)->names('user-management');
         Route::post('/user-management/bulk-action', [UserManagementController::class, 'bulkAction'])->name('user-management.bulk-action');
         Route::patch('/user-management/{user}/toggle-status', [UserManagementController::class, 'toggleStatus'])->name('user-management.toggle-status');
         Route::get('/user-management/{user}/activity', [UserManagementController::class, 'getActivity'])->name('user-management.activity');
         Route::get('/user-management/export/csv', [UserManagementController::class, 'export'])->name('user-management.export');
-        
+
         // System Logs Management
         Route::resource('system-logs', SystemLogController::class)->only(['index', 'show'])->names('system-logs');
         Route::post('/system-logs/clear-old', [SystemLogController::class, 'clearOld'])->name('system-logs.clear-old');
@@ -356,44 +357,44 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/system-logs/chart-data', [SystemLogController::class, 'chartData'])->name('system-logs.chart-data');
         Route::get('/system-logs/recent-activity', [SystemLogController::class, 'recentActivity'])->name('system-logs.recent-activity');
         Route::get('/system-logs/health-metrics', [SystemLogController::class, 'healthMetrics'])->name('system-logs.health-metrics');
-        
+
         // Backup Management
         Route::resource('backups', BackupController::class)->except(['edit', 'update'])->names('backups');
         Route::get('/backups/{backup}/download', [BackupController::class, 'download'])->name('backups.download');
         Route::post('/backups/{backup}/restore', [BackupController::class, 'restore'])->name('backups.restore');
         Route::post('/backups/scheduled', [BackupController::class, 'scheduled'])->name('backups.scheduled');
         Route::get('/backups/stats', [BackupController::class, 'stats'])->name('backups.stats');
-        Route::post('/backups/{backup}/validate', [BackupController::class, 'validate'])->name('backups.validate');
+        Route::post('/backups/{backup}/validate', [BackupController::class, 'validateBackup'])->name('backups.validate');
         Route::post('/backups/cleanup', [BackupController::class, 'cleanup'])->name('backups.cleanup');
         Route::post('/backups/bulk-action', [BackupController::class, 'bulkAction'])->name('backups.bulk-action');
-        
+
         // System management
         Route::get('/stats', [AdminController::class, 'getStats'])->name('stats');
         Route::get('/health', [AdminController::class, 'getHealthCheck'])->name('health');
         Route::get('/activity', [AdminController::class, 'getRecentActivity'])->name('activity');
         Route::get('/alerts', [AdminController::class, 'getSystemAlerts'])->name('alerts');
         Route::post('/alerts/dismiss', [AdminController::class, 'dismissAlert'])->name('alerts.dismiss');
-        
+
         // System actions
         Route::post('/maintenance/toggle', [AdminController::class, 'toggleMaintenance'])->name('toggle-maintenance');
         Route::post('/caches/clear', [AdminController::class, 'clearCaches'])->name('clear-caches');
         Route::post('/optimize', [AdminController::class, 'optimize'])->name('optimize');
         Route::post('/export', [AdminController::class, 'exportSystemData'])->name('export-data');
         Route::get('/system-info', [AdminController::class, 'getSystemInfo'])->name('system-info');
-        
+
         // System Settings Management
         Route::resource('settings', SystemSettingsController::class)->names('admin.settings');
         Route::post('/settings/bulk-action', [SystemSettingsController::class, 'bulkAction'])->name('settings.bulk-action');
         Route::get('/settings/export', [SystemSettingsController::class, 'export'])->name('settings.export');
         Route::post('/settings/clear-cache', [SystemSettingsController::class, 'clearCache'])->name('settings.clear-cache');
-        
+
         // API Key Management
         Route::resource('api-keys', ApiKeyController::class)->names('api-keys');
         Route::post('/api-keys/{apiKey}/regenerate', [ApiKeyController::class, 'regenerate'])->name('api-keys.regenerate');
         Route::post('/api-keys/{apiKey}/toggle-status', [ApiKeyController::class, 'toggleStatus'])->name('api-keys.toggle-status');
         Route::post('/api-keys/bulk-action', [ApiKeyController::class, 'bulkAction'])->name('api-keys.bulk-action');
         Route::get('/api-keys/export', [ApiKeyController::class, 'export'])->name('api-keys.export');
-        
+
         // Security Management
         Route::prefix('security')->name('security.')->group(function () {
             Route::get('/', [SecurityController::class, 'index'])->name('index');
@@ -406,7 +407,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/clear-old', [SecurityController::class, 'clearOldAttempts'])->name('clear-old');
             Route::get('/export', [SecurityController::class, 'export'])->name('export');
         });
-        
+
         // Webhook Logs Management
         Route::resource('webhook-logs', WebhookLogController::class)->only(['index', 'show'])->names('webhook-logs');
         Route::post('/webhook-logs/{webhookLog}/retry', [WebhookLogController::class, 'retry'])->name('webhook-logs.retry');
@@ -428,7 +429,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/queue-monitor/resume', [QueueMonitorController::class, 'resumeQueue'])->name('queue-monitor.resume');
         Route::get('/queue-monitor/export', [QueueMonitorController::class, 'export'])->name('queue-monitor.export');
         Route::get('/queue-monitor/health', [QueueMonitorController::class, 'health'])->name('queue-monitor.health');
-        
+
         // Performance Monitoring Routes
         Route::get('/performance', [PerformanceController::class, 'index'])->name('performance.index');
         Route::get('/performance/metrics', [PerformanceController::class, 'show'])->name('performance.show');
@@ -437,7 +438,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/performance/stats', [PerformanceController::class, 'getStats'])->name('performance.stats');
         Route::delete('/performance/clean', [PerformanceController::class, 'cleanOldMetrics'])->name('performance.clean');
         Route::get('/performance/export', [PerformanceController::class, 'export'])->name('performance.export');
-        
+
         // Business Intelligence & Analytics Management
         Route::prefix('analytics')->name('analytics.')->group(function () {
             Route::get('/', [AnalyticsController::class, 'index'])->name('index');
@@ -480,7 +481,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/preview', [CustomReportController::class, 'preview'])->name('preview');
             Route::post('/bulk-action', [CustomReportController::class, 'bulkAction'])->name('bulk-action');
         });
-        
+
         // Export Management
         Route::prefix('exports')->name('exports.')->group(function () {
             Route::get('/', [ExportController::class, 'index'])->name('index');
@@ -490,37 +491,37 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/{export}/edit', [ExportController::class, 'edit'])->name('edit');
             Route::put('/{export}', [ExportController::class, 'update'])->name('update');
             Route::delete('/{export}', [ExportController::class, 'destroy'])->name('destroy');
-            
+
             // Export actions
             Route::post('/{export}/start', [ExportController::class, 'start'])->name('start');
             Route::post('/{export}/cancel', [ExportController::class, 'cancel'])->name('cancel');
             Route::post('/{export}/duplicate', [ExportController::class, 'duplicate'])->name('duplicate');
             Route::get('/{export}/download', [ExportController::class, 'download'])->name('download');
             Route::get('/{export}/progress', [ExportController::class, 'progress'])->name('progress');
-            
+
             // Additional views
             Route::get('/scheduled/index', [ExportController::class, 'scheduled'])->name('scheduled');
-            
+
             // AJAX endpoints
             Route::post('/bulk-action', [ExportController::class, 'bulk'])->name('bulk');
             Route::get('/columns/{dataType}', [ExportController::class, 'columns'])->name('columns');
             Route::get('/stats/data', [ExportController::class, 'stats'])->name('stats');
         });
-        
+
         // Compliance Management (GDPR)
         Route::prefix('compliance')->name('compliance.')->group(function () {
             Route::get('/', [ComplianceController::class, 'index'])->name('index');
             Route::get('/consent-logs', [ComplianceController::class, 'consentLogs'])->name('consent-logs');
             Route::get('/data-requests', [ComplianceController::class, 'dataRequests'])->name('data-requests');
             Route::get('/retention-policies', [ComplianceController::class, 'retentionPolicies'])->name('retention-policies');
-            
+
             // Data request processing
             Route::post('/process-request/{dataRequest}', [ComplianceController::class, 'processDataRequest'])->name('process-request');
             Route::get('/download-export/{dataRequest}', [ComplianceController::class, 'downloadExport'])->name('download-export');
-            
+
             // Retention policy execution
             Route::post('/execute-retention-policy/{policy}', [ComplianceController::class, 'executeRetentionPolicy'])->name('execute-retention-policy');
-            
+
             // API endpoints
             Route::get('/audit', [ComplianceController::class, 'audit'])->name('audit');
         });
@@ -557,7 +558,7 @@ Route::get('/health', function () {
     return response()->json([
         'status' => 'ok',
         'timestamp' => now()->toISOString(),
-        'version' => config('app.version', '1.0.0')
+        'version' => config('app.version', '1.0.0'),
     ]);
 })->name('health');
 
@@ -567,6 +568,6 @@ Route::get('/horizon-test', function () {
         'horizon_installed' => class_exists('Laravel\\Horizon\\Horizon'),
         'horizon_config' => config('horizon.path'),
         'queue_connection' => config('queue.default'),
-        'redis_config' => config('database.redis.default')
+        'redis_config' => config('database.redis.default'),
     ]);
 })->name('horizon.test');

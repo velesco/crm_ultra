@@ -24,7 +24,7 @@ class SmtpConfig extends Model
         'sent_today',
         'sent_this_hour',
         'last_reset_date',
-        'created_by'
+        'created_by',
     ];
 
     protected $casts = [
@@ -35,7 +35,7 @@ class SmtpConfig extends Model
     ];
 
     protected $hidden = [
-        'password'
+        'password',
     ];
 
     // Relationships
@@ -47,7 +47,7 @@ class SmtpConfig extends Model
     // Mutators and Accessors
     public function setPasswordAttribute($value)
     {
-        if (!empty($value)) {
+        if (! empty($value)) {
             $this->attributes['password'] = encrypt($value);
         }
     }
@@ -82,18 +82,18 @@ class SmtpConfig extends Model
         return $query->where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('daily_limit')
-                  ->orWhere('sent_today', '<', 'daily_limit');
+                    ->orWhere('sent_today', '<', 'daily_limit');
             })
             ->where(function ($q) {
                 $q->whereNull('hourly_limit')
-                  ->orWhere('sent_this_hour', '<', 'hourly_limit');
+                    ->orWhere('sent_this_hour', '<', 'hourly_limit');
             });
     }
 
     // Methods
     public function canSend()
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return false;
         }
 
@@ -133,7 +133,7 @@ class SmtpConfig extends Model
         try {
             // Get decrypted password
             $password = $this->password;
-            
+
             $transport = \Swift_SmtpTransport::newInstance($this->host, $this->port, $this->encryption)
                 ->setUsername($this->username)
                 ->setPassword($password);
@@ -143,9 +143,9 @@ class SmtpConfig extends Model
 
             return true;
         } catch (\Exception $e) {
-            \Log::error('SMTP Test Connection Error: ' . $e->getMessage());
+            \Log::error('SMTP Test Connection Error: '.$e->getMessage());
+
             return false;
         }
     }
-
 }

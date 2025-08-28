@@ -25,7 +25,7 @@ class WhatsAppMessage extends Model
         'direction',
         'delivered_at',
         'read_at',
-        'metadata'
+        'metadata',
     ];
 
     protected $casts = [
@@ -71,21 +71,21 @@ class WhatsAppMessage extends Model
     // Methods
     public function markAsDelivered()
     {
-        if (!$this->delivered_at) {
+        if (! $this->delivered_at) {
             $this->update(['delivered_at' => now(), 'status' => 'delivered']);
         }
     }
 
     public function markAsRead()
     {
-        if (!$this->read_at) {
+        if (! $this->read_at) {
             $this->update(['read_at' => now(), 'status' => 'read']);
         }
     }
 
     public function getStatusColorAttribute()
     {
-        return match($this->status) {
+        return match ($this->status) {
             'sent' => 'green',
             'delivered' => 'blue',
             'read' => 'purple',

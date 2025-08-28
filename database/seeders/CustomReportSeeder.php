@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\CustomReport;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class CustomReportSeeder extends Seeder
 {
@@ -20,8 +19,9 @@ class CustomReportSeeder extends Seeder
         $manager = User::where('email', 'manager@crmultra.com')->first();
 
         // Ensure we have the users
-        if (!$superAdmin || !$admin || !$manager) {
+        if (! $superAdmin || ! $admin || ! $manager) {
             $this->command->warn('Required users not found. Please run UserSeeder first.');
+
             return;
         }
 
@@ -36,11 +36,11 @@ class CustomReportSeeder extends Seeder
                 [
                     'column' => 'status',
                     'operator' => 'equals',
-                    'value' => 'active'
-                ]
+                    'value' => 'active',
+                ],
             ],
             'sorting' => [
-                ['column' => 'created_at', 'direction' => 'desc']
+                ['column' => 'created_at', 'direction' => 'desc'],
             ],
             'visibility' => 'shared',
             'export_format' => 'both',
@@ -48,7 +48,7 @@ class CustomReportSeeder extends Seeder
                 'type' => 'bar',
                 'x_axis' => 'industry',
                 'y_axis' => 'id',
-                'title' => 'Contacts by Industry'
+                'title' => 'Contacts by Industry',
             ],
             'is_active' => true,
             'created_by' => $admin->id,
@@ -67,12 +67,12 @@ class CustomReportSeeder extends Seeder
                     'operator' => 'date_range',
                     'value' => [
                         'start' => now()->startOfMonth()->format('Y-m-d'),
-                        'end' => now()->endOfMonth()->format('Y-m-d')
-                    ]
-                ]
+                        'end' => now()->endOfMonth()->format('Y-m-d'),
+                    ],
+                ],
             ],
             'sorting' => [
-                ['column' => 'created_at', 'direction' => 'desc']
+                ['column' => 'created_at', 'direction' => 'desc'],
             ],
             'visibility' => 'public',
             'export_format' => 'table',
@@ -92,11 +92,11 @@ class CustomReportSeeder extends Seeder
                 [
                     'column' => 'status',
                     'operator' => 'in',
-                    'value' => ['sent', 'completed']
-                ]
+                    'value' => ['sent', 'completed'],
+                ],
             ],
             'sorting' => [
-                ['column' => 'sent_count', 'direction' => 'desc']
+                ['column' => 'sent_count', 'direction' => 'desc'],
             ],
             'visibility' => 'shared',
             'export_format' => 'both',
@@ -104,7 +104,7 @@ class CustomReportSeeder extends Seeder
                 'type' => 'line',
                 'x_axis' => 'created_at',
                 'y_axis' => 'opened_count',
-                'title' => 'Email Opens Over Time'
+                'title' => 'Email Opens Over Time',
             ],
             'is_active' => true,
             'created_by' => $admin->id,
@@ -121,11 +121,11 @@ class CustomReportSeeder extends Seeder
                 [
                     'column' => 'sent_count',
                     'operator' => 'greater_than',
-                    'value' => 10
-                ]
+                    'value' => 10,
+                ],
             ],
             'sorting' => [
-                ['column' => 'opened_count', 'direction' => 'asc']
+                ['column' => 'opened_count', 'direction' => 'asc'],
             ],
             'visibility' => 'private',
             'export_format' => 'table',
@@ -145,11 +145,11 @@ class CustomReportSeeder extends Seeder
                 [
                     'column' => 'status',
                     'operator' => 'equals',
-                    'value' => 'confirmed'
-                ]
+                    'value' => 'confirmed',
+                ],
             ],
             'sorting' => [
-                ['column' => 'amount', 'direction' => 'desc']
+                ['column' => 'amount', 'direction' => 'desc'],
             ],
             'grouping' => ['source'],
             'visibility' => 'private',
@@ -158,7 +158,7 @@ class CustomReportSeeder extends Seeder
                 'type' => 'pie',
                 'label_column' => 'source',
                 'value_column' => 'amount',
-                'title' => 'Revenue by Source'
+                'title' => 'Revenue by Source',
             ],
             'is_active' => true,
             'created_by' => $superAdmin->id,
@@ -178,12 +178,12 @@ class CustomReportSeeder extends Seeder
                     'operator' => 'date_range',
                     'value' => [
                         'start' => now()->subDays(30)->format('Y-m-d'),
-                        'end' => now()->format('Y-m-d')
-                    ]
-                ]
+                        'end' => now()->format('Y-m-d'),
+                    ],
+                ],
             ],
             'sorting' => [
-                ['column' => 'sent_at', 'direction' => 'desc']
+                ['column' => 'sent_at', 'direction' => 'desc'],
             ],
             'visibility' => 'shared',
             'export_format' => 'table',
@@ -203,11 +203,11 @@ class CustomReportSeeder extends Seeder
                 [
                     'column' => 'status',
                     'operator' => 'in',
-                    'value' => ['sent', 'delivered', 'read']
-                ]
+                    'value' => ['sent', 'delivered', 'read'],
+                ],
             ],
             'sorting' => [
-                ['column' => 'sent_at', 'direction' => 'desc']
+                ['column' => 'sent_at', 'direction' => 'desc'],
             ],
             'visibility' => 'shared',
             'export_format' => 'table',
@@ -227,11 +227,11 @@ class CustomReportSeeder extends Seeder
                 [
                     'column' => 'is_dynamic',
                     'operator' => 'equals',
-                    'value' => true
-                ]
+                    'value' => true,
+                ],
             ],
             'sorting' => [
-                ['column' => 'contact_count', 'direction' => 'desc']
+                ['column' => 'contact_count', 'direction' => 'desc'],
             ],
             'visibility' => 'public',
             'export_format' => 'both',
@@ -239,7 +239,7 @@ class CustomReportSeeder extends Seeder
                 'type' => 'doughnut',
                 'label_column' => 'name',
                 'value_column' => 'contact_count',
-                'title' => 'Contacts by Segment'
+                'title' => 'Contacts by Segment',
             ],
             'is_active' => true,
             'created_by' => $manager->id,
@@ -259,12 +259,12 @@ class CustomReportSeeder extends Seeder
                     'operator' => 'date_range',
                     'value' => [
                         'start' => now()->subDays(7)->format('Y-m-d'),
-                        'end' => now()->format('Y-m-d')
-                    ]
-                ]
+                        'end' => now()->format('Y-m-d'),
+                    ],
+                ],
             ],
             'sorting' => [
-                ['column' => 'sent_at', 'direction' => 'desc']
+                ['column' => 'sent_at', 'direction' => 'desc'],
             ],
             'visibility' => 'shared',
             'export_format' => 'table',
@@ -289,7 +289,7 @@ class CustomReportSeeder extends Seeder
                 'type' => 'bar',
                 'x_axis' => 'industry',
                 'y_axis' => 'id',
-                'title' => 'Contact Distribution'
+                'title' => 'Contact Distribution',
             ],
             'is_active' => true,
             'created_by' => $superAdmin->id,

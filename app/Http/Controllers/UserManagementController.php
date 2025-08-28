@@ -8,9 +8,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
-use Carbon\Carbon;
+use Spatie\Permission\Models\Role;
 
 class UserManagementController extends Controller
 {
@@ -35,8 +34,8 @@ class UserManagementController extends Controller
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%")
-                      ->orWhere('phone', 'like', "%{$search}%");
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
                 });
             }
 
@@ -47,7 +46,7 @@ class UserManagementController extends Controller
             if ($request->filled('status')) {
                 if ($request->status === 'active') {
                     $query->whereNotNull('email_verified_at')
-                          ->where('is_active', true);
+                        ->where('is_active', true);
                 } elseif ($request->status === 'inactive') {
                     $query->where('is_active', false);
                 } elseif ($request->status === 'pending') {
@@ -66,7 +65,7 @@ class UserManagementController extends Controller
             // Sorting
             $sortBy = $request->get('sort_by', 'created_at');
             $sortOrder = $request->get('sort_order', 'desc');
-            
+
             $allowedSorts = ['name', 'email', 'created_at', 'last_login_at', 'email_campaigns_count'];
             if (in_array($sortBy, $allowedSorts)) {
                 $query->orderBy($sortBy, $sortOrder);
@@ -83,8 +82,9 @@ class UserManagementController extends Controller
             return view('admin.user-management.index', compact('users', 'stats', 'roles'));
 
         } catch (\Exception $e) {
-            Log::error('User Management Index Error: ' . $e->getMessage());
-            return back()->with('error', 'Error loading users: ' . $e->getMessage());
+            Log::error('User Management Index Error: '.$e->getMessage());
+
+            return back()->with('error', 'Error loading users: '.$e->getMessage());
         }
     }
 
@@ -95,7 +95,7 @@ class UserManagementController extends Controller
     {
         $roles = Role::all();
         $permissions = Permission::all()->groupBy('category');
-        
+
         return view('admin.user-management.create', compact('roles', 'permissions'));
     }
 
@@ -118,7 +118,7 @@ class UserManagementController extends Controller
             'send_welcome_email' => ['boolean'],
             'department' => ['nullable', 'string', 'max:100'],
             'position' => ['nullable', 'string', 'max:100'],
-            'notes' => ['nullable', 'string', 'max:1000']
+            'notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
         try {
@@ -134,16 +134,16 @@ class UserManagementController extends Controller
                 'department' => $validated['department'] ?? null,
                 'position' => $validated['position'] ?? null,
                 'notes' => $validated['notes'] ?? null,
-                'created_by' => auth()->id()
+                'created_by' => auth()->id(),
             ]);
 
             // Assign roles
-            if (!empty($validated['roles'])) {
+            if (! empty($validated['roles'])) {
                 $user->assignRole($validated['roles']);
             }
 
             // Assign direct permissions
-            if (!empty($validated['permissions'])) {
+            if (! empty($validated['permissions'])) {
                 $user->givePermissionTo($validated['permissions']);
             }
 
@@ -158,7 +158,7 @@ class UserManagementController extends Controller
             Log::info('User created successfully', [
                 'user_id' => $user->id,
                 'email' => $user->email,
-                'created_by' => auth()->id()
+                'created_by' => auth()->id(),
             ]);
 
             return redirect()
@@ -167,10 +167,11 @@ class UserManagementController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error('User creation failed: ' . $e->getMessage());
+            Log::error('User creation failed: '.$e->getMessage());
+
             return back()
                 ->withInput()
-                ->with('error', 'Failed to create user: ' . $e->getMessage());
+                ->with('error', 'Failed to create user: '.$e->getMessage());
         }
     }
 
@@ -180,7 +181,7 @@ class UserManagementController extends Controller
     public function show(User $user)
     {
         $user->load(['roles', 'permissions', 'emailCampaigns', 'contactsCreated', 'contactSegments']);
-        
+
         // User activity statistics
         $stats = [
             'email_campaigns' => $user->emailCampaigns()->count(),
@@ -188,12 +189,12 @@ class UserManagementController extends Controller
             'segments_created' => $user->contactSegments()->count(),
             'last_login' => $user->last_login_at ? $user->last_login_at->diffForHumans() : 'Never',
             'account_age' => $user->created_at->diffForHumans(),
-            'total_logins' => $user->login_count ?? 0
+            'total_logins' => $user->login_count ?? 0,
         ];
 
         // Recent activity
         $recentActivity = collect();
-        
+
         // Add email campaigns
         $user->emailCampaigns()->latest()->take(5)->get()->each(function ($campaign) use ($recentActivity) {
             $recentActivity->push([
@@ -201,7 +202,7 @@ class UserManagementController extends Controller
                 'title' => "Created email campaign: {$campaign->name}",
                 'date' => $campaign->created_at,
                 'icon' => 'fas fa-envelope',
-                'color' => 'text-primary'
+                'color' => 'text-primary',
             ]);
         });
 
@@ -212,7 +213,7 @@ class UserManagementController extends Controller
                 'title' => "Created contact: {$contact->first_name} {$contact->last_name}",
                 'date' => $contact->created_at,
                 'icon' => 'fas fa-user-plus',
-                'color' => 'text-success'
+                'color' => 'text-success',
             ]);
         });
 
@@ -230,7 +231,7 @@ class UserManagementController extends Controller
         $permissions = Permission::all()->groupBy('category');
         $userRoles = $user->roles->pluck('name')->toArray();
         $userPermissions = $user->permissions->pluck('name')->toArray();
-        
+
         return view('admin.user-management.edit', compact('user', 'roles', 'permissions', 'userRoles', 'userPermissions'));
     }
 
@@ -252,7 +253,7 @@ class UserManagementController extends Controller
             'email_verified' => ['boolean'],
             'department' => ['nullable', 'string', 'max:100'],
             'position' => ['nullable', 'string', 'max:100'],
-            'notes' => ['nullable', 'string', 'max:1000']
+            'notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
         try {
@@ -266,11 +267,11 @@ class UserManagementController extends Controller
                 'department' => $validated['department'] ?? null,
                 'position' => $validated['position'] ?? null,
                 'notes' => $validated['notes'] ?? null,
-                'updated_by' => auth()->id()
+                'updated_by' => auth()->id(),
             ];
 
             // Update password if provided
-            if (!empty($validated['password'])) {
+            if (! empty($validated['password'])) {
                 $updateData['password'] = Hash::make($validated['password']);
             }
 
@@ -296,7 +297,7 @@ class UserManagementController extends Controller
             Log::info('User updated successfully', [
                 'user_id' => $user->id,
                 'email' => $user->email,
-                'updated_by' => auth()->id()
+                'updated_by' => auth()->id(),
             ]);
 
             return redirect()
@@ -305,10 +306,11 @@ class UserManagementController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error('User update failed: ' . $e->getMessage());
+            Log::error('User update failed: '.$e->getMessage());
+
             return back()
                 ->withInput()
-                ->with('error', 'Failed to update user: ' . $e->getMessage());
+                ->with('error', 'Failed to update user: '.$e->getMessage());
         }
     }
 
@@ -334,7 +336,7 @@ class UserManagementController extends Controller
             Log::info('User deletion initiated', [
                 'user_id' => $user->id,
                 'email' => $user->email,
-                'deleted_by' => auth()->id()
+                'deleted_by' => auth()->id(),
             ]);
 
             // Remove roles and permissions
@@ -352,8 +354,9 @@ class UserManagementController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error('User deletion failed: ' . $e->getMessage());
-            return back()->with('error', 'Failed to delete user: ' . $e->getMessage());
+            Log::error('User deletion failed: '.$e->getMessage());
+
+            return back()->with('error', 'Failed to delete user: '.$e->getMessage());
         }
     }
 
@@ -366,7 +369,7 @@ class UserManagementController extends Controller
             'action' => ['required', 'in:activate,deactivate,delete,assign_role,remove_role'],
             'user_ids' => ['required', 'array'],
             'user_ids.*' => ['exists:users,id'],
-            'role' => ['required_if:action,assign_role,remove_role', 'exists:roles,name']
+            'role' => ['required_if:action,assign_role,remove_role', 'exists:roles,name'],
         ]);
 
         try {
@@ -377,7 +380,7 @@ class UserManagementController extends Controller
 
             foreach ($users as $user) {
                 // Skip self and super admin for certain actions
-                if ($user->id === auth()->id() || 
+                if ($user->id === auth()->id() ||
                     ($user->hasRole('super_admin') && in_array($validated['action'], ['deactivate', 'delete']))) {
                     continue;
                 }
@@ -387,24 +390,24 @@ class UserManagementController extends Controller
                         $user->update(['is_active' => true]);
                         $successCount++;
                         break;
-                        
+
                     case 'deactivate':
                         $user->update(['is_active' => false]);
                         $successCount++;
                         break;
-                        
+
                     case 'delete':
                         $user->syncRoles([]);
                         $user->syncPermissions([]);
                         $user->delete();
                         $successCount++;
                         break;
-                        
+
                     case 'assign_role':
                         $user->assignRole($validated['role']);
                         $successCount++;
                         break;
-                        
+
                     case 'remove_role':
                         $user->removeRole($validated['role']);
                         $successCount++;
@@ -417,15 +420,16 @@ class UserManagementController extends Controller
             Log::info('Bulk user action completed', [
                 'action' => $validated['action'],
                 'affected_users' => $successCount,
-                'performed_by' => auth()->id()
+                'performed_by' => auth()->id(),
             ]);
 
             return back()->with('success', "Bulk action completed successfully! {$successCount} users affected.");
 
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error('Bulk user action failed: ' . $e->getMessage());
-            return back()->with('error', 'Bulk action failed: ' . $e->getMessage());
+            Log::error('Bulk user action failed: '.$e->getMessage());
+
+            return back()->with('error', 'Bulk action failed: '.$e->getMessage());
         }
     }
 
@@ -445,22 +449,23 @@ class UserManagementController extends Controller
                 return response()->json(['error' => 'Super admin account cannot be deactivated.'], 403);
             }
 
-            $user->update(['is_active' => !$user->is_active]);
+            $user->update(['is_active' => ! $user->is_active]);
 
             Log::info('User status toggled', [
                 'user_id' => $user->id,
                 'new_status' => $user->is_active ? 'active' : 'inactive',
-                'toggled_by' => auth()->id()
+                'toggled_by' => auth()->id(),
             ]);
 
             return response()->json([
                 'success' => true,
                 'status' => $user->is_active,
-                'message' => 'User status updated successfully!'
+                'message' => 'User status updated successfully!',
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Toggle user status failed: ' . $e->getMessage());
+            Log::error('Toggle user status failed: '.$e->getMessage());
+
             return response()->json(['error' => 'Failed to update user status.'], 500);
         }
     }
@@ -476,8 +481,8 @@ class UserManagementController extends Controller
             'inactive_users' => User::where('is_active', false)->count(),
             'pending_verification' => User::whereNull('email_verified_at')->count(),
             'new_this_month' => User::whereMonth('created_at', now()->month)
-                                   ->whereYear('created_at', now()->year)
-                                   ->count(),
+                ->whereYear('created_at', now()->year)
+                ->count(),
             'roles_distribution' => Role::withCount('users')->get(),
             'recent_registrations' => User::latest()->take(5)->get(),
         ];
@@ -510,8 +515,8 @@ class UserManagementController extends Controller
 
             $csvData = [];
             $csvData[] = [
-                'ID', 'Name', 'Email', 'Phone', 'Roles', 'Status', 
-                'Email Verified', 'Department', 'Position', 'Created At', 'Last Login'
+                'ID', 'Name', 'Email', 'Phone', 'Roles', 'Status',
+                'Email Verified', 'Department', 'Position', 'Created At', 'Last Login',
             ];
 
             foreach ($users as $user) {
@@ -526,18 +531,18 @@ class UserManagementController extends Controller
                     $user->department ?? 'N/A',
                     $user->position ?? 'N/A',
                     $user->created_at->format('Y-m-d H:i:s'),
-                    $user->last_login_at ? $user->last_login_at->format('Y-m-d H:i:s') : 'Never'
+                    $user->last_login_at ? $user->last_login_at->format('Y-m-d H:i:s') : 'Never',
                 ];
             }
 
-            $filename = 'users_export_' . now()->format('Y-m-d_H-i-s') . '.csv';
-            
+            $filename = 'users_export_'.now()->format('Y-m-d_H-i-s').'.csv';
+
             $headers = [
                 'Content-Type' => 'text/csv',
                 'Content-Disposition' => "attachment; filename=\"{$filename}\"",
             ];
 
-            $callback = function() use ($csvData) {
+            $callback = function () use ($csvData) {
                 $file = fopen('php://output', 'w');
                 foreach ($csvData as $row) {
                     fputcsv($file, $row);
@@ -548,8 +553,9 @@ class UserManagementController extends Controller
             return response()->stream($callback, 200, $headers);
 
         } catch (\Exception $e) {
-            Log::error('User export failed: ' . $e->getMessage());
-            return back()->with('error', 'Failed to export users: ' . $e->getMessage());
+            Log::error('User export failed: '.$e->getMessage());
+
+            return back()->with('error', 'Failed to export users: '.$e->getMessage());
         }
     }
 
@@ -570,7 +576,7 @@ class UserManagementController extends Controller
                     'date' => $campaign->created_at->toISOString(),
                     'formatted_date' => $campaign->created_at->diffForHumans(),
                     'icon' => 'fas fa-envelope',
-                    'color' => 'text-primary'
+                    'color' => 'text-primary',
                 ];
             }
 
@@ -583,22 +589,23 @@ class UserManagementController extends Controller
                     'date' => $contact->created_at->toISOString(),
                     'formatted_date' => $contact->created_at->diffForHumans(),
                     'icon' => 'fas fa-user-plus',
-                    'color' => 'text-success'
+                    'color' => 'text-success',
                 ];
             }
 
             // Sort by date descending
-            usort($activity, function($a, $b) {
+            usort($activity, function ($a, $b) {
                 return strtotime($b['date']) - strtotime($a['date']);
             });
 
             return response()->json([
                 'success' => true,
-                'activity' => array_slice($activity, 0, 20)
+                'activity' => array_slice($activity, 0, 20),
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Get user activity failed: ' . $e->getMessage());
+            Log::error('Get user activity failed: '.$e->getMessage());
+
             return response()->json(['error' => 'Failed to load activity.'], 500);
         }
     }

@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\DataImport;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class DataImportPolicy
 {
@@ -95,8 +94,8 @@ class DataImportPolicy
 
         // Managers can delete imports they created or from agents
         if ($user->hasRole('manager')) {
-            return $dataImport->created_by === $user->id || 
-                   !$dataImport->creator->hasRole(['admin', 'manager']);
+            return $dataImport->created_by === $user->id ||
+                   ! $dataImport->creator->hasRole(['admin', 'manager']);
         }
 
         // Users can only delete imports they created
@@ -130,7 +129,7 @@ class DataImportPolicy
         }
 
         // Must be able to update the import
-        if (!$this->update($user, $dataImport)) {
+        if (! $this->update($user, $dataImport)) {
             return false;
         }
 
@@ -149,7 +148,7 @@ class DataImportPolicy
     public function cancel(User $user, DataImport $dataImport): bool
     {
         // Can only cancel pending or processing imports
-        if (!in_array($dataImport->status, ['pending', 'processing'])) {
+        if (! in_array($dataImport->status, ['pending', 'processing'])) {
             return false;
         }
 
@@ -182,7 +181,7 @@ class DataImportPolicy
      */
     public function downloadErrors(User $user, DataImport $dataImport): bool
     {
-        return $this->view($user, $dataImport) && 
+        return $this->view($user, $dataImport) &&
                ($dataImport->status === 'completed' || $dataImport->status === 'failed');
     }
 
@@ -200,7 +199,7 @@ class DataImportPolicy
     public function viewLogs(User $user, DataImport $dataImport): bool
     {
         // Must be able to view import and have logs permission
-        if (!$this->view($user, $dataImport)) {
+        if (! $this->view($user, $dataImport)) {
             return false;
         }
 
@@ -234,7 +233,7 @@ class DataImportPolicy
      */
     public function export(User $user, DataImport $dataImport): bool
     {
-        return $this->view($user, $dataImport) && 
+        return $this->view($user, $dataImport) &&
                ($user->hasPermissionTo('export data') || $user->hasRole(['admin', 'manager']));
     }
 
