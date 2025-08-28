@@ -11,6 +11,8 @@ use App\Models\EmailCampaign;
 use App\Models\WhatsAppSession;
 use App\Models\SmsProvider;
 use App\Models\DataImport;
+use App\Models\CustomReport;
+use App\Models\ExportRequest;
 
 // Import Policies
 use App\Policies\ContactPolicy;
@@ -18,6 +20,8 @@ use App\Policies\EmailCampaignPolicy;
 use App\Policies\WhatsAppSessionPolicy;
 use App\Policies\SmsProviderPolicy;
 use App\Policies\DataImportPolicy;
+use App\Policies\CustomReportPolicy;
+use App\Policies\ExportRequestPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -32,6 +36,8 @@ class AuthServiceProvider extends ServiceProvider
         WhatsAppSession::class => WhatsAppSessionPolicy::class,
         SmsProvider::class => SmsProviderPolicy::class,
         DataImport::class => DataImportPolicy::class,
+        CustomReport::class => CustomReportPolicy::class,
+        ExportRequest::class => ExportRequestPolicy::class,
     ];
 
     /**

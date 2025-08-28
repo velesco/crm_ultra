@@ -38,12 +38,20 @@ class DatabaseSeeder extends Seeder
         $this->command->info('6️⃣ Creating system settings...');
         $this->call(SystemSettingsSeeder::class);
 
+        // Create custom reports
+        $this->command->info('7️⃣ Creating custom reports...');
+        $this->call(CustomReportSeeder::class);
+
         // Create login attempt data
-        $this->command->info('7️⃣ Creating login attempt data...');
+        $this->command->info('8️⃣ Creating login attempt data...');
         $this->call(LoginAttemptSeeder::class);
 
+        // Create performance metrics data
+        $this->command->info('9️⃣ Creating performance metrics data...');
+        $this->call(PerformanceMetricSeeder::class);
+
         // Create additional sample data using factories
-        $this->command->info('8️⃣ Creating additional sample data...');
+        $this->command->info('🔟 Creating additional sample data...');
         $this->createAdditionalSampleData();
 
         $this->command->info('✅ CRM Ultra Database Seeding Completed Successfully!');
@@ -61,7 +69,9 @@ class DatabaseSeeder extends Seeder
         $this->command->info('• ' . \App\Models\EmailTemplate::count() . ' Email Templates');
         $this->command->info('• ' . \App\Models\ContactSegment::count() . ' Contact Segments');
         $this->command->info('• ' . \App\Models\SystemSetting::count() . ' System Settings');
+        $this->command->info('• ' . \App\Models\CustomReport::count() . ' Custom Reports');
         $this->command->info('• ' . \App\Models\LoginAttempt::count() . ' Login Attempts');
+        $this->command->info('• ' . \App\Models\PerformanceMetric::count() . ' Performance Metrics');
         $this->command->info('• ' . \Spatie\Permission\Models\Role::count() . ' Roles');
         $this->command->info('• ' . \Spatie\Permission\Models\Permission::count() . ' Permissions');
     }

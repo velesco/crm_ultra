@@ -11,6 +11,10 @@ use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\PerformanceController;
 use App\Http\Controllers\Admin\AnalyticsController;
+use App\Http\Controllers\Admin\RevenueController;
+use App\Http\Controllers\Admin\ComplianceController;
+use App\Http\Controllers\CustomReportController;
+use App\Http\Controllers\ExportController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ContactController;
@@ -443,6 +447,82 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/performance', [AnalyticsController::class, 'performance'])->name('performance');
             Route::get('/realtime', [AnalyticsController::class, 'realtime'])->name('realtime');
             Route::get('/export', [AnalyticsController::class, 'export'])->name('export');
+        });
+
+        // Revenue Management & Financial Analytics
+        Route::prefix('revenue')->name('revenue.')->group(function () {
+            Route::get('/', [RevenueController::class, 'index'])->name('index');
+            Route::get('/monthly', [RevenueController::class, 'monthly'])->name('monthly');
+            Route::get('/customers', [RevenueController::class, 'customers'])->name('customers');
+            Route::get('/forecast', [RevenueController::class, 'forecast'])->name('forecast');
+            Route::get('/transactions', [RevenueController::class, 'transactions'])->name('transactions');
+            Route::get('/create', [RevenueController::class, 'create'])->name('create');
+            Route::post('/', [RevenueController::class, 'store'])->name('store');
+            Route::get('/{revenue}', [RevenueController::class, 'show'])->name('show');
+            Route::get('/{revenue}/edit', [RevenueController::class, 'edit'])->name('edit');
+            Route::put('/{revenue}', [RevenueController::class, 'update'])->name('update');
+            Route::delete('/{revenue}', [RevenueController::class, 'destroy'])->name('destroy');
+            Route::post('/{revenue}/confirm', [RevenueController::class, 'confirm'])->name('confirm');
+            Route::post('/{revenue}/refund', [RevenueController::class, 'refund'])->name('refund');
+            Route::get('/stats', [RevenueController::class, 'getStats'])->name('stats');
+            Route::get('/chart-data', [RevenueController::class, 'getChartData'])->name('chart-data');
+            Route::get('/export', [RevenueController::class, 'export'])->name('export');
+        });
+
+        // Custom Reports Management
+        Route::resource('custom-reports', CustomReportController::class)->names('custom-reports');
+        Route::prefix('custom-reports')->name('custom-reports.')->group(function () {
+            Route::post('/{customReport}/duplicate', [CustomReportController::class, 'duplicate'])->name('duplicate');
+            Route::post('/{customReport}/execute', [CustomReportController::class, 'execute'])->name('execute');
+            Route::get('/{customReport}/chart-data', [CustomReportController::class, 'chartData'])->name('chart-data');
+            Route::get('/{customReport}/export', [CustomReportController::class, 'export'])->name('export');
+            Route::get('/columns/{dataSource}', [CustomReportController::class, 'getColumns'])->name('get-columns');
+            Route::post('/preview', [CustomReportController::class, 'preview'])->name('preview');
+            Route::post('/bulk-action', [CustomReportController::class, 'bulkAction'])->name('bulk-action');
+        });
+        
+        // Export Management
+        Route::prefix('exports')->name('exports.')->group(function () {
+            Route::get('/', [ExportController::class, 'index'])->name('index');
+            Route::get('/create', [ExportController::class, 'create'])->name('create');
+            Route::post('/', [ExportController::class, 'store'])->name('store');
+            Route::get('/{export}', [ExportController::class, 'show'])->name('show');
+            Route::get('/{export}/edit', [ExportController::class, 'edit'])->name('edit');
+            Route::put('/{export}', [ExportController::class, 'update'])->name('update');
+            Route::delete('/{export}', [ExportController::class, 'destroy'])->name('destroy');
+            
+            // Export actions
+            Route::post('/{export}/start', [ExportController::class, 'start'])->name('start');
+            Route::post('/{export}/cancel', [ExportController::class, 'cancel'])->name('cancel');
+            Route::post('/{export}/duplicate', [ExportController::class, 'duplicate'])->name('duplicate');
+            Route::get('/{export}/download', [ExportController::class, 'download'])->name('download');
+            Route::get('/{export}/progress', [ExportController::class, 'progress'])->name('progress');
+            
+            // Additional views
+            Route::get('/scheduled/index', [ExportController::class, 'scheduled'])->name('scheduled');
+            
+            // AJAX endpoints
+            Route::post('/bulk-action', [ExportController::class, 'bulk'])->name('bulk');
+            Route::get('/columns/{dataType}', [ExportController::class, 'columns'])->name('columns');
+            Route::get('/stats/data', [ExportController::class, 'stats'])->name('stats');
+        });
+        
+        // Compliance Management (GDPR)
+        Route::prefix('compliance')->name('compliance.')->group(function () {
+            Route::get('/', [ComplianceController::class, 'index'])->name('index');
+            Route::get('/consent-logs', [ComplianceController::class, 'consentLogs'])->name('consent-logs');
+            Route::get('/data-requests', [ComplianceController::class, 'dataRequests'])->name('data-requests');
+            Route::get('/retention-policies', [ComplianceController::class, 'retentionPolicies'])->name('retention-policies');
+            
+            // Data request processing
+            Route::post('/process-request/{dataRequest}', [ComplianceController::class, 'processDataRequest'])->name('process-request');
+            Route::get('/download-export/{dataRequest}', [ComplianceController::class, 'downloadExport'])->name('download-export');
+            
+            // Retention policy execution
+            Route::post('/execute-retention-policy/{policy}', [ComplianceController::class, 'executeRetentionPolicy'])->name('execute-retention-policy');
+            
+            // API endpoints
+            Route::get('/audit', [ComplianceController::class, 'audit'])->name('audit');
         });
     });
 

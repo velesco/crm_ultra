@@ -205,7 +205,7 @@ class SystemSettingsSeeder extends Seeder
             [
                 'key' => 'api.allowed_origins',
                 'label' => 'Allowed Origins',
-                'value' => ['http://localhost:3000', 'http://localhost:8080'],
+                'value' => json_encode(['http://localhost:3000', 'http://localhost:8080']),
                 'type' => 'json',
                 'group' => 'api',
                 'description' => 'List of allowed origins for CORS requests',
@@ -298,10 +298,13 @@ class SystemSettingsSeeder extends Seeder
         ];
 
         foreach ($settings as $setting) {
-            SystemSetting::create(array_merge($setting, [
-                'created_by' => $userId,
-                'updated_by' => $userId,
-            ]));
+            SystemSetting::updateOrCreate(
+                ['key' => $setting['key']],
+                array_merge($setting, [
+                    'created_by' => $userId,
+                    'updated_by' => $userId,
+                ])
+            );
         }
 
         $this->command->info('Created ' . count($settings) . ' system settings');

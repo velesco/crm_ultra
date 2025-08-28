@@ -201,6 +201,58 @@
                             Performance
                         </a>
                     </li>
+
+                    <!-- Revenue Analytics -->
+                    <li x-data="{ open: {{ request()->routeIs('admin.revenue.*') ? 'true' : 'false' }} }">
+                        <button @click="open = !open" class="@if(request()->routeIs('admin.revenue.*')) bg-gray-50 text-blue-600 dark:bg-gray-800 dark:text-blue-400 @else text-gray-700 hover:text-blue-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-800 @endif group flex w-full gap-x-3 rounded-md p-2 text-left text-sm leading-6 font-semibold">
+                            <svg class="@if(request()->routeIs('admin.revenue.*')) text-blue-600 dark:text-blue-400 @else text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 @endif h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12s-1.536-.219-2.121-.659c-1.172-.879-1.172-2.303 0-3.182C10.464 7.781 11.232 7.56 12 7.56s1.536.219 2.121.659" />
+                            </svg>
+                            Revenue Analytics
+                            <svg class="ml-auto h-5 w-5 shrink-0 text-gray-400" :class="{ 'rotate-90': open }" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <div x-show="open" x-collapse>
+                            <ul class="mt-1 px-2">
+                                <li><a href="{{ route('admin.revenue.index') }}" class="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">Overview</a></li>
+                                <li><a href="{{ route('admin.revenue.transactions') }}" class="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">Transactions</a></li>
+                                <li><a href="{{ route('admin.revenue.monthly') }}" class="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">Monthly</a></li>
+                                <li><a href="{{ route('admin.revenue.customers') }}" class="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">Customers</a></li>
+                                <li><a href="{{ route('admin.revenue.forecast') }}" class="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">Forecast</a></li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <!-- Custom Reports -->
+                    <li>
+                        <a href="{{ route('admin.custom-reports.index') }}" class="@if(request()->routeIs('admin.custom-reports.*')) bg-gray-50 text-blue-600 dark:bg-gray-800 dark:text-blue-400 @else text-gray-700 hover:text-blue-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-800 @endif group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                            <svg class="@if(request()->routeIs('admin.custom-reports.*')) text-blue-600 dark:text-blue-400 @else text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 @endif h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                            </svg>
+                            Custom Reports
+                        </a>
+                    </li>
+
+                    <!-- Export Management -->
+                    <li x-data="{ open: {{ request()->routeIs('exports.*') ? 'true' : 'false' }} }">
+                        <button @click="open = !open" class="@if(request()->routeIs('exports.*')) bg-gray-50 text-blue-600 dark:bg-gray-800 dark:text-blue-400 @else text-gray-700 hover:text-blue-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-800 @endif group flex w-full gap-x-3 rounded-md p-2 text-left text-sm leading-6 font-semibold">
+                            <svg class="@if(request()->routeIs('exports.*')) text-blue-600 dark:text-blue-400 @else text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 @endif h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+                            </svg>
+                            Export Management
+                            <svg class="ml-auto h-5 w-5 shrink-0 text-gray-400" :class="{ 'rotate-90': open }" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <div x-show="open" x-collapse>
+                            <ul class="mt-1 px-2">
+                                <li><a href="{{ route('exports.index') }}" class="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">All Exports</a></li>
+                                <li><a href="{{ route('exports.create') }}" class="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">Create Export</a></li>
+                                <li><a href="{{ route('exports.scheduled') }}" class="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">Scheduled</a></li>
+                            </ul>
+                        </div>
+                    </li>
                             Webhook Logs
                         </a>
                     </li>
@@ -223,6 +275,27 @@
                             </svg>
                             Backup Management
                         </a>
+                    </li>
+
+                    <!-- Compliance Management (GDPR) -->
+                    <li x-data="{ open: {{ request()->routeIs('admin.compliance.*') ? 'true' : 'false' }} }">
+                        <button @click="open = !open" class="@if(request()->routeIs('admin.compliance.*')) bg-gray-50 text-blue-600 dark:bg-gray-800 dark:text-blue-400 @else text-gray-700 hover:text-blue-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-800 @endif group flex w-full gap-x-3 rounded-md p-2 text-left text-sm leading-6 font-semibold">
+                            <svg class="@if(request()->routeIs('admin.compliance.*')) text-blue-600 dark:text-blue-400 @else text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 @endif h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.623 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                            </svg>
+                            GDPR Compliance
+                            <svg class="ml-auto h-5 w-5 shrink-0 text-gray-400" :class="{ 'rotate-90': open }" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <div x-show="open" x-collapse>
+                            <ul class="mt-1 px-2">
+                                <li><a href="{{ route('admin.compliance.index') }}" class="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">Dashboard</a></li>
+                                <li><a href="{{ route('admin.compliance.data-requests') }}" class="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">Data Requests</a></li>
+                                <li><a href="{{ route('admin.compliance.consent-logs') }}" class="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">Consent Logs</a></li>
+                                <li><a href="{{ route('admin.compliance.retention-policies') }}" class="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">Retention Policies</a></li>
+                            </ul>
+                        </div>
                     </li>
                 </ul>
             </li>

@@ -618,7 +618,7 @@ class SettingsController extends Controller
         $storageSpace = disk_free_space(storage_path());
         $health['storage'] = [
             'status' => $storageSpace > 1000000000 ? 'healthy' : 'warning', // 1GB threshold
-            'message' => 'Free space: ' . $this->formatBytes($storageSpace)
+            'message' => 'Free space: ' . formatBytes($storageSpace)
         ];
 
         // Check queue connection
@@ -690,14 +690,4 @@ class SettingsController extends Controller
         return "otpauth://totp/{$appName}:{$email}?secret={$secret}&issuer={$appName}";
     }
 
-    private function formatBytes($size, $precision = 2)
-    {
-        if ($size > 0) {
-            $size = (int) $size;
-            $base = log($size) / log(1024);
-            $suffixes = [' bytes', ' KB', ' MB', ' GB', ' TB'];
-            return round(pow(1024, $base - floor($base)), $precision) . $suffixes[floor($base)];
-        }
-        return $size;
-    }
 }
