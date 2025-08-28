@@ -550,6 +550,342 @@ class AdminService
         }
     }
 
+    /**
+     * Optimize system
+     */
+    public function optimizeSystem(string $action): array
+    {
+        try {
+            $results = [];
+
+            switch ($action) {
+                case 'database':
+                    $results['database'] = $this->optimizeDatabase();
+                    break;
+
+                case 'storage':
+                    $results['storage'] = $this->optimizeStorage();
+                    break;
+
+                case 'cache':
+                    $results['cache'] = $this->optimizeCache();
+                    break;
+
+                case 'queue':
+                    $results['queue'] = $this->optimizeQueue();
+                    break;
+
+                case 'all':
+                    $results['database'] = $this->optimizeDatabase();
+                    $results['storage'] = $this->optimizeStorage();
+                    $results['cache'] = $this->optimizeCache();
+                    $results['queue'] = $this->optimizeQueue();
+                    break;
+            }
+
+            return $results;
+
+        } catch (Exception $e) {
+            Log::error('Failed to optimize system: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Get system alerts
+     */
+    public function getSystemAlerts(): array
+    {
+        try {
+            $alerts = [];
+
+            // Check for failed jobs
+            $failedJobs = DB::table('failed_jobs')->count();
+            if ($failedJobs > 0) {
+                $alerts[] = [
+                    'id' => 'failed_jobs',
+                    'type' => 'error',
+                    'title' => 'Failed Jobs',
+                    'message' => "$failedJobs failed jobs need attention",
+                    'action_url' => '/admin/queue',
+                    'created_at' => now()
+                ];
+            }
+
+            // Check for inactive SMTP configs
+            $inactiveSmtp = DB::table('smtp_configs')->where('is_active', false)->count();
+            if ($inactiveSmtp > 0) {
+                $alerts[] = [
+                    'id' => 'inactive_smtp',
+                    'type' => 'warning',
+                    'title' => 'Inactive SMTP Configs',
+                    'message' => "$inactiveSmtp SMTP configurations are inactive",
+                    'action_url' => '/email-configs',
+                    'created_at' => now()
+                ];
+            }
+
+            // Check for disconnected WhatsApp sessions
+            $disconnectedWhatsApp = DB::table('whats_app_sessions')->where('status', 'disconnected')->count();
+            if ($disconnectedWhatsApp > 0) {
+                $alerts[] = [
+                    'id' => 'disconnected_whatsapp',
+                    'type' => 'warning',
+                    'title' => 'Disconnected WhatsApp Sessions',
+                    'message' => "$disconnectedWhatsApp WhatsApp sessions are disconnected",
+                    'action_url' => '/whatsapp/sessions',
+                    'created_at' => now()
+                ];
+            }
+
+            // Check disk usage
+            $freeSpace = disk_free_space(storage_path());
+            $totalSpace = disk_total_space(storage_path());
+            if ($freeSpace && $totalSpace) {
+                $usagePercent = round((($totalSpace - $freeSpace) / $totalSpace) * 100, 2);
+                if ($usagePercent > 90) {
+                    $alerts[] = [
+                        'id' => 'high_disk_usage',
+                        'type' => 'error',
+                        'title' => 'High Disk Usage',
+                        'message' => "Disk usage is at $usagePercent%",
+                        'action_url' => '/admin/storage',
+                        'created_at' => now()
+                    ];
+                } elseif ($usagePercent > 80) {
+                    $alerts[] = [
+                        'id' => 'moderate_disk_usage',
+                        'type' => 'warning',
+                        'title' => 'Moderate Disk Usage',
+                        'message' => "Disk usage is at $usagePercent%",
+                        'action_url' => '/admin/storage',
+                        'created_at' => now()
+                    ];
+                }
+            }
+
+            return $alerts;
+
+        } catch (Exception $e) {
+            Log::error('Failed to get system alerts: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Dismiss alert
+     */
+    public function dismissAlert(string $alertId, int $userId): void
+    {
+        try {
+            // Store dismissed alerts in cache for 24 hours
+            $dismissedAlerts = Cache::get('dismissed_alerts_' . $userId, []);
+            $dismissedAlerts[$alertId] = now()->addDay();
+            Cache::put('dismissed_alerts_' . $userId, $dismissedAlerts, now()->addDay());
+
+            // Log the action
+            $this->logSystemAction(
+                $userId,
+                'alert_dismissed',
+                "System alert '$alertId' was dismissed",
+                ['alert_id' => $alertId]
+            );
+
+        } catch (Exception $e) {
+            Log::error('Failed to dismiss alert: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    // Private optimization methods
+
+    private function optimizeDatabase(): array
+    {
+        try {
+            $results = [];
+
+            // Clean up old system logs (keep last 30 days)
+            $deletedLogs = SystemLog::where('created_at', '<', now()->subDays(30))->delete();
+            $results['old_logs_cleaned'] = $deletedLogs;
+
+            // Clean up old failed jobs (keep last 7 days)
+            $deletedFailedJobs = DB::table('failed_jobs')
+                ->where('failed_at', '<', now()->subDays(7))
+                ->delete();
+            $results['old_failed_jobs_cleaned'] = $deletedFailedJobs;
+
+            // Optimize database tables (MySQL specific)
+            try {
+                DB::statement('OPTIMIZE TABLE contacts, users, email_campaigns, communications');
+                $results['tables_optimized'] = true;
+            } catch (Exception $e) {
+                $results['tables_optimized'] = false;
+                $results['optimize_error'] = $e->getMessage();
+            }
+
+            return $results;
+
+        } catch (Exception $e) {
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    private function optimizeStorage(): array
+    {
+        try {
+            $results = [];
+            $totalCleaned = 0;
+
+            // Clean up old log files
+            $logPath = storage_path('logs');
+            if (is_dir($logPath)) {
+                $logFiles = glob($logPath . '/*.log');
+                $oldLogFiles = array_filter($logFiles, function($file) {
+                    return filemtime($file) < strtotime('-30 days');
+                });
+                
+                foreach ($oldLogFiles as $file) {
+                    $size = filesize($file);
+                    if (unlink($file)) {
+                        $totalCleaned += $size;
+                    }
+                }
+            }
+
+            // Clean up temporary files
+            $tempPath = storage_path('app/temp');
+            if (is_dir($tempPath)) {
+                $tempFiles = glob($tempPath . '/*');
+                foreach ($tempFiles as $file) {
+                    if (is_file($file) && filemtime($file) < strtotime('-1 day')) {
+                        $size = filesize($file);
+                        if (unlink($file)) {
+                            $totalCleaned += $size;
+                        }
+                    }
+                }
+            }
+
+            $results['storage_cleaned'] = round($totalCleaned / 1024 / 1024, 2) . ' MB';
+            return $results;
+
+        } catch (Exception $e) {
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    private function optimizeCache(): array
+    {
+        try {
+            $results = [];
+
+            // Clear expired cache entries
+            Cache::flush();
+            $results['cache_cleared'] = true;
+
+            // Warm up important caches
+            $this->getSystemStats(); // This will cache the stats
+            $results['cache_warmed'] = true;
+
+            return $results;
+
+        } catch (Exception $e) {
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    private function optimizeQueue(): array
+    {
+        try {
+            $results = [];
+
+            // Get queue statistics
+            $pendingJobs = DB::table('jobs')->count();
+            $failedJobs = DB::table('failed_jobs')->count();
+
+            $results['pending_jobs'] = $pendingJobs;
+            $results['failed_jobs'] = $failedJobs;
+
+            // Clean up old failed jobs
+            $deletedJobs = DB::table('failed_jobs')
+                ->where('failed_at', '<', now()->subDays(7))
+                ->delete();
+            $results['cleaned_failed_jobs'] = $deletedJobs;
+
+            return $results;
+
+        } catch (Exception $e) {
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Get storage usage breakdown
+     */
+    public function getStorageUsage(): array
+    {
+        try {
+            return [
+                'database' => $this->getDatabaseSize(),
+                'uploads' => $this->getUploadsSize(),
+                'logs' => $this->getLogFilesSize(),
+                'cache' => $this->getCacheSize(),
+                'temp' => $this->getTempSize()
+            ];
+        } catch (Exception $e) {
+            Log::error('Failed to get storage usage: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    private function getCacheSize(): string
+    {
+        try {
+            $cachePath = storage_path('framework/cache');
+            $size = 0;
+            
+            if (is_dir($cachePath)) {
+                $iterator = new \RecursiveIteratorIterator(
+                    new \RecursiveDirectoryIterator($cachePath)
+                );
+                
+                foreach ($iterator as $file) {
+                    if ($file->isFile()) {
+                        $size += $file->getSize();
+                    }
+                }
+            }
+            
+            return round($size / 1024 / 1024, 1) . ' MB';
+        } catch (Exception $e) {
+            return '0 MB';
+        }
+    }
+
+    private function getTempSize(): string
+    {
+        try {
+            $tempPath = storage_path('app/temp');
+            $size = 0;
+            
+            if (is_dir($tempPath)) {
+                $iterator = new \RecursiveIteratorIterator(
+                    new \RecursiveDirectoryIterator($tempPath)
+                );
+                
+                foreach ($iterator as $file) {
+                    if ($file->isFile()) {
+                        $size += $file->getSize();
+                    }
+                }
+            }
+            
+            return round($size / 1024 / 1024, 1) . ' MB';
+        } catch (Exception $e) {
+            return '0 MB';
+        }
+    }
+
     private function checkExternalApisHealth(): array
     {
         // This would check external API endpoints
@@ -558,5 +894,191 @@ class AdminService
             'status' => 'healthy',
             'message' => 'External APIs responding'
         ];
+    }
+
+    /**
+     * Get system information
+     */
+    public function getSystemInfo(): array
+    {
+        try {
+            return [
+                'php' => [
+                    'version' => PHP_VERSION,
+                    'memory_limit' => ini_get('memory_limit'),
+                    'max_execution_time' => ini_get('max_execution_time'),
+                    'upload_max_filesize' => ini_get('upload_max_filesize'),
+                    'post_max_size' => ini_get('post_max_size')
+                ],
+                'laravel' => [
+                    'version' => app()->version(),
+                    'environment' => app()->environment(),
+                    'debug' => config('app.debug'),
+                    'timezone' => config('app.timezone')
+                ],
+                'database' => [
+                    'connection' => config('database.default'),
+                    'host' => config('database.connections.mysql.host'),
+                    'database' => config('database.connections.mysql.database')
+                ],
+                'cache' => [
+                    'driver' => config('cache.default'),
+                    'stores' => array_keys(config('cache.stores'))
+                ],
+                'queue' => [
+                    'connection' => config('queue.default'),
+                    'connections' => array_keys(config('queue.connections'))
+                ]
+            ];
+        } catch (Exception $e) {
+            Log::error('Failed to get system info: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Export system data
+     */
+    public function exportSystemData(string $type, string $format = 'csv', ?string $dateFrom = null, ?string $dateTo = null)
+    {
+        try {
+            $data = [];
+            $filename = $type . '_export_' . now()->format('Y-m-d_H-i-s') . '.' . $format;
+
+            // Apply date filters if provided
+            $dateQuery = function($query) use ($dateFrom, $dateTo) {
+                if ($dateFrom) {
+                    $query->where('created_at', '>=', $dateFrom);
+                }
+                if ($dateTo) {
+                    $query->where('created_at', '<=', $dateTo);
+                }
+                return $query;
+            };
+
+            switch ($type) {
+                case 'users':
+                    $data = User::with('roles')
+                        ->when($dateFrom || $dateTo, $dateQuery)
+                        ->get()
+                        ->map(function ($user) {
+                            return [
+                                'id' => $user->id,
+                                'name' => $user->name,
+                                'email' => $user->email,
+                                'roles' => $user->roles->pluck('name')->implode(', '),
+                                'created_at' => $user->created_at,
+                                'email_verified_at' => $user->email_verified_at
+                            ];
+                        });
+                    break;
+
+                case 'contacts':
+                    $data = Contact::when($dateFrom || $dateTo, $dateQuery)
+                        ->get()
+                        ->map(function ($contact) {
+                            return [
+                                'id' => $contact->id,
+                                'first_name' => $contact->first_name,
+                                'last_name' => $contact->last_name,
+                                'email' => $contact->email,
+                                'phone' => $contact->phone,
+                                'company' => $contact->company,
+                                'status' => $contact->status,
+                                'created_at' => $contact->created_at
+                            ];
+                        });
+                    break;
+
+                case 'campaigns':
+                    $data = EmailCampaign::with('user')
+                        ->when($dateFrom || $dateTo, $dateQuery)
+                        ->get()
+                        ->map(function ($campaign) {
+                            return [
+                                'id' => $campaign->id,
+                                'name' => $campaign->name,
+                                'subject' => $campaign->subject,
+                                'status' => $campaign->status,
+                                'recipients_count' => $campaign->recipients_count,
+                                'sent_count' => $campaign->sent_count,
+                                'opened_count' => $campaign->opened_count,
+                                'clicked_count' => $campaign->clicked_count,
+                                'created_by' => $campaign->user->name ?? 'Unknown',
+                                'created_at' => $campaign->created_at,
+                                'sent_at' => $campaign->sent_at
+                            ];
+                        });
+                    break;
+
+                case 'messages':
+                    $data = Communication::when($dateFrom || $dateTo, $dateQuery)
+                        ->get()
+                        ->map(function ($communication) {
+                            return [
+                                'id' => $communication->id,
+                                'type' => $communication->type,
+                                'from' => $communication->from,
+                                'to' => $communication->to,
+                                'subject' => $communication->subject,
+                                'status' => $communication->status,
+                                'created_at' => $communication->created_at
+                            ];
+                        });
+                    break;
+
+                case 'all':
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Full system export is not supported via web interface. Please use command line.'
+                    ], 400);
+            }
+
+            // Generate file based on format
+            return $this->generateExportFile($data, $filename, $format);
+
+        } catch (Exception $e) {
+            Log::error('Failed to export system data: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Generate export file
+     */
+    private function generateExportFile($data, string $filename, string $format)
+    {
+        $filePath = storage_path('app/exports/' . $filename);
+        
+        // Create exports directory if it doesn't exist
+        if (!file_exists(dirname($filePath))) {
+            mkdir(dirname($filePath), 0755, true);
+        }
+
+        switch ($format) {
+            case 'csv':
+                $handle = fopen($filePath, 'w');
+                if (!empty($data)) {
+                    // Write header
+                    fputcsv($handle, array_keys($data[0]));
+                    // Write data
+                    foreach ($data as $row) {
+                        fputcsv($handle, $row);
+                    }
+                }
+                fclose($handle);
+                break;
+
+            case 'json':
+                file_put_contents($filePath, json_encode($data, JSON_PRETTY_PRINT));
+                break;
+
+            case 'xlsx':
+                // For Excel export, you'd typically use PhpSpreadsheet
+                // For now, fall back to CSV
+                return $this->generateExportFile($data, str_replace('.xlsx', '.csv', $filename), 'csv');
+        }
+
+        return response()->download($filePath)->deleteFileAfterSend(true);
     }
 }

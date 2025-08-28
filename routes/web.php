@@ -1,7 +1,16 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\SystemLogController;
+use App\Http\Controllers\Admin\BackupController;
+use App\Http\Controllers\Admin\SecurityController;
+use App\Http\Controllers\Admin\ApiKeyController;
+use App\Http\Controllers\Admin\WebhookLogController;
+use App\Http\Controllers\Admin\QueueMonitorController;
+use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\PerformanceController;
+use App\Http\Controllers\Admin\AnalyticsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ContactController;
@@ -282,7 +291,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Profile
-
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/edit', [ProfileController::class, 'edit'])->name('edit');
     });
@@ -330,6 +338,31 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Main admin dashboard
         Route::get('/', [AdminController::class, 'index'])->name('dashboard');
         
+        // User Management
+        Route::resource('user-management', UserManagementController::class)->names('user-management');
+        Route::post('/user-management/bulk-action', [UserManagementController::class, 'bulkAction'])->name('user-management.bulk-action');
+        Route::patch('/user-management/{user}/toggle-status', [UserManagementController::class, 'toggleStatus'])->name('user-management.toggle-status');
+        Route::get('/user-management/{user}/activity', [UserManagementController::class, 'getActivity'])->name('user-management.activity');
+        Route::get('/user-management/export/csv', [UserManagementController::class, 'export'])->name('user-management.export');
+        
+        // System Logs Management
+        Route::resource('system-logs', SystemLogController::class)->only(['index', 'show'])->names('system-logs');
+        Route::post('/system-logs/clear-old', [SystemLogController::class, 'clearOld'])->name('system-logs.clear-old');
+        Route::get('/system-logs/export', [SystemLogController::class, 'export'])->name('system-logs.export');
+        Route::get('/system-logs/chart-data', [SystemLogController::class, 'chartData'])->name('system-logs.chart-data');
+        Route::get('/system-logs/recent-activity', [SystemLogController::class, 'recentActivity'])->name('system-logs.recent-activity');
+        Route::get('/system-logs/health-metrics', [SystemLogController::class, 'healthMetrics'])->name('system-logs.health-metrics');
+        
+        // Backup Management
+        Route::resource('backups', BackupController::class)->except(['edit', 'update'])->names('backups');
+        Route::get('/backups/{backup}/download', [BackupController::class, 'download'])->name('backups.download');
+        Route::post('/backups/{backup}/restore', [BackupController::class, 'restore'])->name('backups.restore');
+        Route::post('/backups/scheduled', [BackupController::class, 'scheduled'])->name('backups.scheduled');
+        Route::get('/backups/stats', [BackupController::class, 'stats'])->name('backups.stats');
+        Route::post('/backups/{backup}/validate', [BackupController::class, 'validate'])->name('backups.validate');
+        Route::post('/backups/cleanup', [BackupController::class, 'cleanup'])->name('backups.cleanup');
+        Route::post('/backups/bulk-action', [BackupController::class, 'bulkAction'])->name('backups.bulk-action');
+        
         // System management
         Route::get('/stats', [AdminController::class, 'getStats'])->name('stats');
         Route::get('/health', [AdminController::class, 'getHealthCheck'])->name('health');
@@ -343,6 +376,74 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/optimize', [AdminController::class, 'optimize'])->name('optimize');
         Route::post('/export', [AdminController::class, 'exportSystemData'])->name('export-data');
         Route::get('/system-info', [AdminController::class, 'getSystemInfo'])->name('system-info');
+        
+        // System Settings Management
+        Route::resource('settings', SystemSettingsController::class)->names('admin.settings');
+        Route::post('/settings/bulk-action', [SystemSettingsController::class, 'bulkAction'])->name('settings.bulk-action');
+        Route::get('/settings/export', [SystemSettingsController::class, 'export'])->name('settings.export');
+        Route::post('/settings/clear-cache', [SystemSettingsController::class, 'clearCache'])->name('settings.clear-cache');
+        
+        // API Key Management
+        Route::resource('api-keys', ApiKeyController::class)->names('api-keys');
+        Route::post('/api-keys/{apiKey}/regenerate', [ApiKeyController::class, 'regenerate'])->name('api-keys.regenerate');
+        Route::post('/api-keys/{apiKey}/toggle-status', [ApiKeyController::class, 'toggleStatus'])->name('api-keys.toggle-status');
+        Route::post('/api-keys/bulk-action', [ApiKeyController::class, 'bulkAction'])->name('api-keys.bulk-action');
+        Route::get('/api-keys/export', [ApiKeyController::class, 'export'])->name('api-keys.export');
+        
+        // Security Management
+        Route::prefix('security')->name('security.')->group(function () {
+            Route::get('/', [SecurityController::class, 'index'])->name('index');
+            Route::get('/login-attempts', [SecurityController::class, 'loginAttempts'])->name('login-attempts');
+            Route::post('/block-ip', [SecurityController::class, 'blockIp'])->name('block-ip');
+            Route::post('/unblock-ip', [SecurityController::class, 'unblockIp'])->name('unblock-ip');
+            Route::post('/block-user', [SecurityController::class, 'blockUser'])->name('block-user');
+            Route::post('/unblock-user', [SecurityController::class, 'unblockUser'])->name('unblock-user');
+            Route::get('/chart-data', [SecurityController::class, 'chartData'])->name('chart-data');
+            Route::post('/clear-old', [SecurityController::class, 'clearOldAttempts'])->name('clear-old');
+            Route::get('/export', [SecurityController::class, 'export'])->name('export');
+        });
+        
+        // Webhook Logs Management
+        Route::resource('webhook-logs', WebhookLogController::class)->only(['index', 'show'])->names('webhook-logs');
+        Route::post('/webhook-logs/{webhookLog}/retry', [WebhookLogController::class, 'retry'])->name('webhook-logs.retry');
+        Route::post('/webhook-logs/bulk-retry', [WebhookLogController::class, 'bulkRetry'])->name('webhook-logs.bulk-retry');
+        Route::post('/webhook-logs/clear-old', [WebhookLogController::class, 'clearOld'])->name('webhook-logs.clear-old');
+        Route::get('/webhook-logs/export', [WebhookLogController::class, 'export'])->name('webhook-logs.export');
+        Route::get('/webhook-logs/chart-data', [WebhookLogController::class, 'chartData'])->name('webhook-logs.chart-data');
+        Route::get('/webhook-logs/health-metrics', [WebhookLogController::class, 'healthMetrics'])->name('webhook-logs.health-metrics');
+        Route::get('/webhook-logs/recent-activity', [WebhookLogController::class, 'recentActivity'])->name('webhook-logs.recent-activity');
+
+        // Queue Monitor Routes
+        Route::get('/queue-monitor', [QueueMonitorController::class, 'index'])->name('queue-monitor.index');
+        Route::get('/queue-monitor/{id}', [QueueMonitorController::class, 'show'])->name('queue-monitor.show');
+        Route::post('/queue-monitor/retry/{id}', [QueueMonitorController::class, 'retryJob'])->name('queue-monitor.retry');
+        Route::delete('/queue-monitor/delete/{id}', [QueueMonitorController::class, 'deleteJob'])->name('queue-monitor.delete');
+        Route::post('/queue-monitor/retry-all', [QueueMonitorController::class, 'retryAllFailed'])->name('queue-monitor.retry-all');
+        Route::post('/queue-monitor/clear-all', [QueueMonitorController::class, 'clearAllFailed'])->name('queue-monitor.clear-all');
+        Route::post('/queue-monitor/pause', [QueueMonitorController::class, 'pauseQueue'])->name('queue-monitor.pause');
+        Route::post('/queue-monitor/resume', [QueueMonitorController::class, 'resumeQueue'])->name('queue-monitor.resume');
+        Route::get('/queue-monitor/export', [QueueMonitorController::class, 'export'])->name('queue-monitor.export');
+        Route::get('/queue-monitor/health', [QueueMonitorController::class, 'health'])->name('queue-monitor.health');
+        
+        // Performance Monitoring Routes
+        Route::get('/performance', [PerformanceController::class, 'index'])->name('performance.index');
+        Route::get('/performance/metrics', [PerformanceController::class, 'show'])->name('performance.show');
+        Route::get('/performance/system-metrics', [PerformanceController::class, 'getSystemMetrics'])->name('performance.system-metrics');
+        Route::get('/performance/chart-data', [PerformanceController::class, 'getChartData'])->name('performance.chart-data');
+        Route::get('/performance/stats', [PerformanceController::class, 'getStats'])->name('performance.stats');
+        Route::delete('/performance/clean', [PerformanceController::class, 'cleanOldMetrics'])->name('performance.clean');
+        Route::get('/performance/export', [PerformanceController::class, 'export'])->name('performance.export');
+        
+        // Business Intelligence & Analytics Management
+        Route::prefix('analytics')->name('analytics.')->group(function () {
+            Route::get('/', [AnalyticsController::class, 'index'])->name('index');
+            Route::get('/revenue', [AnalyticsController::class, 'revenue'])->name('revenue');
+            Route::get('/campaigns', [AnalyticsController::class, 'campaigns'])->name('campaigns');
+            Route::get('/contacts', [AnalyticsController::class, 'contacts'])->name('contacts');
+            Route::get('/performance', [AnalyticsController::class, 'performance'])->name('performance');
+            Route::get('/realtime', [AnalyticsController::class, 'realtime'])->name('realtime');
+            Route::get('/export', [AnalyticsController::class, 'export'])->name('export');
+        });
     });
 
     // API Routes for AJAX requests

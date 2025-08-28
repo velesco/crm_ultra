@@ -29,7 +29,13 @@ class User extends Authenticatable
         'language',
         'is_active',
         'last_login_at',
-        'settings'
+        'settings',
+        'department',
+        'position',
+        'notes',
+        'login_count',
+        'created_by',
+        'updated_by'
     ];
 
     /**
@@ -53,14 +59,37 @@ class User extends Authenticatable
         'is_active' => 'boolean',
         'last_login_at' => 'datetime',
         'settings' => 'array',
+        'login_count' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    // User Management Relationships
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updatedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function createdUsers()
+    {
+        return $this->hasMany(User::class, 'created_by');
+    }
 
     // CRM Relationships
     public function createdContacts()
     {
         return $this->hasMany(Contact::class, 'created_by');
+    }
+
+    // Alias for consistency with controller
+    public function contactsCreated()
+    {
+        return $this->createdContacts();
     }
 
     public function assignedContacts()

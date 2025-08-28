@@ -14,20 +14,25 @@ return new class extends Migration
         Schema::create('system_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
-            $table->string('action', 100)->index();
-            $table->text('description');
-            $table->json('metadata')->nullable();
-            $table->string('ip_address', 45)->nullable();
-            $table->text('user_agent')->nullable();
-            $table->enum('level', ['debug', 'info', 'warning', 'error'])->default('info')->index();
-            $table->string('category', 50)->default('system')->index();
+            $table->string('level')->index(); // info, warning, error, debug, critical
+            $table->string('category')->index(); // authentication, email, sms, whatsapp, system, etc.
+            $table->string('action'); // login, logout, send_email, create_contact, etc.
+            $table->string('message');
+            $table->text('description')->nullable();
+            $table->json('metadata')->nullable(); // Additional context data
+            $table->string('ip_address')->nullable();
+            $table->string('user_agent')->nullable();
+            $table->string('session_id')->nullable();
+            $table->string('request_id')->nullable()->index(); // For request correlation
+            $table->json('context')->nullable(); // Request context (route, parameters, etc.)
+            $table->timestamp('occurred_at')->index(); // When the event actually occurred
             $table->timestamps();
             
             // Indexes for performance
-            $table->index(['action', 'created_at']);
-            $table->index(['user_id', 'created_at']);
-            $table->index(['level', 'created_at']);
-            $table->index(['category', 'created_at']);
+            $table->index(['level', 'occurred_at']);
+            $table->index(['category', 'occurred_at']);
+            $table->index(['user_id', 'occurred_at']);
+            $table->index(['created_at']);
         });
     }
 

@@ -125,6 +125,108 @@
                     </li>
                 </ul>
             </li>
+            
+            <!-- Admin Section (only visible to super_admin and admin) -->
+            @canany(['super_admin', 'admin'])
+            <li>
+                <div class="text-xs font-semibold leading-6 text-gray-400 uppercase tracking-wider px-2 py-2">
+                    Administration
+                </div>
+                <ul role="list" class="-mx-2 space-y-1">
+                    <!-- Admin Dashboard -->
+                    <li>
+                        <a href="{{ route('admin.dashboard') }}" class="@if(request()->routeIs('admin.dashboard')) bg-gray-50 text-blue-600 dark:bg-gray-800 dark:text-blue-400 @else text-gray-700 hover:text-blue-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-800 @endif group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                            <svg class="@if(request()->routeIs('admin.dashboard')) text-blue-600 dark:text-blue-400 @else text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 @endif h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z" />
+                            </svg>
+                            Admin Dashboard
+                        </a>
+                    </li>
+
+                    <!-- User Management -->
+                    <li>
+                        <a href="{{ route('admin.user-management.index') }}" class="@if(request()->routeIs('admin.user-management.*')) bg-gray-50 text-blue-600 dark:bg-gray-800 dark:text-blue-400 @else text-gray-700 hover:text-blue-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-800 @endif group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                            <svg class="@if(request()->routeIs('admin.user-management.*')) text-blue-600 dark:text-blue-400 @else text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 @endif h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                            </svg>
+                            User Management
+                        </a>
+                    </li>
+
+                    <!-- System Logs -->
+                    <li>
+                        <a href="{{ route('admin.system-logs.index') }}" class="@if(request()->routeIs('admin.system-logs.*')) bg-gray-50 text-blue-600 dark:bg-gray-800 dark:text-blue-400 @else text-gray-700 hover:text-blue-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-800 @endif group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                            <svg class="@if(request()->routeIs('admin.system-logs.*')) text-blue-600 dark:text-blue-400 @else text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 @endif h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h6M9 18h6M20.25 10.5V21a3.75 3.75 0 01-3.75 3.75h-9a3.75 3.75 0 01-3.75-3.75V10.5m17.25-3V5.25c0-1.242-1.007-2.25-2.25-2.25H3c-1.243 0-2.25 1.008-2.25 2.25V7.5" />
+                            </svg>
+                            System Logs
+                        </a>
+                    </li>
+
+                    <!-- Security Management -->
+                    <li>
+                        <a href="{{ route('admin.security.index') }}" class="@if(request()->routeIs('admin.security.*')) bg-gray-50 text-blue-600 dark:bg-gray-800 dark:text-blue-400 @else text-gray-700 hover:text-blue-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-800 @endif group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                            <svg class="@if(request()->routeIs('admin.security.*')) text-blue-600 dark:text-blue-400 @else text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 @endif h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.623 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                            </svg>
+                            Security
+                        </a>
+                    </li>
+
+                    <!-- Webhook Logs Management -->
+                    <li>
+                        <a href="{{ route('admin.webhook-logs.index') }}" class="@if(request()->routeIs('admin.webhook-logs.*')) bg-gray-50 text-blue-600 dark:bg-gray-800 dark:text-blue-400 @else text-gray-700 hover:text-blue-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-800 @endif group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                            <svg class="@if(request()->routeIs('admin.webhook-logs.*')) text-blue-600 dark:text-blue-400 @else text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 @endif h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-2.25-1.313L16.5 7.5l2.25 1.313L21 7.5zM14.25 7.5l-2.25-1.313L9.75 7.5l2.25 1.313L14.25 7.5zM10.5 9.75L8.25 8.437 6 9.75l2.25 1.313L10.5 9.75z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 20.25h12A2.25 2.25 0 0020.25 18v-2.625c0-.621-.504-1.125-1.125-1.125H4.875c-.621 0-1.125.504-1.125 1.125V18a2.25 2.25 0 002.25 2.25z" />
+                            </svg>
+
+                    <!-- Queue Monitor -->
+                    <li>
+                        <a href="{{ route('admin.queue-monitor.index') }}" class="@if(request()->routeIs('admin.queue-monitor.*')) bg-gray-50 text-blue-600 dark:bg-gray-800 dark:text-blue-400 @else text-gray-700 hover:text-blue-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-800 @endif group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                            <svg class="@if(request()->routeIs('admin.queue-monitor.*')) text-blue-600 dark:text-blue-400 @else text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 @endif h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
+                            </svg>
+                            Queue Monitor
+                        </a>
+                    </li>
+
+                    <!-- Performance Monitor -->
+                    <li>
+                        <a href="{{ route('admin.performance.index') }}" class="@if(request()->routeIs('admin.performance.*')) bg-gray-50 text-blue-600 dark:bg-gray-800 dark:text-blue-400 @else text-gray-700 hover:text-blue-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-800 @endif group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                            <svg class="@if(request()->routeIs('admin.performance.*')) text-blue-600 dark:text-blue-400 @else text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 @endif h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l-1-3m1 3l-1-3m-9 3h2.25m0 0H6m2.25 0l1-3m-2.25 0l1 3" />
+                            </svg>
+                            Performance
+                        </a>
+                    </li>
+                            Webhook Logs
+                        </a>
+                    </li>
+
+                    <!-- Backup Management -->
+                    <li>
+                        <a href="{{ route('admin.backups.index') }}" class="@if(request()->routeIs('admin.backups.*')) bg-gray-50 text-blue-600 dark:bg-gray-800 dark:text-blue-400 @else text-gray-700 hover:text-blue-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-800 @endif group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+
+                    <!-- Queue Monitor -->
+                    <li>
+                        <a href="{{ route("admin.queue-monitor.index") }}" class="@if(request()->routeIs("admin.queue-monitor.*")) bg-gray-50 text-blue-600 dark:bg-gray-800 dark:text-blue-400 @else text-gray-700 hover:text-blue-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-gray-800 @endif group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                            <svg class="@if(request()->routeIs("admin.queue-monitor.*")) text-blue-600 dark:text-blue-400 @else text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 @endif h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
+                            </svg>
+                            Queue Monitor
+                        </a>
+                    </li>
+                            <svg class="@if(request()->routeIs('admin.backups.*')) text-blue-600 dark:text-blue-400 @else text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 @endif h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
+                            </svg>
+                            Backup Management
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            @endcanany
 
             <!-- Version info -->
             <li class="mt-auto">
