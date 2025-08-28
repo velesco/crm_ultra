@@ -3,96 +3,96 @@
 @section('title', 'API Keys Management')
 
 @section('content')
-<div class="container-fluid">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <!-- Header Section -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="fas fa-key text-primary"></i>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
+                <svg class="w-8 h-8 text-indigo-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                </svg>
                 API Keys Management
             </h1>
-            <p class="text-muted">Manage API keys for external integrations and third-party access</p>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">Manage API keys for external integrations and third-party access</p>
         </div>
-        <div class="col-md-6 text-end">
-            <a href="{{ route('admin.api-keys.create') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Create New API Key
+        <div class="mt-4 sm:mt-0 flex space-x-3">
+            <a href="{{ route('admin.api-keys.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Create New API Key
             </a>
-            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#exportModal">
-                <i class="fas fa-download"></i> Export
+            <button type="button" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium rounded-md transition-colors" onclick="openExportModal()">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Export
             </button>
         </div>
     </div>
 
     <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Total API Keys
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $statistics['total'] }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-key fa-2x text-gray-300"></i>
-                        </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white dark:bg-gray-800 border-l-4 border-indigo-500 rounded-lg shadow-sm p-6">
+            <div class="flex items-center">
+                <div class="flex-1">
+                    <div class="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide mb-1">
+                        Total API Keys
                     </div>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ $statistics['total'] }}</div>
+                </div>
+                <div class="ml-4">
+                    <svg class="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                    </svg>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Active Keys
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $statistics['active'] }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
-                        </div>
+        <div class="bg-white dark:bg-gray-800 border-l-4 border-green-500 rounded-lg shadow-sm p-6">
+            <div class="flex items-center">
+                <div class="flex-1">
+                    <div class="text-xs font-bold text-green-600 dark:text-green-400 uppercase tracking-wide mb-1">
+                        Active Keys
                     </div>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ $statistics['active'] }}</div>
+                </div>
+                <div class="ml-4">
+                    <svg class="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Expired Keys
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $statistics['expired'] }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
-                        </div>
+        <div class="bg-white dark:bg-gray-800 border-l-4 border-yellow-500 rounded-lg shadow-sm p-6">
+            <div class="flex items-center">
+                <div class="flex-1">
+                    <div class="text-xs font-bold text-yellow-600 dark:text-yellow-400 uppercase tracking-wide mb-1">
+                        Expired Keys
                     </div>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ $statistics['expired'] }}</div>
+                </div>
+                <div class="ml-4">
+                    <svg class="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Total API Calls
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ number_format($statistics['total_usage']) }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-chart-bar fa-2x text-gray-300"></i>
-                        </div>
+        <div class="bg-white dark:bg-gray-800 border-l-4 border-cyan-500 rounded-lg shadow-sm p-6">
+            <div class="flex items-center">
+                <div class="flex-1">
+                    <div class="text-xs font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-wide mb-1">
+                        Total API Calls
                     </div>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ number_format($statistics['total_usage']) }}</div>
+                </div>
+                <div class="ml-4">
+                    <svg class="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
                 </div>
             </div>
         </div>
