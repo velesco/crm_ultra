@@ -76,7 +76,7 @@ Route::prefix('admin')->name('admin.')->middleware(['role:super_admin|admin'])->
     Route::get('/system-info', [AdminController::class, 'getSystemInfo'])->name('system-info');
 
     // System Settings Management
-    Route::resource('settings', SystemSettingsController::class)->names('admin.settings');
+    Route::resource('settings', SystemSettingsController::class)->names('settings');
     Route::post('/settings/bulk-action', [SystemSettingsController::class, 'bulkAction'])->name('settings.bulk-action');
     Route::get('/settings/export', [SystemSettingsController::class, 'export'])->name('settings.export');
     Route::post('/settings/clear-cache', [SystemSettingsController::class, 'clearCache'])->name('settings.clear-cache');
