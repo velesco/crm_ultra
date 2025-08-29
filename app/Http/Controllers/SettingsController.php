@@ -57,7 +57,7 @@ class SettingsController extends Controller
     /**
      * General system settings
      */
-    public function general()
+    public function general() 
     {
         $settings = [
             'app_name' => config('app.name'),

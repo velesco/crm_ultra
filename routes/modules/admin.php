@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\SystemLogController;
 use App\Http\Controllers\Admin\WebhookLogController;
 use App\Http\Controllers\CustomReportController;
 use App\Http\Controllers\ExportController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SystemSettingsController;
 use App\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
@@ -77,6 +78,7 @@ Route::prefix('admin')->name('admin.')->middleware(['role:super_admin|admin'])->
 
     // System Settings Management
     Route::resource('settings', SystemSettingsController::class)->names('settings');
+    Route::get('settings/general', [SettingsController::class, 'general'])->name('settings.general');
     Route::post('/settings/bulk-action', [SystemSettingsController::class, 'bulkAction'])->name('settings.bulk-action');
     Route::get('/settings/export', [SystemSettingsController::class, 'export'])->name('settings.export');
     Route::post('/settings/clear-cache', [SystemSettingsController::class, 'clearCache'])->name('settings.clear-cache');
