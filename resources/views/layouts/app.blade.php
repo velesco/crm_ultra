@@ -147,8 +147,8 @@
                                class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->routeIs('sms.create') ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
                                 Send SMS
                             </a>
-                            <a href="{{ route('sms-providers.index') }}"
-                               class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->routeIs('sms-providers.*') ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                            <a href="{{ route('sms.providers.index') }}"
+                               class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->routeIs('sms.providers.*') ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
                                 SMS Providers
                             </a>
                         </div>
