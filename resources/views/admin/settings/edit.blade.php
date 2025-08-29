@@ -3,71 +3,128 @@
 @section('title', 'Edit System Setting')
 
 @section('content')
-<div class="container-fluid py-4">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <!-- Page Header -->
-    <div class="row align-items-center mb-4">
-        <div class="col">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-2">
-                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('admin.settings.index') }}">System Settings</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('admin.settings.index', ['group' => $systemSetting->group]) }}">{{ ucfirst($systemSetting->group) }}</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('admin.settings.show', $systemSetting) }}">{{ $systemSetting->label }}</a></li>
-                    <li class="breadcrumb-item active">Edit</li>
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <!-- Breadcrumb -->
+            <nav class="flex mb-3" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                    <li class="inline-flex items-center">
+                        <a href="{{ route('admin.dashboard') }}" class="text-gray-400 hover:text-blue-500 transition-colors duration-200">
+                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                            </svg>
+                            Admin
+                        </a>
+                    </li>
+                    <li>
+                        <div class="flex items-center">
+                            <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            <a href="{{ route('admin.settings.index') }}" class="ml-1 text-gray-400 hover:text-blue-500 md:ml-2 transition-colors duration-200">System Settings</a>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="flex items-center">
+                            <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            <a href="{{ route('admin.settings.index', ['group' => $systemSetting->group]) }}" class="ml-1 text-gray-400 hover:text-blue-500 md:ml-2 transition-colors duration-200">{{ ucfirst($systemSetting->group) }}</a>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="flex items-center">
+                            <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            <a href="{{ route('admin.settings.show', $systemSetting) }}" class="ml-1 text-gray-400 hover:text-blue-500 md:ml-2 transition-colors duration-200">{{ $systemSetting->label }}</a>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="flex items-center">
+                            <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span class="ml-1 text-gray-500 md:ml-2">Edit</span>
+                        </div>
+                    </li>
                 </ol>
             </nav>
-            <div class="d-flex align-items-center">
-                <div class="icon-shape bg-gradient-warning text-white rounded-circle me-3">
-                    <i class="fas fa-edit fa-lg"></i>
+            
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-gradient-to-r from-yellow-600 to-yellow-700 text-white rounded-full flex items-center justify-center mr-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
                 </div>
                 <div>
-                    <h1 class="h3 mb-0">Edit System Setting</h1>
-                    <p class="text-muted mb-0">{{ $systemSetting->label }}</p>
+                    <h1 class="text-3xl font-bold text-white">Edit System Setting</h1>
+                    <p class="text-gray-400">{{ $systemSetting->label }}</p>
                 </div>
             </div>
         </div>
-        <div class="col-auto">
-            <div class="btn-group" role="group">
-                <a href="{{ route('admin.settings.show', $systemSetting) }}" class="btn btn-outline-secondary">
-                    <i class="fas fa-eye me-2"></i>View Details
-                </a>
-                <a href="{{ route('admin.settings.index', ['group' => $systemSetting->group]) }}" 
-                   class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left me-2"></i>Back to Settings
-                </a>
-            </div>
+        <div class="flex items-center space-x-3">
+            <a href="{{ route('admin.settings.show', $systemSetting) }}" 
+               class="inline-flex items-center px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+                View Details
+            </a>
+            <a href="{{ route('admin.settings.index', ['group' => $systemSetting->group]) }}" 
+               class="inline-flex items-center px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Back to Settings
+            </a>
         </div>
     </div>
 
-    <div class="row justify-content-center">
-        <div class="col-xl-8 col-lg-10">
+    <div class="flex justify-center">
+        <div class="w-full max-w-4xl">
             <!-- Setting Status Alerts -->
             @if(!$systemSetting->isEditable())
-                <div class="alert alert-danger mb-4">
-                    <i class="fas fa-lock me-2"></i>
-                    <strong>Read-Only Setting:</strong> This setting cannot be edited due to system restrictions.
+                <div class="mb-6 flex items-center p-4 bg-red-900 border border-red-700 rounded-lg">
+                    <svg class="w-5 h-5 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                    <div class="text-red-200">
+                        <strong>Read-Only Setting:</strong> This setting cannot be edited due to system restrictions.
+                    </div>
                 </div>
             @endif
             
             @if($systemSetting->requires_restart)
-                <div class="alert alert-warning mb-4">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    <strong>Cache Clear Required:</strong> Changes to this setting will require clearing the application cache.
+                <div class="mb-6 flex items-center p-4 bg-yellow-900 border border-yellow-700 rounded-lg">
+                    <svg class="w-5 h-5 text-yellow-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                    <div class="text-yellow-200">
+                        <strong>Cache Clear Required:</strong> Changes to this setting will require clearing the application cache.
+                    </div>
                 </div>
             @endif
             
             @if($systemSetting->is_encrypted)
-                <div class="alert alert-info mb-4">
-                    <i class="fas fa-shield-alt me-2"></i>
-                    <strong>Encrypted Setting:</strong> The value will be automatically encrypted when saved.
+                <div class="mb-6 flex items-center p-4 bg-blue-900 border border-blue-700 rounded-lg">
+                    <svg class="w-5 h-5 text-blue-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                    <div class="text-blue-200">
+                        <strong>Encrypted Setting:</strong> The value will be automatically encrypted when saved.
+                    </div>
                 </div>
             @endif
 
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0">Setting Information</h6>
-                        <div class="text-muted small">
+            <div class="bg-gray-800 rounded-lg border border-gray-700 shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-700">
+                    <div class="flex justify-between items-center">
+                        <h6 class="text-white font-semibold">Setting Information</h6>
+                        <div class="text-gray-400 text-sm">
                             Created: {{ $systemSetting->created_at->format('M j, Y') }}
                             @if($systemSetting->createdBy)
                                 by {{ $systemSetting->createdBy->name }}
@@ -80,104 +137,104 @@
                     @csrf
                     @method('PUT')
                     
-                    <div class="card-body">
+                    <div class="p-6">
                         <!-- Basic Information -->
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="key" class="form-label">Setting Key <span class="text-danger">*</span></label>
-                                    <input type="text" 
-                                           class="form-control @error('key') is-invalid @enderror" 
-                                           id="key" 
-                                           name="key" 
-                                           value="{{ old('key', $systemSetting->key) }}"
-                                           placeholder="e.g., app.max_upload_size"
-                                           pattern="^[a-z0-9._]+$"
-                                           required>
-                                    <div class="form-text">Use lowercase letters, numbers, dots, and underscores only</div>
-                                    @error('key')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label for="key" class="block text-sm font-medium text-gray-300 mb-2">
+                                    Setting Key <span class="text-red-400">*</span>
+                                </label>
+                                <input type="text" 
+                                       class="w-full px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('key') border-red-500 @enderror" 
+                                       id="key" 
+                                       name="key" 
+                                       value="{{ old('key', $systemSetting->key) }}"
+                                       placeholder="e.g., app.max_upload_size"
+                                       pattern="^[a-z0-9._]+$"
+                                       required>
+                                <p class="mt-1 text-sm text-gray-400">Use lowercase letters, numbers, dots, and underscores only</p>
+                                @error('key')
+                                    <p class="mt-1 text-sm text-red-400">{{ $message }}</p>
+                                @enderror
                             </div>
                             
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="label" class="form-label">Display Label <span class="text-danger">*</span></label>
-                                    <input type="text" 
-                                           class="form-control @error('label') is-invalid @enderror" 
-                                           id="label" 
-                                           name="label" 
-                                           value="{{ old('label', $systemSetting->label) }}"
-                                           placeholder="e.g., Maximum Upload Size"
-                                           required>
-                                    <div class="form-text">Human-readable name for this setting</div>
-                                    @error('label')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                            <div>
+                                <label for="label" class="block text-sm font-medium text-gray-300 mb-2">
+                                    Display Label <span class="text-red-400">*</span>
+                                </label>
+                                <input type="text" 
+                                       class="w-full px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('label') border-red-500 @enderror" 
+                                       id="label" 
+                                       name="label" 
+                                       value="{{ old('label', $systemSetting->label) }}"
+                                       placeholder="e.g., Maximum Upload Size"
+                                       required>
+                                <p class="mt-1 text-sm text-gray-400">Human-readable name for this setting</p>
+                                @error('label')
+                                    <p class="mt-1 text-sm text-red-400">{{ $message }}</p>
+                                @enderror
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="group" class="form-label">Group <span class="text-danger">*</span></label>
-                                    <select class="form-select @error('group') is-invalid @enderror" 
-                                            id="group" 
-                                            name="group" 
-                                            required>
-                                        <option value="">Select a group...</option>
-                                        @foreach($groups as $key => $name)
-                                            <option value="{{ $key }}" {{ (old('group', $systemSetting->group) === $key) ? 'selected' : '' }}>
-                                                {{ $name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <div class="form-text">Category to organize this setting</div>
-                                    @error('group')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label for="group" class="block text-sm font-medium text-gray-300 mb-2">
+                                    Group <span class="text-red-400">*</span>
+                                </label>
+                                <select class="w-full px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('group') border-red-500 @enderror" 
+                                        id="group" 
+                                        name="group" 
+                                        required>
+                                    <option value="">Select a group...</option>
+                                    @foreach($groups as $key => $name)
+                                        <option value="{{ $key }}" {{ (old('group', $systemSetting->group) === $key) ? 'selected' : '' }}>
+                                            {{ $name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="mt-1 text-sm text-gray-400">Category to organize this setting</p>
+                                @error('group')
+                                    <p class="mt-1 text-sm text-red-400">{{ $message }}</p>
+                                @enderror
                             </div>
                             
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="type" class="form-label">Data Type <span class="text-danger">*</span></label>
-                                    <select class="form-select @error('type') is-invalid @enderror" 
-                                            id="type" 
-                                            name="type" 
-                                            required>
-                                        <option value="">Select data type...</option>
-                                        <option value="string" {{ old('type', $systemSetting->type) === 'string' ? 'selected' : '' }}>String</option>
-                                        <option value="integer" {{ old('type', $systemSetting->type) === 'integer' ? 'selected' : '' }}>Integer</option>
-                                        <option value="boolean" {{ old('type', $systemSetting->type) === 'boolean' ? 'selected' : '' }}>Boolean</option>
-                                        <option value="json" {{ old('type', $systemSetting->type) === 'json' ? 'selected' : '' }}>JSON</option>
-                                        <option value="text" {{ old('type', $systemSetting->type) === 'text' ? 'selected' : '' }}>Text (Long)</option>
-                                        <option value="encrypted" {{ old('type', $systemSetting->type) === 'encrypted' ? 'selected' : '' }}>Encrypted</option>
-                                    </select>
-                                    <div class="form-text">How the value should be stored and processed</div>
-                                    @error('type')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                            <div>
+                                <label for="type" class="block text-sm font-medium text-gray-300 mb-2">
+                                    Data Type <span class="text-red-400">*</span>
+                                </label>
+                                <select class="w-full px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('type') border-red-500 @enderror" 
+                                        id="type" 
+                                        name="type" 
+                                        required>
+                                    <option value="">Select data type...</option>
+                                    <option value="string" {{ old('type', $systemSetting->type) === 'string' ? 'selected' : '' }}>String</option>
+                                    <option value="integer" {{ old('type', $systemSetting->type) === 'integer' ? 'selected' : '' }}>Integer</option>
+                                    <option value="boolean" {{ old('type', $systemSetting->type) === 'boolean' ? 'selected' : '' }}>Boolean</option>
+                                    <option value="json" {{ old('type', $systemSetting->type) === 'json' ? 'selected' : '' }}>JSON</option>
+                                    <option value="text" {{ old('type', $systemSetting->type) === 'text' ? 'selected' : '' }}>Text (Long)</option>
+                                    <option value="encrypted" {{ old('type', $systemSetting->type) === 'encrypted' ? 'selected' : '' }}>Encrypted</option>
+                                </select>
+                                <p class="mt-1 text-sm text-gray-400">How the value should be stored and processed</p>
+                                @error('type')
+                                    <p class="mt-1 text-sm text-red-400">{{ $message }}</p>
+                                @enderror
                             </div>
                         </div>
 
                         <!-- Value Input -->
-                        <div class="mb-3">
-                            <label for="value" class="form-label">Value</label>
+                        <div class="mb-6">
+                            <label for="value" class="block text-sm font-medium text-gray-300 mb-2">Value</label>
                             
                             <!-- String/Integer/Encrypted input -->
                             <input type="text" 
-                                   class="form-control @error('value') is-invalid @enderror" 
+                                   class="w-full px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('value') border-red-500 @enderror" 
                                    id="value-text" 
                                    name="value" 
                                    value="{{ old('value', $systemSetting->is_encrypted ? '' : $systemSetting->value) }}"
                                    placeholder="{{ $systemSetting->is_encrypted ? 'Enter new value (leave empty to keep current)' : 'Enter setting value' }}">
                             
                             <!-- Boolean input -->
-                            <select class="form-select @error('value') is-invalid @enderror" 
+                            <select class="w-full px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('value') border-red-500 @enderror" 
                                     id="value-boolean" 
                                     name="value" 
                                     style="display: none;">
@@ -186,147 +243,146 @@
                             </select>
                             
                             <!-- Text/JSON input -->
-                            <textarea class="form-control @error('value') is-invalid @enderror" 
+                            <textarea class="w-full px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm @error('value') border-red-500 @enderror" 
                                       id="value-textarea" 
                                       name="value" 
                                       rows="4" 
                                       style="display: none;"
                                       placeholder="Enter setting value...">{{ old('value', $systemSetting->is_encrypted ? '' : ($systemSetting->type === 'json' ? json_encode($systemSetting->value, JSON_PRETTY_PRINT) : $systemSetting->value)) }}</textarea>
                             
-                            <div class="form-text" id="value-help">
+                            <p class="mt-1 text-sm text-gray-400" id="value-help">
                                 @if($systemSetting->is_encrypted)
                                     Current value is encrypted. Leave empty to keep current value, or enter new value to replace.
                                 @else
                                     The current or new value for this setting
                                 @endif
-                            </div>
+                            </p>
                             @error('value')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <p class="mt-1 text-sm text-red-400">{{ $message }}</p>
                             @enderror
                         </div>
 
                         <!-- Description -->
-                        <div class="mb-3">
-                            <label for="description" class="form-label">Description</label>
-                            <textarea class="form-control @error('description') is-invalid @enderror" 
+                        <div class="mb-6">
+                            <label for="description" class="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                            <textarea class="w-full px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('description') border-red-500 @enderror" 
                                       id="description" 
                                       name="description" 
                                       rows="3"
                                       placeholder="Describe what this setting controls...">{{ old('description', $systemSetting->description) }}</textarea>
-                            <div class="form-text">Explain what this setting does and how it affects the system</div>
+                            <p class="mt-1 text-sm text-gray-400">Explain what this setting does and how it affects the system</p>
                             @error('description')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <p class="mt-1 text-sm text-red-400">{{ $message }}</p>
                             @enderror
                         </div>
 
                         <!-- Advanced Options -->
-                        <div class="card bg-light border-0 mb-3">
-                            <div class="card-header bg-transparent border-0 pb-0">
-                                <h6 class="mb-0">
-                                    <a class="text-decoration-none" 
-                                       data-bs-toggle="collapse" 
-                                       href="#advancedOptions" 
-                                       role="button" 
-                                       aria-expanded="{{ $systemSetting->validation_rules || $systemSetting->options || $systemSetting->sort_order > 0 ? 'true' : 'false' }}">
-                                        <i class="fas fa-chevron-{{ $systemSetting->validation_rules || $systemSetting->options || $systemSetting->sort_order > 0 ? 'down' : 'right' }} me-2" id="advanced-toggle"></i>
+                        <div class="bg-gray-700 rounded-lg border border-gray-600 overflow-hidden">
+                            <div class="px-4 py-3 border-b border-gray-600">
+                                <button type="button" 
+                                        class="w-full flex items-center justify-between text-left text-white font-medium focus:outline-none hover:text-blue-400 transition-colors duration-200" 
+                                        onclick="toggleAdvanced()"
+                                        id="advanced-toggle-btn">
+                                    <span class="flex items-center">
+                                        <svg class="w-4 h-4 mr-2 transform transition-transform duration-200 {{ $systemSetting->validation_rules || $systemSetting->options || $systemSetting->sort_order > 0 ? 'rotate-90' : '' }}" id="advanced-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                        </svg>
                                         Advanced Options
-                                    </a>
-                                </h6>
+                                    </span>
+                                </button>
                             </div>
-                            <div class="collapse {{ $systemSetting->validation_rules || $systemSetting->options || $systemSetting->sort_order > 0 ? 'show' : '' }}" id="advancedOptions">
-                                <div class="card-body pt-2">
+                            <div class="{{ $systemSetting->validation_rules || $systemSetting->options || $systemSetting->sort_order > 0 ? '' : 'hidden' }}" id="advancedOptions">
+                                <div class="p-4 space-y-4">
                                     <!-- Validation Rules -->
-                                    <div class="mb-3">
-                                        <label for="validation_rules" class="form-label">Validation Rules (JSON)</label>
-                                        <textarea class="form-control @error('validation_rules') is-invalid @enderror" 
+                                    <div>
+                                        <label for="validation_rules" class="block text-sm font-medium text-gray-300 mb-2">Validation Rules (JSON)</label>
+                                        <textarea class="w-full px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm @error('validation_rules') border-red-500 @enderror" 
                                                   id="validation_rules" 
                                                   name="validation_rules" 
                                                   rows="3"
                                                   placeholder='{"required": true, "min": 1, "max": 100}'>{{ old('validation_rules', $systemSetting->validation_rules ? json_encode($systemSetting->validation_rules, JSON_PRETTY_PRINT) : '') }}</textarea>
-                                        <div class="form-text">Laravel validation rules in JSON format</div>
+                                        <p class="mt-1 text-sm text-gray-400">Laravel validation rules in JSON format</p>
                                         @error('validation_rules')
-                                            <div class="invalid-feedback">{{ $message }}</div>
+                                            <p class="mt-1 text-sm text-red-400">{{ $message }}</p>
                                         @enderror
                                     </div>
                                     
                                     <!-- Options for select/radio inputs -->
-                                    <div class="mb-3">
-                                        <label for="options" class="form-label">Options (JSON)</label>
-                                        <textarea class="form-control @error('options') is-invalid @enderror" 
+                                    <div>
+                                        <label for="options" class="block text-sm font-medium text-gray-300 mb-2">Options (JSON)</label>
+                                        <textarea class="w-full px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm @error('options') border-red-500 @enderror" 
                                                   id="options" 
                                                   name="options" 
                                                   rows="3"
                                                   placeholder='{"option1": "Label 1", "option2": "Label 2"}'>{{ old('options', $systemSetting->options ? json_encode($systemSetting->options, JSON_PRETTY_PRINT) : '') }}</textarea>
-                                        <div class="form-text">Key-value pairs for select/radio options</div>
+                                        <p class="mt-1 text-sm text-gray-400">Key-value pairs for select/radio options</p>
                                         @error('options')
-                                            <div class="invalid-feedback">{{ $message }}</div>
+                                            <p class="mt-1 text-sm text-red-400">{{ $message }}</p>
                                         @enderror
                                     </div>
                                     
                                     <!-- Sort Order -->
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="sort_order" class="form-label">Sort Order</label>
-                                                <input type="number" 
-                                                       class="form-control @error('sort_order') is-invalid @enderror" 
-                                                       id="sort_order" 
-                                                       name="sort_order" 
-                                                       value="{{ old('sort_order', $systemSetting->sort_order) }}"
-                                                       min="0">
-                                                <div class="form-text">Lower numbers appear first</div>
-                                                @error('sort_order')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label for="sort_order" class="block text-sm font-medium text-gray-300 mb-2">Sort Order</label>
+                                            <input type="number" 
+                                                   class="w-full px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('sort_order') border-red-500 @enderror" 
+                                                   id="sort_order" 
+                                                   name="sort_order" 
+                                                   value="{{ old('sort_order', $systemSetting->sort_order) }}"
+                                                   min="0">
+                                            <p class="mt-1 text-sm text-gray-400">Lower numbers appear first</p>
+                                            @error('sort_order')
+                                                <p class="mt-1 text-sm text-red-400">{{ $message }}</p>
+                                            @enderror
                                         </div>
                                     </div>
                                     
                                     <!-- Checkboxes -->
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div class="form-check mb-3">
-                                                <input class="form-check-input" 
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div class="space-y-2">
+                                            <div class="flex items-center">
+                                                <input class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-600 rounded bg-gray-700" 
                                                        type="checkbox" 
                                                        id="is_public" 
                                                        name="is_public" 
                                                        value="1" 
                                                        {{ old('is_public', $systemSetting->is_public) ? 'checked' : '' }}>
-                                                <label class="form-check-label" for="is_public">
+                                                <label for="is_public" class="ml-3 block text-sm font-medium text-gray-300">
                                                     Public Setting
                                                 </label>
-                                                <div class="form-text">Can be accessed by non-admin users</div>
                                             </div>
+                                            <p class="text-xs text-gray-400">Can be accessed by non-admin users</p>
                                         </div>
                                         
-                                        <div class="col-md-4">
-                                            <div class="form-check mb-3">
-                                                <input class="form-check-input" 
+                                        <div class="space-y-2">
+                                            <div class="flex items-center">
+                                                <input class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-600 rounded bg-gray-700" 
                                                        type="checkbox" 
                                                        id="is_encrypted" 
                                                        name="is_encrypted" 
                                                        value="1" 
                                                        {{ old('is_encrypted', $systemSetting->is_encrypted) ? 'checked' : '' }}>
-                                                <label class="form-check-label" for="is_encrypted">
+                                                <label for="is_encrypted" class="ml-3 block text-sm font-medium text-gray-300">
                                                     Encrypt Value
                                                 </label>
-                                                <div class="form-text">Store value encrypted in database</div>
                                             </div>
+                                            <p class="text-xs text-gray-400">Store value encrypted in database</p>
                                         </div>
                                         
-                                        <div class="col-md-4">
-                                            <div class="form-check mb-3">
-                                                <input class="form-check-input" 
+                                        <div class="space-y-2">
+                                            <div class="flex items-center">
+                                                <input class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-600 rounded bg-gray-700" 
                                                        type="checkbox" 
                                                        id="requires_restart" 
                                                        name="requires_restart" 
                                                        value="1" 
                                                        {{ old('requires_restart', $systemSetting->requires_restart) ? 'checked' : '' }}>
-                                                <label class="form-check-label" for="requires_restart">
+                                                <label for="requires_restart" class="ml-3 block text-sm font-medium text-gray-300">
                                                     Requires Restart
                                                 </label>
-                                                <div class="form-text">Changes require cache clear</div>
                                             </div>
+                                            <p class="text-xs text-gray-400">Changes require cache clear</p>
                                         </div>
                                     </div>
                                 </div>
@@ -334,16 +390,22 @@
                         </div>
                     </div>
                     
-                    <div class="card-footer bg-white border-0">
-                        <div class="d-flex justify-content-between">
-                            <a href="{{ route('admin.settings.show', $systemSetting) }}" class="btn btn-outline-secondary">
-                                <i class="fas fa-times me-2"></i>Cancel
+                    <div class="px-6 py-4 bg-gray-700 border-t border-gray-600">
+                        <div class="flex justify-between items-center">
+                            <a href="{{ route('admin.settings.show', $systemSetting) }}" 
+                               class="inline-flex items-center px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                                Cancel
                             </a>
-                            <div class="btn-group">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save me-2"></i>Update Setting
-                                </button>
-                            </div>
+                            <button type="submit" 
+                                    class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"></path>
+                                </svg>
+                                Update Setting
+                            </button>
                         </div>
                     </div>
                 </form>
@@ -361,7 +423,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const valueBoolean = document.getElementById('value-boolean');
     const valueTextarea = document.getElementById('value-textarea');
     const valueHelp = document.getElementById('value-help');
-    const advancedToggle = document.getElementById('advanced-toggle');
     
     // Handle data type changes
     typeSelect.addEventListener('change', function() {
@@ -423,18 +484,6 @@ document.addEventListener('DOMContentLoaded', function() {
         typeSelect.dispatchEvent(new Event('change'));
     }
     
-    // Handle advanced options toggle
-    const advancedOptionsCollapse = document.getElementById('advancedOptions');
-    advancedOptionsCollapse.addEventListener('show.bs.collapse', function() {
-        advancedToggle.classList.remove('fa-chevron-right');
-        advancedToggle.classList.add('fa-chevron-down');
-    });
-    
-    advancedOptionsCollapse.addEventListener('hide.bs.collapse', function() {
-        advancedToggle.classList.remove('fa-chevron-down');
-        advancedToggle.classList.add('fa-chevron-right');
-    });
-    
     // Validate JSON fields
     const jsonFields = ['validation_rules', 'options'];
     jsonFields.forEach(fieldName => {
@@ -444,25 +493,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (this.value.trim()) {
                     try {
                         JSON.parse(this.value);
-                        this.classList.remove('is-invalid');
-                        const feedback = this.parentNode.querySelector('.invalid-feedback[data-json]');
+                        this.classList.remove('border-red-500');
+                        const feedback = this.parentNode.querySelector('.json-error');
                         if (feedback) {
                             feedback.remove();
                         }
                     } catch (e) {
-                        this.classList.add('is-invalid');
-                        let feedback = this.parentNode.querySelector('.invalid-feedback[data-json]');
+                        this.classList.add('border-red-500');
+                        let feedback = this.parentNode.querySelector('.json-error');
                         if (!feedback) {
-                            feedback = document.createElement('div');
-                            feedback.className = 'invalid-feedback';
-                            feedback.dataset.json = 'true';
+                            feedback = document.createElement('p');
+                            feedback.className = 'mt-1 text-sm text-red-400 json-error';
                             this.parentNode.appendChild(feedback);
                         }
                         feedback.textContent = 'Invalid JSON format: ' + e.message;
                     }
                 } else {
-                    this.classList.remove('is-invalid');
-                    const feedback = this.parentNode.querySelector('.invalid-feedback[data-json]');
+                    this.classList.remove('border-red-500');
+                    const feedback = this.parentNode.querySelector('.json-error');
                     if (feedback) {
                         feedback.remove();
                     }
@@ -483,41 +531,59 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+function toggleAdvanced() {
+    const options = document.getElementById('advancedOptions');
+    const arrow = document.getElementById('advanced-arrow');
+    
+    if (options.classList.contains('hidden')) {
+        options.classList.remove('hidden');
+        arrow.classList.add('rotate-90');
+    } else {
+        options.classList.add('hidden');
+        arrow.classList.remove('rotate-90');
+    }
+}
+
+// Toast notification helper
+function showToast(message, type = 'info') {
+    const colors = {
+        'success': 'bg-green-600',
+        'error': 'bg-red-600',
+        'warning': 'bg-yellow-600',
+        'info': 'bg-blue-600'
+    };
+    
+    const toastHtml = `
+        <div class="fixed top-4 right-4 z-50 ${colors[type]} text-white px-4 py-3 rounded-lg shadow-lg animate-fade-in-down" role="alert">
+            <span>${message}</span>
+            <button type="button" class="ml-4 text-white hover:text-gray-200" onclick="this.parentElement.remove();">&times;</button>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', toastHtml);
+    
+    setTimeout(function() {
+        const toasts = document.querySelectorAll('.fixed.top-4.right-4');
+        toasts.forEach(toast => toast.remove());
+    }, 5000);
+}
 </script>
 @endpush
 
 @push('styles')
 <style>
-.icon-shape {
-    width: 48px;
-    height: 48px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translate3d(0, -100%, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
 }
-
-.form-text {
-    font-size: 0.875em;
-    color: #6c757d;
-}
-
-.card-header h6 {
-    color: #495057;
-    font-weight: 600;
-}
-
-#value-textarea {
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    font-size: 0.9em;
-}
-
-#validation_rules, #options {
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    font-size: 0.9em;
-}
-
-.collapse-toggle {
-    transition: transform 0.2s ease;
+.animate-fade-in-down {
+    animation: fadeInDown 0.5s ease-out;
 }
 </style>
 @endpush
