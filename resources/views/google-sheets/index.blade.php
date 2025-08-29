@@ -16,7 +16,7 @@
                     </p>
                 </div>
                 <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
-                    <a href="{{ route('google-sheets.create') }}" 
+                    <a href="{{ route('google.sheets.create') }}"
                        class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
                         <i class="fas fa-plus mr-2"></i>
                         New Integration
@@ -170,11 +170,11 @@
                                     </td>
                                     <td class="px-6 py-4 text-right">
                                         <div class="flex items-center justify-end space-x-2">
-                                            <a href="{{ route('google-sheets.show', $integration) }}" 
+                                            <a href="{{ route('google.sheets.show', $integration) }}"
                                                class="text-blue-600 hover:text-blue-800 dark:text-blue-400">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <a href="{{ route('google-sheets.edit', $integration) }}" 
+                                            <a href="{{ route('google.sheets.edit', $integration) }}"
                                                class="text-gray-600 hover:text-gray-800 dark:text-gray-400">
                                                 <i class="fas fa-edit"></i>
                                             </a>
@@ -192,7 +192,7 @@
                     <p class="text-gray-500 dark:text-gray-400 mb-6">
                         Get started by creating your first Google Sheets integration.
                     </p>
-                    <a href="{{ route('google-sheets.create') }}" 
+                    <a href="{{ route('google.sheets.create') }}"
                        class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg">
                         <i class="fas fa-plus mr-2"></i>
                         Create Integration
