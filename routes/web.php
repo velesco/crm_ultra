@@ -5,6 +5,7 @@ use App\Http\Controllers\ContactSegmentController;
 use App\Http\Controllers\CommunicationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DataImportController;
+use App\Http\Controllers\ExportController;
 use App\Http\Controllers\GoogleSheetsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
@@ -154,6 +155,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/billing', [SettingsController::class, 'billing'])->name('billing');
         Route::get('/support', [SettingsController::class, 'support'])->name('support');
         Route::post('/update', [SettingsController::class, 'update'])->name('update');
+    });
+
+    // Export Management (Accessible to all authenticated users)
+    Route::resource('exports', ExportController::class);
+    Route::prefix('exports')->name('exports.')->group(function () {
+        Route::post('/{export}/start', [ExportController::class, 'start'])->name('start');
+        Route::post('/{export}/cancel', [ExportController::class, 'cancel'])->name('cancel');
+        Route::post('/{export}/duplicate', [ExportController::class, 'duplicate'])->name('duplicate');
+        Route::get('/{export}/download', [ExportController::class, 'download'])->name('download');
+        Route::get('/{export}/progress', [ExportController::class, 'progress'])->name('progress');
+        Route::get('/scheduled/index', [ExportController::class, 'scheduled'])->name('scheduled');
+        Route::post('/bulk-action', [ExportController::class, 'bulk'])->name('bulk');
+        Route::get('/columns/{dataType}', [ExportController::class, 'columns'])->name('columns');
+        Route::get('/stats/data', [ExportController::class, 'stats'])->name('stats');
     });
 
     /*
