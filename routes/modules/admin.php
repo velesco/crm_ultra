@@ -176,7 +176,7 @@ Route::prefix('admin')->name('admin.')->middleware(['role:super_admin|admin'])->
     });
 
     // Export Management
-    Route::prefix('exports')->name('admin.exports.')->group(function () {
+    Route::prefix('exports')->name('exports.')->group(function () {
         Route::get('/', [ExportController::class, 'index'])->name('index');
         Route::get('/create', [ExportController::class, 'create'])->name('create');
         Route::post('/', [ExportController::class, 'store'])->name('store');
