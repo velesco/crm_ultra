@@ -1273,6 +1273,8 @@ Toate view-urile din panoul admin au fost create cu Bootstrap CSS, dar proiectul
 ✅ resources/views/admin/dashboard.blade.php - Admin dashboard (ALREADY TAILWIND)
 🔲 resources/views/admin/user-management/ (4 views) - User management
   ✅ index.blade.php - CONVERTED TO TAILWIND CSS ✅ AUGUST 29, 2025
+  ✅ create.blade.php - CONVERTED TO TAILWIND CSS ✅ AUGUST 29, 2025
+  ✅ show.blade.php - CONVERTED TO TAILWIND CSS ✅ AUGUST 29, 2025
 🔲 resources/views/admin/system-logs/ (3 views) - System logs
 🔲 resources/views/admin/backups/ (4 views) - Backup management  
 🔲 resources/views/admin/settings/ (4 views) - System settings

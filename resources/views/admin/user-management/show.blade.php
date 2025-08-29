@@ -3,187 +3,272 @@
 @section('title', 'User Details - ' . $user->name)
 
 @section('content')
-<div class="container-fluid">
+<div class="max-w-7xl mx-auto">
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0 text-gray-800">User Details</h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('admin.user-management.index') }}">User Management</a></li>
-                    <li class="breadcrumb-item active">{{ $user->name }}</li>
-                </ol>
-            </nav>
-        </div>
-        <div class="d-flex gap-2">
-            <a href="{{ route('admin.user-management.edit', $user) }}" class="btn btn-warning">
-                <i class="fas fa-edit"></i> Edit User
-            </a>
-            <a href="{{ route('admin.user-management.index') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Back to List
-            </a>
+    <div class="mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+                    <svg class="w-6 h-6 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                    User Details
+                </h1>
+                <nav class="flex mt-1" aria-label="Breadcrumb">
+                    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                        <li class="inline-flex items-center">
+                            <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
+                                Admin
+                            </a>
+                        </li>
+                        <li>
+                            <div class="flex items-center">
+                                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                <a href="{{ route('admin.user-management.index') }}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 dark:text-gray-400 dark:hover:text-white">User Management</a>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="flex items-center">
+                                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2 dark:text-gray-400">{{ $user->name }}</span>
+                            </div>
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="mt-4 sm:mt-0 flex space-x-2">
+                <a href="{{ route('admin.user-management.edit', $user) }}" class="inline-flex items-center px-4 py-2 border border-yellow-600 text-yellow-600 bg-white hover:bg-yellow-50 font-medium rounded-md transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                    Edit User
+                </a>
+                <a href="{{ route('admin.user-management.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium rounded-md transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Back to List
+                </a>
+            </div>
         </div>
     </div>
 
-    <div class="row">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <!-- Left Column - User Info -->
-        <div class="col-lg-4">
+        <div class="lg:col-span-4 space-y-6">
             <!-- User Profile Card -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">Profile Information</h6>
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
-                                id="userActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-cog"></i>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Profile Information</h3>
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="inline-flex items-center p-1 border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
                         </button>
-                        <ul class="dropdown-menu" aria-labelledby="userActionsDropdown">
-                            <li><a class="dropdown-item" href="{{ route('admin.user-management.edit', $user) }}">
-                                <i class="fas fa-edit"></i> Edit User</a></li>
-                            @if($user->id !== auth()->id() && !$user->hasRole('super_admin'))
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="#" onclick="toggleUserStatus({{ $user->id }})">
-                                    <i class="fas fa-{{ $user->is_active ? 'user-times' : 'user-check' }}"></i> 
-                                    {{ $user->is_active ? 'Deactivate' : 'Activate' }} User</a></li>
-                                <li><a class="dropdown-item text-danger" href="#" onclick="deleteUser({{ $user->id }}, '{{ $user->name }}')">
-                                    <i class="fas fa-trash"></i> Delete User</a></li>
-                            @endif
-                        </ul>
+                        <div x-show="open" @click.outside="open = false" x-transition class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10">
+                            <div class="py-1">
+                                <a href="{{ route('admin.user-management.edit', $user) }}" class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    Edit User
+                                </a>
+                                @if($user->id !== auth()->id() && !$user->hasRole('super_admin'))
+                                    <div class="border-t border-gray-100 dark:border-gray-700"></div>
+                                    <a href="#" onclick="toggleUserStatus({{ $user->id }})" class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                        @if($user->is_active)
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            Deactivate User
+                                        @else
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            Activate User
+                                        @endif
+                                    </a>
+                                    <a href="#" onclick="deleteUser({{ $user->id }}, '{{ $user->name }}')" class="flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                        Delete User
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="card-body text-center">
-                    <div class="avatar-lg mb-3">
+                <div class="p-6 text-center">
+                    <div class="mb-4">
                         <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" 
-                             class="img-fluid rounded-circle" width="120" height="120">
+                             class="w-32 h-32 rounded-full object-cover mx-auto">
                     </div>
-                    <h5 class="font-weight-bold mb-2">{{ $user->name }}</h5>
-                    <p class="text-muted mb-3">{{ $user->email }}</p>
+                    <h5 class="text-xl font-bold text-gray-900 dark:text-white mb-2">{{ $user->name }}</h5>
+                    <p class="text-gray-500 dark:text-gray-400 mb-4">{{ $user->email }}</p>
                     
                     <!-- Status Badges -->
-                    <div class="mb-3">
+                    <div class="mb-4 flex justify-center space-x-2">
                         @if($user->is_active)
-                            <span class="badge bg-success">Active</span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                Active
+                            </span>
                         @else
-                            <span class="badge bg-danger">Inactive</span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                Inactive
+                            </span>
                         @endif
                         
                         @if($user->email_verified_at)
-                            <span class="badge bg-info">Verified</span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                Verified
+                            </span>
                         @else
-                            <span class="badge bg-warning">Pending Verification</span>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                Pending Verification
+                            </span>
                         @endif
                     </div>
 
                     <!-- User Details -->
-                    <div class="text-left">
+                    <div class="text-left space-y-3">
                         @if($user->phone)
-                            <div class="mb-2">
-                                <i class="fas fa-phone text-muted me-2"></i>
-                                <span>{{ $user->phone }}</span>
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                                </svg>
+                                <span class="text-sm text-gray-900 dark:text-white">{{ $user->phone }}</span>
                             </div>
                         @endif
                         
                         @if($user->department)
-                            <div class="mb-2">
-                                <i class="fas fa-building text-muted me-2"></i>
-                                <span>{{ $user->department }}</span>
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                </svg>
+                                <span class="text-sm text-gray-900 dark:text-white">{{ $user->department }}</span>
                             </div>
                         @endif
                         
                         @if($user->position)
-                            <div class="mb-2">
-                                <i class="fas fa-briefcase text-muted me-2"></i>
-                                <span>{{ $user->position }}</span>
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6"></path>
+                                </svg>
+                                <span class="text-sm text-gray-900 dark:text-white">{{ $user->position }}</span>
                             </div>
                         @endif
                         
-                        <div class="mb-2">
-                            <i class="fas fa-calendar-alt text-muted me-2"></i>
-                            <span>Joined {{ $user->created_at->format('M d, Y') }}</span>
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a4 4 0 118 0v4m-4 8a3 3 0 100-6 3 3 0 000 6zm0 0v1m0 0v-1m0-8V8a4 4 0 10-8 0v1.5m0 0V10a1 1 0 011-1h2a1 1 0 011 1v1.5m-4 0h4"></path>
+                            </svg>
+                            <span class="text-sm text-gray-900 dark:text-white">Joined {{ $user->created_at->format('M d, Y') }}</span>
                         </div>
                         
                         @if($user->last_login_at)
-                            <div class="mb-2">
-                                <i class="fas fa-clock text-muted me-2"></i>
-                                <span>Last login {{ $user->last_login_at->diffForHumans() }}</span>
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="text-sm text-gray-900 dark:text-white">Last login {{ $user->last_login_at->diffForHumans() }}</span>
                             </div>
                         @else
-                            <div class="mb-2">
-                                <i class="fas fa-clock text-muted me-2"></i>
-                                <span class="text-muted">Never logged in</span>
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="text-sm text-gray-500 dark:text-gray-400">Never logged in</span>
                             </div>
                         @endif
                     </div>
 
                     @if($user->notes)
-                        <div class="mt-3 pt-3 border-top">
-                            <h6 class="text-muted mb-2">Notes</h6>
-                            <p class="small text-left">{{ $user->notes }}</p>
+                        <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                            <h6 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Notes</h6>
+                            <p class="text-sm text-left text-gray-900 dark:text-white">{{ $user->notes }}</p>
                         </div>
                     @endif
                 </div>
             </div>
 
             <!-- Roles & Permissions Card -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Roles & Permissions</h6>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Roles & Permissions</h3>
                 </div>
-                <div class="card-body">
+                <div class="p-6">
                     <!-- Roles -->
-                    <div class="mb-3">
-                        <h6 class="text-muted mb-2">Roles</h6>
-                        @if($user->roles->count() > 0)
-                            @foreach($user->roles as $role)
-                                <span class="badge bg-primary me-1 mb-1">{{ ucfirst($role->name) }}</span>
-                            @endforeach
-                        @else
-                            <span class="badge bg-secondary">No Roles Assigned</span>
-                        @endif
+                    <div class="mb-6">
+                        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">Roles</h4>
+                        <div class="flex flex-wrap gap-2">
+                            @if($user->roles->count() > 0)
+                                @foreach($user->roles as $role)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+                                        {{ ucfirst($role->name) }}
+                                    </span>
+                                @endforeach
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                                    No Roles Assigned
+                                </span>
+                            @endif
+                        </div>
                     </div>
 
                     <!-- Direct Permissions -->
                     <div>
-                        <h6 class="text-muted mb-2">Direct Permissions</h6>
-                        @if($user->permissions->count() > 0)
-                            @foreach($user->permissions as $permission)
-                                <span class="badge bg-success me-1 mb-1">{{ $permission->name }}</span>
-                            @endforeach
-                        @else
-                            <span class="badge bg-secondary">No Direct Permissions</span>
-                        @endif
+                        <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">Direct Permissions</h4>
+                        <div class="flex flex-wrap gap-2">
+                            @if($user->permissions->count() > 0)
+                                @foreach($user->permissions as $permission)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                        {{ $permission->name }}
+                                    </span>
+                                @endforeach
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                                    No Direct Permissions
+                                </span>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Activity Statistics Card -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Activity Statistics</h6>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Activity Statistics</h3>
                 </div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-6 mb-3">
-                            <div class="h4 font-weight-bold text-primary">{{ $stats['email_campaigns'] }}</div>
-                            <div class="small text-muted">Email Campaigns</div>
+                <div class="p-6">
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div>
+                            <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{{ $stats['email_campaigns'] }}</div>
+                            <div class="text-sm text-gray-500 dark:text-gray-400">Email Campaigns</div>
                         </div>
-                        <div class="col-6 mb-3">
-                            <div class="h4 font-weight-bold text-success">{{ $stats['contacts_created'] }}</div>
-                            <div class="small text-muted">Contacts Created</div>
+                        <div>
+                            <div class="text-2xl font-bold text-green-600 dark:text-green-400">{{ $stats['contacts_created'] }}</div>
+                            <div class="text-sm text-gray-500 dark:text-gray-400">Contacts Created</div>
                         </div>
-                        <div class="col-6 mb-3">
-                            <div class="h4 font-weight-bold text-info">{{ $stats['segments_created'] }}</div>
-                            <div class="small text-muted">Segments Created</div>
+                        <div>
+                            <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ $stats['segments_created'] }}</div>
+                            <div class="text-sm text-gray-500 dark:text-gray-400">Segments Created</div>
                         </div>
-                        <div class="col-6 mb-3">
-                            <div class="h4 font-weight-bold text-warning">{{ $stats['total_logins'] }}</div>
-                            <div class="small text-muted">Total Logins</div>
+                        <div>
+                            <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{{ $stats['total_logins'] }}</div>
+                            <div class="text-sm text-gray-500 dark:text-gray-400">Total Logins</div>
                         </div>
                     </div>
                     
-                    <div class="border-top pt-3">
-                        <div class="small text-muted text-center">
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                        <div class="text-sm text-gray-500 dark:text-gray-400 text-center space-y-1">
                             <div>Account Age: {{ $stats['account_age'] }}</div>
                             <div>Last Login: {{ $stats['last_login'] }}</div>
                         </div>
@@ -193,40 +278,45 @@
         </div>
 
         <!-- Right Column - Activity Feed -->
-        <div class="col-lg-8">
+        <div class="lg:col-span-8 space-y-6">
             <!-- Recent Activity Card -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">Recent Activity</h6>
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="refreshActivity()">
-                        <i class="fas fa-sync-alt"></i> Refresh
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Recent Activity</h3>
+                    <button type="button" class="inline-flex items-center px-3 py-1 border border-indigo-600 text-indigo-600 bg-white hover:bg-indigo-50 text-sm rounded-md transition-colors" onclick="refreshActivity()">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Refresh
                     </button>
                 </div>
-                <div class="card-body">
+                <div class="p-6">
                     <div id="activity-container">
                         @if($recentActivity->count() > 0)
-                            <div class="timeline">
+                            <div class="timeline space-y-6">
                                 @foreach($recentActivity as $activity)
-                                    <div class="timeline-item mb-3">
-                                        <div class="d-flex">
-                                            <div class="flex-shrink-0">
-                                                <div class="avatar-sm rounded-circle bg-light d-flex align-items-center justify-content-center">
-                                                    <i class="{{ $activity['icon'] }} {{ $activity['color'] }}"></i>
-                                                </div>
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0">
+                                            <div class="flex items-center justify-center w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full">
+                                                <svg class="w-5 h-5 text-{{ $activity['color'] ?? 'gray' }}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                                </svg>
                                             </div>
-                                            <div class="flex-grow-1 ms-3">
-                                                <div class="fw-bold">{{ $activity['title'] }}</div>
-                                                <div class="small text-muted">{{ $activity['date']->diffForHumans() }}</div>
-                                            </div>
+                                        </div>
+                                        <div class="min-w-0 flex-1 ml-4">
+                                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $activity['title'] }}</div>
+                                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ $activity['date']->diffForHumans() }}</div>
                                         </div>
                                     </div>
                                 @endforeach
                             </div>
                         @else
-                            <div class="text-center py-5">
-                                <i class="fas fa-history fa-3x text-gray-300 mb-3"></i>
-                                <h5>No Recent Activity</h5>
-                                <p class="text-muted">This user hasn't performed any tracked activities yet.</p>
+                            <div class="text-center py-12">
+                                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <h5 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No Recent Activity</h5>
+                                <p class="text-gray-500 dark:text-gray-400">This user hasn't performed any tracked activities yet.</p>
                             </div>
                         @endif
                     </div>
@@ -234,71 +324,63 @@
             </div>
 
             <!-- System Information Card -->
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">System Information</h6>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">System Information</h3>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <table class="table table-sm table-borderless">
-                                <tr>
-                                    <td class="fw-bold">User ID:</td>
-                                    <td>{{ $user->id }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-bold">Created:</td>
-                                    <td>{{ $user->created_at->format('M d, Y H:i:s') }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-bold">Updated:</td>
-                                    <td>{{ $user->updated_at->format('M d, Y H:i:s') }}</td>
-                                </tr>
-                                @if($user->email_verified_at)
-                                    <tr>
-                                        <td class="fw-bold">Email Verified:</td>
-                                        <td>{{ $user->email_verified_at->format('M d, Y H:i:s') }}</td>
-                                    </tr>
-                                @endif
-                            </table>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">User ID:</span>
+                                <span class="text-sm text-gray-900 dark:text-white">{{ $user->id }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Created:</span>
+                                <span class="text-sm text-gray-900 dark:text-white">{{ $user->created_at->format('M d, Y H:i:s') }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Updated:</span>
+                                <span class="text-sm text-gray-900 dark:text-white">{{ $user->updated_at->format('M d, Y H:i:s') }}</span>
+                            </div>
+                            @if($user->email_verified_at)
+                                <div class="flex justify-between">
+                                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Email Verified:</span>
+                                    <span class="text-sm text-gray-900 dark:text-white">{{ $user->email_verified_at->format('M d, Y H:i:s') }}</span>
+                                </div>
+                            @endif
                         </div>
-                        <div class="col-md-6">
-                            <table class="table table-sm table-borderless">
-                                @if($user->createdBy)
-                                    <tr>
-                                        <td class="fw-bold">Created By:</td>
-                                        <td>
-                                            <a href="{{ route('admin.user-management.show', $user->createdBy) }}" 
-                                               class="text-decoration-none">
-                                                {{ $user->createdBy->name }}
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @endif
-                                @if($user->updatedBy)
-                                    <tr>
-                                        <td class="fw-bold">Updated By:</td>
-                                        <td>
-                                            <a href="{{ route('admin.user-management.show', $user->updatedBy) }}" 
-                                               class="text-decoration-none">
-                                                {{ $user->updatedBy->name }}
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @endif
-                                @if($user->timezone)
-                                    <tr>
-                                        <td class="fw-bold">Timezone:</td>
-                                        <td>{{ $user->timezone }}</td>
-                                    </tr>
-                                @endif
-                                @if($user->language)
-                                    <tr>
-                                        <td class="fw-bold">Language:</td>
-                                        <td>{{ $user->language }}</td>
-                                    </tr>
-                                @endif
-                            </table>
+                        <div class="space-y-3">
+                            @if($user->createdBy)
+                                <div class="flex justify-between">
+                                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Created By:</span>
+                                    <a href="{{ route('admin.user-management.show', $user->createdBy) }}" 
+                                       class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors">
+                                        {{ $user->createdBy->name }}
+                                    </a>
+                                </div>
+                            @endif
+                            @if($user->updatedBy)
+                                <div class="flex justify-between">
+                                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Updated By:</span>
+                                    <a href="{{ route('admin.user-management.show', $user->updatedBy) }}" 
+                                       class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors">
+                                        {{ $user->updatedBy->name }}
+                                    </a>
+                                </div>
+                            @endif
+                            @if($user->timezone)
+                                <div class="flex justify-between">
+                                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Timezone:</span>
+                                    <span class="text-sm text-gray-900 dark:text-white">{{ $user->timezone }}</span>
+                                </div>
+                            @endif
+                            @if($user->language)
+                                <div class="flex justify-between">
+                                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Language:</span>
+                                    <span class="text-sm text-gray-900 dark:text-white">{{ $user->language }}</span>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -307,41 +389,6 @@
     </div>
 </div>
 @endsection
-
-@push('styles')
-<style>
-.avatar-lg img {
-    object-fit: cover;
-}
-
-.avatar-sm {
-    width: 40px;
-    height: 40px;
-}
-
-.timeline-item {
-    position: relative;
-}
-
-.timeline-item:not(:last-child)::after {
-    content: '';
-    position: absolute;
-    left: 20px;
-    top: 40px;
-    bottom: -15px;
-    width: 2px;
-    background-color: #e3e6f0;
-}
-
-.badge {
-    font-size: 0.75rem;
-}
-
-.card {
-    box-shadow: 0 0.15rem 1.75rem 0 rgba(33, 40, 50, 0.15);
-}
-</style>
-@endpush
 
 @push('scripts')
 <script>
@@ -397,7 +444,7 @@ function refreshActivity() {
     const icon = button.find('i');
     
     // Show loading state
-    icon.addClass('fa-spin');
+    icon.addClass('animate-spin');
     button.prop('disabled', true);
     
     $.ajax({
@@ -407,20 +454,20 @@ function refreshActivity() {
             if (response.success) {
                 let html = '';
                 if (response.activity.length > 0) {
-                    html = '<div class="timeline">';
+                    html = '<div class="timeline space-y-6">';
                     response.activity.forEach(function(activity) {
                         html += `
-                            <div class="timeline-item mb-3">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0">
-                                        <div class="avatar-sm rounded-circle bg-light d-flex align-items-center justify-content-center">
-                                            <i class="${activity.icon} ${activity.color}"></i>
-                                        </div>
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <div class="flex items-center justify-center w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full">
+                                        <svg class="w-5 h-5 text-${activity.color || 'gray'}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                        </svg>
                                     </div>
-                                    <div class="flex-grow-1 ms-3">
-                                        <div class="fw-bold">${activity.title}</div>
-                                        <div class="small text-muted">${activity.formatted_date}</div>
-                                    </div>
+                                </div>
+                                <div class="min-w-0 flex-1 ml-4">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">${activity.title}</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">${activity.formatted_date}</div>
                                 </div>
                             </div>
                         `;
@@ -428,10 +475,12 @@ function refreshActivity() {
                     html += '</div>';
                 } else {
                     html = `
-                        <div class="text-center py-5">
-                            <i class="fas fa-history fa-3x text-gray-300 mb-3"></i>
-                            <h5>No Recent Activity</h5>
-                            <p class="text-muted">This user hasn't performed any tracked activities yet.</p>
+                        <div class="text-center py-12">
+                            <svg class="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <h5 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No Recent Activity</h5>
+                            <p class="text-gray-500 dark:text-gray-400">This user hasn't performed any tracked activities yet.</p>
                         </div>
                     `;
                 }
@@ -443,7 +492,7 @@ function refreshActivity() {
         },
         complete: function() {
             // Remove loading state
-            icon.removeClass('fa-spin');
+            icon.removeClass('animate-spin');
             button.prop('disabled', false);
         }
     });
