@@ -25,12 +25,12 @@ use Illuminate\Support\Facades\Route;
 
 // Admin Panel - Requires super_admin or admin role
 Route::prefix('admin')->name('admin.')->middleware(['role:super_admin|admin'])->group(function () {
-    
+
     // Admin Dashboard
     Route::get('/', [AdminController::class, 'index'])->name('dashboard');
 
     // User Management
-    Route::resource('user-management', UserManagementController::class, ['as' => 'user-management']);
+    Route::resource('user-management', UserManagementController::class);
     Route::prefix('user-management')->name('user-management.')->group(function () {
         Route::post('/{user}/toggle-status', [UserManagementController::class, 'toggleStatus'])->name('toggle-status');
         Route::post('/{user}/reset-password', [UserManagementController::class, 'resetPassword'])->name('reset-password');

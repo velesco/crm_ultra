@@ -180,7 +180,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Email Management Module
     require __DIR__.'/modules/email.php';
 
-    // SMS Management Module  
+    // SMS Management Module
     require __DIR__.'/modules/sms.php';
 
     // WhatsApp Management Module
