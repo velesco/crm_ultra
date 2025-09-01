@@ -1,183 +1,206 @@
 @extends('layouts.app')
 
-@section('title', 'SMS Details')
+@section('title', 'Detalii SMS')
 
-@section('content')
-<div class="container-fluid">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+@section('header')
+    <div class="flex items-center justify-between">
         <div>
-            <h1 class="h3 mb-0 text-gray-800 dark:text-white">SMS Details</h1>
-            <p class="mb-0 text-gray-600 dark:text-gray-400">
-                Message sent to {{ $smsMessage->contact->name ?? 'Unknown Contact' }}
+            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Detalii SMS</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Mesaj trimis către {{ $sms->contact->name ?? 'Contact Necunoscut' }}
             </p>
         </div>
         <div>
-            <a href="{{ route('sms.index') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Back to SMS List
+            <a href="{{ route('sms.index') }}" 
+               class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Înapoi la Lista SMS
             </a>
         </div>
     </div>
+@endsection
 
-    <div class="row">
+@section('content')
+<div class="space-y-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Main Content -->
-        <div class="col-lg-8">
+        <div class="lg:col-span-2 space-y-8">
             <!-- Message Content -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">Message Content</h6>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Conținut Mesaj</h3>
                     @php
-                        $statusClasses = [
-                            'pending' => 'warning',
-                            'sent' => 'success',
-                            'delivered' => 'success',
-                            'failed' => 'danger',
-                            'scheduled' => 'info',
-                            'cancelled' => 'secondary'
+                        $statusConfig = [
+                            'pending' => ['class' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300', 'label' => 'În așteptare'],
+                            'sent' => ['class' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300', 'label' => 'Trimis'],
+                            'delivered' => ['class' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300', 'label' => 'Livrat'],
+                            'failed' => ['class' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300', 'label' => 'Eșuat'],
+                            'scheduled' => ['class' => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300', 'label' => 'Programat'],
+                            'cancelled' => ['class' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300', 'label' => 'Anulat']
                         ];
-                        $statusClass = $statusClasses[$smsMessage->status] ?? 'secondary';
+                        $status = $statusConfig[$sms->status] ?? ['class' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300', 'label' => ucfirst($sms->status)];
                     @endphp
-                    <span class="badge bg-{{ $statusClass }} fs-6">
-                        {{ ucfirst($smsMessage->status) }}
+                    <span class="px-3 py-1 text-sm font-medium rounded-full {{ $status['class'] }}">
+                        {{ $status['label'] }}
                     </span>
                 </div>
-                <div class="card-body">
-                    <div class="message-display p-4 bg-light border rounded">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="me-3">
-                                <i class="fas fa-sms fa-2x text-primary"></i>
+                
+                <div class="p-6">
+                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6 border-l-4 border-indigo-500">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center mr-4">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                </svg>
                             </div>
                             <div>
-                                <strong>To: {{ $smsMessage->phone_number }}</strong>
-                                <br>
-                                <small class="text-muted">{{ strlen($smsMessage->message) }} characters</small>
+                                <div class="text-lg font-medium text-gray-900 dark:text-white">Către: {{ $sms->phone_number }}</div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400">{{ Str::length($sms->message) }} caractere</div>
                             </div>
                         </div>
-                        <div class="message-content" style="font-family: monospace; white-space: pre-wrap; background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff;">
-                            {{ $smsMessage->message }}
-                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 font-mono text-sm text-gray-900 dark:text-white whitespace-pre-wrap">{{ $sms->message }}</div>
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="mt-4">
-                        <div class="btn-group" role="group">
-                            @if($smsMessage->status === 'scheduled')
-                                <a href="{{ route('sms.edit', $smsMessage) }}" class="btn btn-primary">
-                                    <i class="fas fa-edit me-2"></i>Edit Message
+                    @if(in_array($sms->status, ['scheduled', 'failed']))
+                        <div class="mt-6 flex flex-wrap gap-3">
+                            @if($sms->status === 'scheduled')
+                                <a href="{{ route('sms.edit', $sms) }}" 
+                                   class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-colors">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                    Editează Mesajul
                                 </a>
-                                <form action="{{ route('sms.cancel', $smsMessage) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="btn btn-warning" 
-                                            onclick="return confirm('Are you sure you want to cancel this scheduled SMS?')">
-                                        <i class="fas fa-times me-2"></i>Cancel
-                                    </button>
-                                </form>
-                            @endif
-
-                            @if($smsMessage->status === 'failed')
-                                <form action="{{ route('sms.resend', $smsMessage) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="btn btn-success"
-                                            onclick="return confirm('Are you sure you want to resend this SMS?')">
-                                        <i class="fas fa-redo me-2"></i>Resend
-                                    </button>
-                                </form>
-                            @endif
-
-                            @if(in_array($smsMessage->status, ['scheduled', 'failed', 'draft']))
-                                <form action="{{ route('sms.destroy', $smsMessage) }}" method="POST" class="d-inline">
+                                
+                                <form action="{{ route('sms.destroy', $sms) }}" method="POST" class="inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-outline-danger"
-                                            onclick="return confirm('Are you sure you want to delete this SMS message?')">
-                                        <i class="fas fa-trash me-2"></i>Delete
+                                    <button type="submit" 
+                                            onclick="return confirm('Ești sigur că vrei să anulezi acest SMS programat?')"
+                                            class="inline-flex items-center px-4 py-2 border border-yellow-300 dark:border-yellow-600 rounded-lg text-sm font-medium text-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                        Anulează
+                                    </button>
+                                </form>
+                            @endif
+
+                            @if($sms->status === 'failed')
+                                <form action="{{ route('sms.resend', $sms) }}" method="POST" class="inline">
+                                    @csrf
+                                    <button type="submit" 
+                                            onclick="return confirm('Ești sigur că vrei să retrimiti acest SMS?')"
+                                            class="inline-flex items-center px-4 py-2 border border-green-300 dark:border-green-600 rounded-lg text-sm font-medium text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                        </svg>
+                                        Retrimite
+                                    </button>
+                                </form>
+                            @endif
+
+                            @if(in_array($sms->status, ['scheduled', 'failed']))
+                                <form action="{{ route('sms.destroy', $sms) }}" method="POST" class="inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" 
+                                            onclick="return confirm('Ești sigur că vrei să ștergi acest mesaj SMS?')"
+                                            class="inline-flex items-center px-4 py-2 border border-red-300 dark:border-red-600 rounded-lg text-sm font-medium text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                        Șterge
                                     </button>
                                 </form>
                             @endif
                         </div>
-                    </div>
+                    @endif
                 </div>
             </div>
 
             <!-- Delivery Information -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Delivery Information</h6>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Informații Livrare</h3>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="info-group mb-4">
-                                <label class="text-muted small mb-1">Status</label>
-                                <div class="fw-bold">
-                                    <span class="badge bg-{{ $statusClass }} me-2">
-                                        {{ ucfirst($smsMessage->status) }}
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</label>
+                                <div class="mt-1 flex items-center space-x-2">
+                                    <span class="px-3 py-1 text-sm font-medium rounded-full {{ $status['class'] }}">
+                                        {{ $status['label'] }}
                                     </span>
-                                    @if($smsMessage->error_message)
-                                        <small class="text-danger">{{ $smsMessage->error_message }}</small>
+                                    @if($sms->error_message)
+                                        <span class="text-sm text-red-600 dark:text-red-400">{{ $sms->error_message }}</span>
                                     @endif
                                 </div>
                             </div>
 
-                            <div class="info-group mb-4">
-                                <label class="text-muted small mb-1">Provider</label>
-                                <div class="fw-bold">
-                                    {{ $smsMessage->provider ?? 'Default Provider' }}
+                            <div>
+                                <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Provider</label>
+                                <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                                    {{ $sms->smsProvider->name ?? 'Provider Implicit' }}
                                 </div>
                             </div>
 
-                            <div class="info-group mb-4">
-                                <label class="text-muted small mb-1">Cost</label>
-                                <div class="fw-bold">
-                                    @if($smsMessage->cost > 0)
-                                        ${{ number_format($smsMessage->cost, 4) }}
+                            <div>
+                                <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Cost</label>
+                                <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                                    @if($sms->cost > 0)
+                                        ${{ number_format($sms->cost, 4) }}
                                     @else
-                                        <span class="text-muted">No cost recorded</span>
+                                        <span class="text-gray-500 dark:text-gray-400">Fără cost înregistrat</span>
                                     @endif
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-md-6">
-                            <div class="info-group mb-4">
-                                <label class="text-muted small mb-1">Created At</label>
-                                <div class="fw-bold">
-                                    {{ $smsMessage->created_at->format('M j, Y \a\t g:i A') }}
-                                    <small class="text-muted d-block">
-                                        ({{ $smsMessage->created_at->diffForHumans() }})
-                                    </small>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Creat La</label>
+                                <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                                    {{ $sms->created_at->format('j M Y, H:i') }}
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                                        ({{ $sms->created_at->diffForHumans() }})
+                                    </div>
                                 </div>
                             </div>
 
-                            @if($smsMessage->scheduled_at)
-                                <div class="info-group mb-4">
-                                    <label class="text-muted small mb-1">Scheduled For</label>
-                                    <div class="fw-bold">
-                                        {{ $smsMessage->scheduled_at->format('M j, Y \a\t g:i A') }}
-                                        <small class="text-muted d-block">
-                                            ({{ $smsMessage->scheduled_at->diffForHumans() }})
-                                        </small>
+                            @if($sms->scheduled_at)
+                                <div>
+                                    <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Programat Pentru</label>
+                                    <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                                        {{ $sms->scheduled_at->format('j M Y, H:i') }}
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                                            ({{ $sms->scheduled_at->diffForHumans() }})
+                                        </div>
                                     </div>
                                 </div>
                             @endif
 
-                            @if($smsMessage->sent_at)
-                                <div class="info-group mb-4">
-                                    <label class="text-muted small mb-1">Sent At</label>
-                                    <div class="fw-bold">
-                                        {{ $smsMessage->sent_at->format('M j, Y \a\t g:i A') }}
-                                        <small class="text-muted d-block">
-                                            ({{ $smsMessage->sent_at->diffForHumans() }})
-                                        </small>
+                            @if($sms->sent_at)
+                                <div>
+                                    <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Trimis La</label>
+                                    <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                                        {{ $sms->sent_at->format('j M Y, H:i') }}
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                                            ({{ $sms->sent_at->diffForHumans() }})
+                                        </div>
                                     </div>
                                 </div>
                             @endif
 
-                            @if($smsMessage->provider_message_id)
-                                <div class="info-group mb-4">
-                                    <label class="text-muted small mb-1">Provider Message ID</label>
-                                    <div class="fw-bold font-monospace">
-                                        {{ $smsMessage->provider_message_id }}
+                            @if($sms->provider_message_id)
+                                <div>
+                                    <label class="text-sm font-medium text-gray-500 dark:text-gray-400">ID Mesaj Provider</label>
+                                    <div class="mt-1 text-sm font-mono text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                                        {{ $sms->provider_message_id }}
                                     </div>
                                 </div>
                             @endif
@@ -186,36 +209,34 @@
                 </div>
             </div>
 
-            <!-- Metadata -->
-            @if($smsMessage->metadata)
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Technical Details</h6>
+            <!-- Technical Details -->
+            @if($sms->metadata)
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Detalii Tehnice</h3>
                     </div>
-                    <div class="card-body">
+                    <div class="p-6">
                         @php
-                            $metadata = json_decode($smsMessage->metadata, true);
+                            $metadata = json_decode($sms->metadata, true);
                         @endphp
                         
                         @if($metadata)
-                            <div class="row">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 @foreach($metadata as $key => $value)
-                                    <div class="col-md-6 mb-3">
-                                        <div class="info-group">
-                                            <label class="text-muted small mb-1">{{ ucwords(str_replace('_', ' ', $key)) }}</label>
-                                            <div class="fw-bold">
-                                                @if(is_array($value) || is_object($value))
-                                                    <pre class="small mb-0">{{ json_encode($value, JSON_PRETTY_PRINT) }}</pre>
-                                                @else
-                                                    {{ $value }}
-                                                @endif
-                                            </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ ucwords(str_replace('_', ' ', $key)) }}</label>
+                                        <div class="mt-1 text-sm text-gray-900 dark:text-white">
+                                            @if(is_array($value) || is_object($value))
+                                                <pre class="bg-gray-100 dark:bg-gray-700 p-3 rounded text-xs overflow-x-auto">{{ json_encode($value, JSON_PRETTY_PRINT) }}</pre>
+                                            @else
+                                                <div class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded font-mono text-sm">{{ $value }}</div>
+                                            @endif
                                         </div>
                                     </div>
                                 @endforeach
                             </div>
                         @else
-                            <p class="text-muted mb-0">No technical details available.</p>
+                            <p class="text-gray-500 dark:text-gray-400">Nu sunt disponibile detalii tehnice.</p>
                         @endif
                     </div>
                 </div>
@@ -223,123 +244,136 @@
         </div>
 
         <!-- Sidebar -->
-        <div class="col-lg-4">
+        <div class="space-y-8">
             <!-- Contact Information -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Contact Information</h6>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Informații Contact</h3>
                 </div>
-                <div class="card-body">
-                    @if($smsMessage->contact)
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-lg rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3">
-                                {{ substr($smsMessage->contact->name, 0, 1) }}
+                <div class="p-6">
+                    @if($sms->contact)
+                        <div class="flex items-center mb-6">
+                            <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-lg mr-4">
+                                {{ strtoupper(substr($sms->contact->name, 0, 2)) }}
                             </div>
                             <div>
-                                <h5 class="mb-1">{{ $smsMessage->contact->name }}</h5>
-                                <p class="mb-0 text-muted">{{ $smsMessage->contact->email }}</p>
+                                <h4 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $sms->contact->name }}</h4>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">{{ $sms->contact->email }}</p>
                             </div>
                         </div>
 
-                        <div class="contact-details">
-                            <div class="info-group mb-3">
-                                <label class="text-muted small mb-1">Phone Number</label>
-                                <div class="fw-bold">
-                                    <a href="tel:{{ $smsMessage->contact->phone }}" class="text-decoration-none">
-                                        {{ $smsMessage->contact->phone }}
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Număr Telefon</label>
+                                <div class="mt-1">
+                                    <a href="tel:{{ $sms->contact->phone }}" class="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
+                                        {{ $sms->contact->phone }}
                                     </a>
                                 </div>
                             </div>
 
-                            @if($smsMessage->contact->company)
-                                <div class="info-group mb-3">
-                                    <label class="text-muted small mb-1">Company</label>
-                                    <div class="fw-bold">{{ $smsMessage->contact->company }}</div>
+                            @if($sms->contact->company)
+                                <div>
+                                    <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Companie</label>
+                                    <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">{{ $sms->contact->company }}</div>
                                 </div>
                             @endif
 
-                            @if($smsMessage->contact->location)
-                                <div class="info-group mb-3">
-                                    <label class="text-muted small mb-1">Location</label>
-                                    <div class="fw-bold">{{ $smsMessage->contact->location }}</div>
+                            @if($sms->contact->location)
+                                <div>
+                                    <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Locație</label>
+                                    <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">{{ $sms->contact->location }}</div>
                                 </div>
                             @endif
 
-                            <div class="info-group mb-3">
-                                <label class="text-muted small mb-1">Contact Created</label>
-                                <div class="fw-bold">
-                                    {{ $smsMessage->contact->created_at->format('M j, Y') }}
+                            <div>
+                                <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Contact Creat</label>
+                                <div class="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                                    {{ $sms->contact->created_at->format('j M Y') }}
                                 </div>
                             </div>
                         </div>
 
-                        <div class="mt-4">
-                            <a href="{{ route('contacts.show', $smsMessage->contact) }}" class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-user me-2"></i>View Contact Profile
+                        <div class="mt-6">
+                            <a href="{{ route('contacts.show', $sms->contact) }}" 
+                               class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                                Vezi Profil Contact
                             </a>
                         </div>
                     @else
-                        <div class="text-center text-muted py-4">
-                            <i class="fas fa-user-slash fa-3x mb-3"></i>
-                            <div>Contact information not available</div>
-                            <small>The contact may have been deleted</small>
+                        <div class="text-center py-8">
+                            <svg class="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            <p class="text-gray-500 dark:text-gray-400">Informații contact indisponibile</p>
+                            <p class="text-sm text-gray-400 dark:text-gray-500">Contactul poate fi fost șters</p>
                         </div>
                     @endif
                 </div>
             </div>
 
             <!-- Sender Information -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Sender Information</h6>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Expeditor</h3>
                 </div>
-                <div class="card-body">
-                    @if($smsMessage->user)
-                        <div class="d-flex align-items-center">
-                            <div class="avatar-sm rounded-circle bg-success text-white d-flex align-items-center justify-content-center me-3">
-                                {{ substr($smsMessage->user->name, 0, 1) }}
+                <div class="p-6">
+                    @if($sms->user)
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-semibold mr-3">
+                                {{ strtoupper(substr($sms->user->name, 0, 1)) }}
                             </div>
                             <div>
-                                <div class="fw-bold">{{ $smsMessage->user->name }}</div>
-                                <small class="text-muted">{{ $smsMessage->user->email }}</small>
+                                <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $sms->user->name }}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">{{ $sms->user->email }}</div>
                             </div>
                         </div>
                     @else
-                        <div class="text-muted">
-                            <i class="fas fa-user-times me-2"></i>
-                            Sender information not available
+                        <div class="flex items-center text-gray-500 dark:text-gray-400">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            Informații expeditor indisponibile
                         </div>
                     @endif
                 </div>
             </div>
 
             <!-- Quick Actions -->
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Acțiuni Rapide</h3>
                 </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        @if($smsMessage->contact)
-                            <a href="{{ route('sms.create', ['contact' => $smsMessage->contact->id]) }}" 
-                               class="btn btn-outline-primary">
-                                <i class="fas fa-sms me-2"></i>Send Another SMS
-                            </a>
-                            <a href="{{ route('email.campaigns.create', ['contact' => $smsMessage->contact->id]) }}" 
-                               class="btn btn-outline-success">
-                                <i class="fas fa-envelope me-2"></i>Send Email
-                            </a>
-                        @endif
-                        
-                        <button type="button" class="btn btn-outline-info" onclick="copyMessage()">
-                            <i class="fas fa-copy me-2"></i>Copy Message
-                        </button>
-                        
-                        <a href="{{ route('sms.index', ['phone' => $smsMessage->phone_number]) }}" 
-                           class="btn btn-outline-secondary">
-                            <i class="fas fa-history me-2"></i>SMS History
+                <div class="p-6 space-y-3">
+                    @if($sms->contact)
+                        <a href="{{ route('sms.create', ['contact' => $sms->contact->id]) }}" 
+                           class="w-full inline-flex items-center justify-center px-4 py-2 border border-indigo-300 dark:border-indigo-600 rounded-lg text-sm font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                            Trimite Alt SMS
                         </a>
-                    </div>
+                    @endif
+                    
+                    <button type="button" 
+                            onclick="copyMessage()"
+                            class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
+                        Copiază Mesaj
+                    </button>
+                    
+                    <a href="{{ route('sms.index', ['search' => $sms->phone_number]) }}" 
+                       class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Istoric SMS
+                    </a>
                 </div>
             </div>
         </div>
@@ -347,71 +381,63 @@
 </div>
 @endsection
 
-@push('styles')
-<style>
-.avatar-lg {
-    width: 60px;
-    height: 60px;
-    font-size: 20px;
-    font-weight: 600;
-}
-
-.avatar-sm {
-    width: 40px;
-    height: 40px;
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.info-group {
-    padding: 10px 0;
-    border-bottom: 1px solid #f1f1f1;
-}
-
-.info-group:last-child {
-    border-bottom: none;
-}
-
-.message-content {
-    line-height: 1.6;
-    font-size: 14px;
-}
-
-.contact-details .info-group {
-    padding: 8px 0;
-}
-</style>
-@endpush
-
 @push('scripts')
 <script>
 function copyMessage() {
-    const messageContent = `{{ addslashes($smsMessage->message) }}`;
+    const messageContent = `{{ addslashes($sms->message) }}`;
+    
     navigator.clipboard.writeText(messageContent).then(function() {
-        // Show success message
-        const toast = document.createElement('div');
-        toast.className = 'position-fixed top-0 end-0 p-3';
-        toast.style.zIndex = '9999';
-        toast.innerHTML = `
-            <div class="toast show" role="alert">
-                <div class="toast-header">
-                    <strong class="me-auto text-success">Success</strong>
-                    <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
-                </div>
-                <div class="toast-body">
-                    Message copied to clipboard!
-                </div>
-            </div>
-        `;
-        document.body.appendChild(toast);
-        
-        // Remove toast after 3 seconds
-        setTimeout(() => {
-            document.body.removeChild(toast);
-        }, 3000);
+        // Show success notification
+        showNotification('Mesaj copiat în clipboard!', 'success');
     }).catch(function() {
-        alert('Failed to copy message to clipboard');
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = messageContent;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showNotification('Mesaj copiat în clipboard!', 'success');
+        } catch (err) {
+            showNotification('Eroare la copierea mesajului', 'error');
+        }
+        document.body.removeChild(textArea);
     });
+}
+
+function showNotification(message, type = 'success') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 flex items-center p-4 rounded-lg shadow-lg transition-all transform translate-x-full ${
+        type === 'success' 
+            ? 'bg-green-100 border border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200' 
+            : 'bg-red-100 border border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200'
+    }`;
+    
+    notification.innerHTML = `
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            ${type === 'success' 
+                ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>'
+                : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>'
+            }
+        </svg>
+        <span>${message}</span>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+    }, 100);
+    
+    // Animate out and remove
+    setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
 }
 </script>
 @endpush

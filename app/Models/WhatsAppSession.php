@@ -23,6 +23,11 @@ class WhatsAppSession extends Model
         'last_activity',
         'settings',
         'created_by',
+        // Additional fields from controller usage
+        'name',
+        'server_url',
+        'user_id',
+        'description',
     ];
 
     protected $casts = [
@@ -37,6 +42,16 @@ class WhatsAppSession extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function whatsappMessages()
+    {
+        return $this->hasMany(WhatsAppMessage::class, 'session_id');
     }
 
     public function messages()

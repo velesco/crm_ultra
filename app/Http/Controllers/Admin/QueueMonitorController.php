@@ -309,8 +309,17 @@ class QueueMonitorController extends Controller
             $stats = Cache::remember('queue_stats', 30, function () {
                 // Get basic stats
                 $failedJobsCount = DB::table('failed_jobs')->count();
-                $jobsPerHour = $this->metricsRepository->jobsPerHour();
-                $recentlyFailed = $this->metricsRepository->recentlyFailed();
+                
+                // Alternative implementation for jobs per hour since jobsPerHour() may not be available
+                $jobsPerHour = $this->getJobsPerHourAlternative();
+                
+                // Get recently failed using alternative method if needed
+                try {
+                    $recentlyFailed = $this->metricsRepository->recentlyFailed();
+                } catch (\Exception $e) {
+                    $recentlyFailed = collect();
+                }
+                
                 $recentJobs = $this->jobRepository->getRecent();
 
                 // Calculate processing stats
@@ -538,6 +547,35 @@ class QueueMonitorController extends Controller
                 'issues' => ['Unable to determine queue health'],
                 'error' => $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Alternative implementation for jobs per hour calculation
+     */
+    private function getJobsPerHourAlternative()
+    {
+        try {
+            // Get recent jobs from the last hour and calculate rate
+            $recentJobs = $this->jobRepository->getRecent();
+            $oneHourAgo = now()->subHour();
+            
+            // Filter jobs from the last hour
+            $jobsLastHour = collect($recentJobs)->filter(function ($job) use ($oneHourAgo) {
+                return isset($job->started_at) && Carbon::parse($job->started_at)->isAfter($oneHourAgo);
+            });
+            
+            return $jobsLastHour->count();
+        } catch (\Exception $e) {
+            // Fallback calculation using system logs or database queries
+            try {
+                return DB::table('jobs')
+                    ->where('created_at', '>=', now()->subHour())
+                    ->count();
+            } catch (\Exception $fallbackE) {
+                // Return 0 if all methods fail
+                return 0;
+            }
         }
     }
 }

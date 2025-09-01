@@ -40,7 +40,7 @@ class WhatsAppController extends Controller
             ->selectRaw('MAX(created_at) as last_message_at')
             ->selectRaw('COUNT(*) as message_count')
             ->selectRaw('SUM(CASE WHEN direction = "inbound" AND read_at IS NULL THEN 1 ELSE 0 END) as unread_count')
-            ->where('whats_app_session_id', $session->id)
+            ->where('session_id', $session->id)
             ->groupBy('contact_id')
             ->orderBy('last_message_at', 'desc')
             ->paginate(20);
@@ -53,13 +53,13 @@ class WhatsAppController extends Controller
             $selectedContact = Contact::find($request->contact_id);
             if ($selectedContact) {
                 $messages = WhatsAppMessage::with(['contact', 'whatsAppSession'])
-                    ->where('whats_app_session_id', $session->id)
+                    ->where('session_id', $session->id)
                     ->where('contact_id', $selectedContact->id)
                     ->orderBy('created_at')
                     ->get();
 
                 // Mark messages as read
-                WhatsAppMessage::where('whats_app_session_id', $session->id)
+                WhatsAppMessage::where('session_id', $session->id)
                     ->where('contact_id', $selectedContact->id)
                     ->where('direction', 'inbound')
                     ->whereNull('read_at')
@@ -69,12 +69,12 @@ class WhatsAppController extends Controller
 
         // Dashboard statistics
         $stats = [
-            'total_messages' => WhatsAppMessage::where('whats_app_session_id', $session->id)->count(),
-            'messages_today' => WhatsAppMessage::where('whats_app_session_id', $session->id)
+            'total_messages' => WhatsAppMessage::where('session_id', $session->id)->count(),
+            'messages_today' => WhatsAppMessage::where('session_id', $session->id)
                 ->whereDate('created_at', today())->count(),
-            'unread_messages' => WhatsAppMessage::where('whats_app_session_id', $session->id)
+            'unread_messages' => WhatsAppMessage::where('session_id', $session->id)
                 ->where('direction', 'inbound')->whereNull('read_at')->count(),
-            'unique_contacts' => WhatsAppMessage::where('whats_app_session_id', $session->id)
+            'unique_contacts' => WhatsAppMessage::where('session_id', $session->id)
                 ->distinct('contact_id')->count(),
             'session_status' => $session->status,
         ];
@@ -83,74 +83,172 @@ class WhatsAppController extends Controller
     }
 
     /**
+     * Show the form for creating a new WhatsApp message
+     */
+    public function create()
+    {
+        $contacts = Contact::select('id', 'first_name', 'last_name', 'whatsapp', 'phone')
+            ->where(function($query) {
+                $query->whereNotNull('whatsapp')
+                      ->orWhereNotNull('phone');
+            })
+            ->orderBy('first_name')
+            ->get();
+
+        $segments = ContactSegment::all();
+
+        return view('whatsapp.create', compact('contacts', 'segments'));
+    }
+
+    /**
      * Send a new WhatsApp message
      */
     public function send(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'contact_id' => 'required|exists:contacts,id',
             'message' => 'required|string|max:4096',
+            'send_type' => 'required|in:individual,contacts,segment',
+            'contact_id' => 'required_if:send_type,individual|exists:contacts,id',
+            'contact_ids' => 'required_if:send_type,contacts|array|min:1',
+            'contact_ids.*' => 'exists:contacts,id',
+            'segment_id' => 'required_if:send_type,segment|exists:contact_segments,id',
             'message_type' => 'in:text,image,document,audio',
             'media_url' => 'nullable|url',
+            'schedule_at' => 'nullable|date|after:now',
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+            return back()->withErrors($validator)->withInput();
         }
 
         try {
             $session = WhatsAppSession::where('is_active', true)->first();
 
             if (! $session) {
-                return response()->json(['success' => false, 'message' => 'No active WhatsApp session found'], 400);
+                return back()->withErrors(['session' => 'No active WhatsApp session found']);
             }
 
-            $contact = Contact::find($request->contact_id);
+            // Get contacts based on send type
+            $contacts = $this->getContactsBasedOnSendType($request);
 
-            if (! $contact->whatsapp_number && ! $contact->phone) {
-                return response()->json(['success' => false, 'message' => 'Contact does not have WhatsApp number or phone'], 400);
+            if ($contacts->isEmpty()) {
+                return back()->withErrors(['contacts' => 'No valid contacts found with WhatsApp numbers']);
             }
 
-            // Use WhatsApp number or fallback to phone
-            $phoneNumber = $contact->whatsapp_number ?: $contact->phone;
+            $sentCount = 0;
+            $failedCount = 0;
+            $scheduleAt = $request->schedule_at ? Carbon::parse($request->schedule_at) : null;
 
-            // Send message through WhatsApp service
-            $result = $this->whatsappService->sendMessage(
-                $phoneNumber,
-                $request->message,
-                $request->message_type ?? 'text',
-                $request->media_url
-            );
+            foreach ($contacts as $contact) {
+                $phoneNumber = $contact->whatsapp ?: $contact->phone;
+                
+                if (!$phoneNumber) {
+                    $failedCount++;
+                    continue;
+                }
 
-            if ($result['success']) {
-                // Create message record
-                $message = WhatsAppMessage::create([
-                    'whats_app_session_id' => $session->id,
-                    'contact_id' => $contact->id,
-                    'user_id' => Auth::id(),
-                    'phone_number' => $phoneNumber,
-                    'message' => $request->message,
-                    'message_type' => $request->message_type ?? 'text',
-                    'media_url' => $request->media_url,
-                    'direction' => 'outbound',
-                    'status' => 'sent',
-                    'whatsapp_message_id' => $result['message_id'] ?? null,
-                    'sent_at' => now(),
-                ]);
+                try {
+                    if ($scheduleAt) {
+                        // Schedule for later
+                        WhatsAppMessage::create([
+                            'session_id' => $session->id,
+                            'contact_id' => $contact->id,
+                            'user_id' => Auth::id(),
+                            'phone_number' => $phoneNumber,
+                            'message' => $request->message,
+                            'message_type' => $request->message_type ?? 'text',
+                            'media_url' => $request->media_url,
+                            'direction' => 'outbound',
+                            'status' => 'scheduled',
+                            'scheduled_at' => $scheduleAt,
+                        ]);
+                        $sentCount++;
+                    } else {
+                        // Send immediately
+                        $result = $this->whatsappService->sendMessage(
+                            $phoneNumber,
+                            $request->message,
+                            $request->message_type ?? 'text',
+                            $request->media_url
+                        );
 
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Message sent successfully',
-                    'data' => $message->load('contact'),
-                ]);
+                        if ($result['success']) {
+                            WhatsAppMessage::create([
+                                'session_id' => $session->id,
+                                'contact_id' => $contact->id,
+                                'user_id' => Auth::id(),
+                                'phone_number' => $phoneNumber,
+                                'message' => $request->message,
+                                'message_type' => $request->message_type ?? 'text',
+                                'media_url' => $request->media_url,
+                                'direction' => 'outbound',
+                                'status' => 'sent',
+                                'whatsapp_message_id' => $result['message_id'] ?? null,
+                                'sent_at' => now(),
+                            ]);
+                            $sentCount++;
+                        } else {
+                            $failedCount++;
+                        }
+                    }
+
+                    // Add delay between messages to avoid rate limiting
+                    if ($contacts->count() > 1) {
+                        usleep(500000); // 0.5 second delay
+                    }
+
+                } catch (\Exception $e) {
+                    $failedCount++;
+                    \Log::error('WhatsApp send error for contact '.$contact->id.': '.$e->getMessage());
+                }
+            }
+
+            $totalContacts = $contacts->count();
+
+            if ($scheduleAt) {
+                $message = "WhatsApp messages scheduled for {$totalContacts} contacts on ".$scheduleAt->format('d/m/Y H:i');
             } else {
-                return response()->json(['success' => false, 'message' => $result['error'] ?? 'Failed to send message'], 400);
+                $message = "WhatsApp sending completed. Sent: {$sentCount}, Failed: {$failedCount} out of {$totalContacts} contacts.";
             }
+
+            return redirect()->route('whatsapp.index')->with('success', $message);
 
         } catch (\Exception $e) {
-            \Log::error('WhatsApp send error: '.$e->getMessage());
+            return back()->withErrors(['error' => 'An error occurred while sending WhatsApp messages: '.$e->getMessage()])->withInput();
+        }
+    }
 
-            return response()->json(['success' => false, 'message' => 'An error occurred while sending message'], 500);
+    /**
+     * Get contacts based on send type for new send method
+     */
+    private function getContactsBasedOnSendType(Request $request)
+    {
+        switch ($request->send_type) {
+            case 'individual':
+                return Contact::where('id', $request->contact_id)
+                    ->where(function($query) {
+                        $query->whereNotNull('whatsapp')
+                              ->orWhereNotNull('phone');
+                    })
+                    ->get();
+
+            case 'contacts':
+                return Contact::whereIn('id', $request->contact_ids)
+                    ->where(function($query) {
+                        $query->whereNotNull('whatsapp')
+                              ->orWhereNotNull('phone');
+                    })
+                    ->get();
+
+            case 'segment':
+                $segment = ContactSegment::with('contacts')->find($request->segment_id);
+                return $segment ? $segment->contacts()->where(function($query) {
+                    $query->whereNotNull('whatsapp')
+                          ->orWhereNotNull('phone');
+                })->get() : collect();
+
+            default:
+                return collect();
         }
     }
 
@@ -193,7 +291,7 @@ class WhatsAppController extends Controller
             $scheduleAt = $request->schedule_at ? Carbon::parse($request->schedule_at) : null;
 
             foreach ($contacts as $contact) {
-                if (! $contact->whatsapp_number) {
+                if (! $contact->whatsapp) {
                     $failedCount++;
 
                     continue;
@@ -203,10 +301,10 @@ class WhatsAppController extends Controller
                     if ($scheduleAt) {
                         // Schedule for later
                         WhatsAppMessage::create([
-                            'whats_app_session_id' => $session->id,
+                            'session_id' => $session->id,
                             'contact_id' => $contact->id,
                             'user_id' => Auth::id(),
-                            'phone_number' => $contact->whatsapp_number,
+                            'phone_number' => $contact->whatsapp,
                             'message' => $request->message,
                             'message_type' => $request->message_type ?? 'text',
                             'media_url' => $request->media_url,
@@ -218,7 +316,7 @@ class WhatsAppController extends Controller
                     } else {
                         // Send immediately
                         $result = $this->whatsappService->sendMessage(
-                            $contact->whatsapp_number,
+                            $contact->whatsapp,
                             $request->message,
                             $request->message_type ?? 'text',
                             $request->media_url
@@ -226,10 +324,10 @@ class WhatsAppController extends Controller
 
                         if ($result['success']) {
                             WhatsAppMessage::create([
-                                'whats_app_session_id' => $session->id,
+                                'session_id' => $session->id,
                                 'contact_id' => $contact->id,
                                 'user_id' => Auth::id(),
-                                'phone_number' => $contact->whatsapp_number,
+                                'phone_number' => $contact->whatsapp,
                                 'message' => $request->message,
                                 'message_type' => $request->message_type ?? 'text',
                                 'media_url' => $request->media_url,
@@ -269,12 +367,47 @@ class WhatsAppController extends Controller
     }
 
     /**
+     * Show chat interface (alias for index)
+     */
+    public function chat(Request $request)
+    {
+        return $this->index($request);
+    }
+
+    /**
+     * Show chat with specific contact
+     */
+    public function chatWithContact(Contact $contact)
+    {
+        return redirect()->route('whatsapp.index', ['contact_id' => $contact->id]);
+    }
+
+    /**
+     * Show contacts page
+     */
+    public function contacts()
+    {
+        $contacts = Contact::whereNotNull('whatsapp')
+            ->orWhereNotNull('phone')
+            ->withCount([
+                'whatsappMessages',
+                'whatsappMessages as last_message_date' => function ($query) {
+                    $query->select(\DB::raw('MAX(created_at)'));
+                }
+            ])
+            ->orderBy('first_name')
+            ->paginate(20);
+
+        return view('whatsapp.contacts', compact('contacts'));
+    }
+
+    /**
      * Show bulk message form
      */
     public function createBulk()
     {
-        $contacts = Contact::select('id', 'first_name', 'last_name', 'whatsapp_number')
-            ->whereNotNull('whatsapp_number')
+        $contacts = Contact::select('id', 'first_name', 'last_name', 'whatsapp')
+            ->whereNotNull('whatsapp')
             ->orderBy('first_name')
             ->get();
 
@@ -492,13 +625,13 @@ class WhatsAppController extends Controller
         switch ($request->send_type) {
             case 'contacts':
                 return Contact::whereIn('id', $request->contact_ids)
-                    ->whereNotNull('whatsapp_number')
+                    ->whereNotNull('whatsapp')
                     ->get();
 
             case 'segment':
                 $segment = ContactSegment::with('contacts')->find($request->segment_id);
 
-                return $segment ? $segment->contacts()->whereNotNull('whatsapp_number')->get() : collect();
+                return $segment ? $segment->contacts()->whereNotNull('whatsapp')->get() : collect();
 
             default:
                 return collect();

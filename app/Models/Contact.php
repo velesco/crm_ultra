@@ -64,6 +64,36 @@ class Contact extends Model
         return $this->belongsToMany(ContactSegment::class, 'contact_segment_members');
     }
 
+    public function consentLogs()
+    {
+        return $this->hasMany(ConsentLog::class);
+    }
+
+    public function dataRequests()
+    {
+        return $this->hasMany(DataRequest::class);
+    }
+
+    public function emailLogs()
+    {
+        return $this->hasMany(EmailLog::class);
+    }
+
+    public function smsMessages()
+    {
+        return $this->hasMany(SmsMessage::class);
+    }
+
+    public function whatsappMessages()
+    {
+        return $this->hasMany(WhatsAppMessage::class);
+    }
+
+    public function contactActivities()
+    {
+        return $this->hasMany(ContactActivity::class);
+    }
+
     // Scopes
     public function scopeActive($query)
     {

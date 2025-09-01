@@ -14,17 +14,25 @@ class WhatsAppMessage extends Model
     protected $fillable = [
         'session_id',
         'contact_id',
-        'message_id',
-        'from_number',
-        'to_number',
+        'user_id',
+        'phone_number',
+        'message',
         'message_type',
-        'content',
         'media_url',
-        'media_type',
-        'status',
         'direction',
+        'status',
+        'whatsapp_message_id',
+        'sent_at',
         'delivered_at',
         'read_at',
+        'scheduled_at',
+        'error_message',
+        // Original fields
+        'message_id',
+        'from_number',
+        'to_number', 
+        'content',
+        'media_type',
         'metadata',
     ];
 
@@ -42,9 +50,19 @@ class WhatsAppMessage extends Model
         return $this->belongsTo(WhatsAppSession::class, 'session_id');
     }
 
+    public function whatsAppSession()
+    {
+        return $this->belongsTo(WhatsAppSession::class, 'session_id');
+    }
+
     public function contact()
     {
         return $this->belongsTo(Contact::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     // Scopes

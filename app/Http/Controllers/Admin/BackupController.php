@@ -438,6 +438,52 @@ class BackupController extends Controller
     }
 
     /**
+     * Display scheduled backups
+     */
+    public function scheduled(Request $request)
+    {
+        // Get scheduled backups (future backups)
+        $query = SystemBackup::with('creator')
+            ->where('status', 'scheduled')
+            ->orWhere('created_at', '>', now());
+
+        // Apply filters
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $scheduledBackups = $query->latest()->paginate(20);
+
+        // Statistics for scheduled backups
+        $stats = [
+            'total_scheduled' => SystemBackup::where('status', 'scheduled')->count(),
+            'next_backup' => SystemBackup::where('status', 'scheduled')
+                ->where('created_at', '>', now())
+                ->orderBy('created_at')
+                ->first(),
+            'daily_scheduled' => SystemBackup::where('status', 'scheduled')
+                ->whereRaw('JSON_EXTRACT(metadata, "$.frequency") = "daily"')
+                ->count(),
+            'weekly_scheduled' => SystemBackup::where('status', 'scheduled')
+                ->whereRaw('JSON_EXTRACT(metadata, "$.frequency") = "weekly"')
+                ->count(),
+            'monthly_scheduled' => SystemBackup::where('status', 'scheduled')
+                ->whereRaw('JSON_EXTRACT(metadata, "$.frequency") = "monthly"')
+                ->count(),
+        ];
+
+        return view('admin.backups.scheduled', compact('scheduledBackups', 'stats'));
+    }
+
+    /**
      * Get daily backup statistics for charts
      */
     private function getDailyBackupStats()

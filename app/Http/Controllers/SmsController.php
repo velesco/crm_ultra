@@ -66,15 +66,16 @@ class SmsController extends Controller
             'total_messages' => SmsMessage::count(),
             'sent_today' => SmsMessage::whereDate('created_at', today())->count(),
             'delivered_count' => SmsMessage::where('status', 'delivered')->count(),
-            'failed' => SmsMessage::where('status', 'failed')->count(),
-            'pending' => SmsMessage::where('status', 'pending')->count(),
+            'failed_count' => SmsMessage::where('status', 'failed')->count(),
+            'pending_count' => SmsMessage::where('status', 'pending')->count(),
             'delivery_rate' => SmsMessage::count() > 0 ?
                 round((SmsMessage::where('status', 'delivered')->count() / SmsMessage::count()) * 100, 2) : 0,
         ];
 
         $providers = SmsProvider::where('is_active', true)->get();
+        $segments = ContactSegment::withCount('contacts')->get();
 
-        return view('sms.index', compact('messages', 'stats', 'providers'));
+        return view('sms.index', compact('messages', 'stats', 'providers', 'segments'));
     }
 
     /**
@@ -285,6 +286,114 @@ class SmsController extends Controller
 
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'An error occurred while resending SMS: '.$e->getMessage()]);
+        }
+    }
+
+    /**
+     * Retry a failed SMS message via AJAX
+     */
+    public function retry(SmsMessage $smsMessage)
+    {
+        if ($smsMessage->status !== 'failed') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only failed SMS messages can be retried.'
+            ], 400);
+        }
+
+        try {
+            $result = $this->smsService->sendSms(
+                $smsMessage->phone_number,
+                $smsMessage->message,
+                $smsMessage->contact_id,
+                $smsMessage->sms_provider_id
+            );
+
+            if ($result['success']) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'SMS message retried successfully.'
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to retry SMS: '.($result['error'] ?? 'Unknown error')
+                ], 400);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while retrying SMS: '.$e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Send bulk SMS messages
+     */
+    public function sendBulk(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'message' => 'required|string|max:1600',
+            'segments' => 'required|array|min:1',
+            'segments.*' => 'exists:contact_segments,id'
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        try {
+            $segments = ContactSegment::whereIn('id', $request->segments)->with('contacts')->get();
+            $allContacts = collect();
+            
+            // Collect all contacts from selected segments
+            foreach ($segments as $segment) {
+                $allContacts = $allContacts->merge(
+                    $segment->contacts()->whereNotNull('phone')->get()
+                );
+            }
+
+            // Remove duplicates based on phone number
+            $uniqueContacts = $allContacts->unique('phone');
+
+            if ($uniqueContacts->isEmpty()) {
+                return back()->withErrors(['segments' => 'No contacts with phone numbers found in selected segments.']);
+            }
+
+            $sentCount = 0;
+            $failedCount = 0;
+
+            foreach ($uniqueContacts as $contact) {
+                try {
+                    $result = $this->smsService->sendSms(
+                        $contact->phone,
+                        $request->message,
+                        $contact->id
+                    );
+
+                    if ($result['success']) {
+                        $sentCount++;
+                    } else {
+                        $failedCount++;
+                    }
+                } catch (\Exception $e) {
+                    $failedCount++;
+                    \Log::error('Bulk SMS send error for contact '.$contact->id.': '.$e->getMessage());
+                }
+
+                // Add small delay to prevent rate limiting
+                usleep(100000); // 0.1 second
+            }
+
+            $totalContacts = $uniqueContacts->count();
+            $message = "Bulk SMS sending completed. Sent: {$sentCount}, Failed: {$failedCount} out of {$totalContacts} contacts.";
+
+            return redirect()->route('sms.index')->with('success', $message);
+
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'An error occurred while sending bulk SMS: '.$e->getMessage()])->withInput();
         }
     }
 

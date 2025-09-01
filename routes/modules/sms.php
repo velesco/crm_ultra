@@ -14,9 +14,11 @@ use Illuminate\Support\Facades\Route;
 Route::resource('sms', SmsController::class);
 Route::prefix('sms')->name('sms.')->group(function () {
     Route::post('/send-to-segment', [SmsController::class, 'sendToSegment'])->name('send-to-segment');
+    Route::post('/bulk', [SmsController::class, 'sendBulk'])->name('bulk');
     Route::get('/statistics', [SmsController::class, 'statistics'])->name('statistics');
     Route::post('/{smsMessage}/cancel', [SmsController::class, 'cancel'])->name('cancel');
     Route::post('/{smsMessage}/resend', [SmsController::class, 'resend'])->name('resend');
+    Route::post('/{smsMessage}/retry', [SmsController::class, 'retry'])->name('retry');
 });
 
 // SMS Providers

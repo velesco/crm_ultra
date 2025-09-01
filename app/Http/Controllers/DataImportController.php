@@ -25,7 +25,7 @@ class DataImportController extends Controller
      */
     public function index(Request $request)
     {
-        $query = DataImport::with(['user'])
+        $query = DataImport::with(['creator'])
             ->latest('created_at');
 
         // Apply filters
@@ -54,7 +54,7 @@ class DataImportController extends Controller
             'failed_imports' => DataImport::where('status', 'failed')->count(),
             'pending_imports' => DataImport::where('status', 'pending')->count(),
             'processing_imports' => DataImport::where('status', 'processing')->count(),
-            'total_records_imported' => DataImport::where('status', 'completed')->sum('imported_count'),
+            'total_records_imported' => DataImport::where('status', 'completed')->sum('successful_rows'),
             'imports_today' => DataImport::whereDate('created_at', today())->count(),
         ];
 

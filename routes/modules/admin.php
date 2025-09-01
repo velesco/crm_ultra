@@ -55,6 +55,7 @@ Route::prefix('admin')->name('admin.')->middleware(['role:super_admin|admin'])->
     // System Backups
     Route::resource('backups', BackupController::class)->names('backups');
     Route::prefix('backups')->name('backups.')->group(function () {
+        Route::get('/scheduled', [BackupController::class, 'scheduled'])->name('scheduled');
         Route::post('/{backup}/restore', [BackupController::class, 'restore'])->name('restore');
         Route::post('/{backup}/download', [BackupController::class, 'download'])->name('download');
         Route::post('/{backup}/validate', [BackupController::class, 'validate'])->name('validate');

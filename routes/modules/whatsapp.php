@@ -15,10 +15,12 @@ Route::prefix('whatsapp')->name('whatsapp.')->group(function () {
     Route::get('/', [WhatsAppController::class, 'index'])->name('index');
     Route::get('/chat', [WhatsAppController::class, 'chat'])->name('chat');
     Route::get('/chat/{contact}', [WhatsAppController::class, 'chatWithContact'])->name('chat.contact');
+    Route::get('/send', [WhatsAppController::class, 'create'])->name('send');
     Route::post('/send-message', [WhatsAppController::class, 'sendMessage'])->name('send-message');
-    Route::post('/send', [WhatsAppController::class, 'sendMessage'])->name('send');
+    Route::post('/send', [WhatsAppController::class, 'send'])->name('send.post');
     Route::get('/contacts', [WhatsAppController::class, 'contacts'])->name('contacts');
     Route::get('/history', [WhatsAppController::class, 'history'])->name('history');
+    Route::get('/stats', [WhatsAppController::class, 'stats'])->name('stats');
 });
 
 // WhatsApp Sessions
