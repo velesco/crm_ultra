@@ -6,13 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Models\SystemBackup;
 use App\Services\BackupService;
 use Carbon\Carbon;
+use Exception;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Foundation\Application;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 
 class BackupController extends Controller
 {
-    protected $backupService;
+    protected BackupService $backupService;
 
     public function __construct(BackupService $backupService)
     {
@@ -23,7 +28,7 @@ class BackupController extends Controller
     /**
      * Display backup management dashboard
      */
-    public function index(Request $request)
+    public function index(Request $request): Factory|Application|View|JsonResponse|\Illuminate\Contracts\Foundation\Application
     {
         $query = SystemBackup::with('creator');
 
@@ -47,10 +52,10 @@ class BackupController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%")
+                $q->where('name', 'like', "%$search%")
+                    ->orWhere('description', 'like', "%$search%")
                     ->orWhereHas('creator', function ($subQ) use ($search) {
-                        $subQ->where('name', 'like', "%{$search}%");
+                        $subQ->where('name', 'like', "%$search%");
                     });
             });
         }
@@ -122,7 +127,7 @@ class BackupController extends Controller
                     break;
 
                 case 'database':
-                    $backup = SystemBackup::create([
+                    $backup = SystemBackup::query()->create([
                         'name' => $request->name,
                         'description' => $request->description,
                         'type' => 'database',
@@ -142,7 +147,7 @@ class BackupController extends Controller
                     break;
 
                 case 'files':
-                    $backup = SystemBackup::create([
+                    $backup = SystemBackup::query()->create([
                         'name' => $request->name,
                         'description' => $request->description,
                         'type' => 'files',
@@ -172,7 +177,7 @@ class BackupController extends Controller
                 ->route('admin.backups.index')
                 ->with('success', 'Backup created successfully!');
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Backup creation failed', [
                 'error' => $e->getMessage(),
                 'type' => $request->type,
@@ -196,7 +201,7 @@ class BackupController extends Controller
         $validation = $this->backupService->validateBackup($backup);
 
         // Get related backups (same type, recent)
-        $relatedBackups = SystemBackup::where('type', $backup->type)
+        $relatedBackups = SystemBackup::query()->where('type', $backup->type)
             ->where('id', '!=', $backup->id)
             ->latest()
             ->limit(5)
@@ -264,7 +269,7 @@ class BackupController extends Controller
                 ->route('admin.backups.index')
                 ->with('success', 'System restored successfully from backup!');
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Backup restoration failed', [
                 'backup_id' => $backup->id,
                 'error' => $e->getMessage(),
@@ -278,7 +283,7 @@ class BackupController extends Controller
     /**
      * Delete backup
      */
-    public function destroy(SystemBackup $backup)
+    public function destroy(SystemBackup $backup): \Illuminate\Http\RedirectResponse
     {
         if (! $backup->canBeDeleted()) {
             return back()->with('error', 'This backup cannot be deleted while in progress.');
@@ -296,39 +301,13 @@ class BackupController extends Controller
                 ->route('admin.backups.index')
                 ->with('success', 'Backup deleted successfully!');
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Backup deletion failed', [
                 'backup_id' => $backup->id,
                 'error' => $e->getMessage(),
             ]);
 
             return back()->with('error', 'Failed to delete backup: '.$e->getMessage());
-        }
-    }
-
-    /**
-     * Create scheduled backup
-     */
-    public function scheduled(Request $request)
-    {
-        $request->validate([
-            'frequency' => 'required|in:daily,weekly,monthly',
-        ]);
-
-        try {
-            $backup = $this->backupService->scheduleAutomaticBackup($request->frequency);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Scheduled backup created successfully!',
-                'backup' => $backup,
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Scheduled backup failed: '.$e->getMessage(),
-            ], 500);
         }
     }
 
@@ -383,7 +362,7 @@ class BackupController extends Controller
                 'deleted_count' => $deleted,
             ]);
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Cleanup failed: '.$e->getMessage(),
@@ -426,7 +405,7 @@ class BackupController extends Controller
                         ];
                         break;
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $results[] = ['id' => $backup->id, 'success' => false, 'message' => $e->getMessage()];
             }
         }
