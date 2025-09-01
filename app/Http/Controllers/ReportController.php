@@ -46,8 +46,8 @@ class ReportController extends Controller
             ],
             'segments' => [
                 'total' => ContactSegment::count(),
-                'dynamic' => ContactSegment::where('type', 'dynamic')->count(),
-                'static' => ContactSegment::where('type', 'static')->count(),
+                'dynamic' => ContactSegment::where('is_dynamic', true)->count(),
+                'static' => ContactSegment::where('is_dynamic', false)->count(),
                 'largest_segment_size' => $this->getLargestSegmentSize(),
             ],
         ];

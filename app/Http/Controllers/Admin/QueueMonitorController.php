@@ -433,9 +433,23 @@ class QueueMonitorController extends Controller
                 $hour = Carbon::now()->subHours($i);
                 $hours[] = $hour->format('H:00');
 
-                // Get metrics for this hour
-                $hourlyProcessed = $this->metricsRepository->jobsPerHour()[$hour->format('Y-m-d H:00')] ?? 0;
-                $hourlyFailed = $this->metricsRepository->recentlyFailed()[$hour->format('Y-m-d H:00')] ?? 0;
+                // Get metrics for this hour with fallback
+                try {
+                    $hourlyProcessed = $this->metricsRepository->jobsPerHour()[$hour->format('Y-m-d H:00')] ?? 0;
+                } catch (\Exception $e) {
+                    $hourlyProcessed = 0;
+                }
+
+                try {
+                    // Try to get failed jobs data, fallback if method doesn't exist
+                    if (method_exists($this->metricsRepository, 'recentlyFailed')) {
+                        $hourlyFailed = $this->metricsRepository->recentlyFailed()[$hour->format('Y-m-d H:00')] ?? 0;
+                    } else {
+                        $hourlyFailed = $this->getFailedJobsForHour($hour);
+                    }
+                } catch (\Exception $e) {
+                    $hourlyFailed = 0;
+                }
 
                 $processed[] = $hourlyProcessed;
                 $failed[] = $hourlyFailed;
@@ -576,6 +590,23 @@ class QueueMonitorController extends Controller
                 // Return 0 if all methods fail
                 return 0;
             }
+        }
+    }
+
+    /**
+     * Get failed jobs count for a specific hour
+     */
+    private function getFailedJobsForHour($hour)
+    {
+        try {
+            $startOfHour = $hour->startOfHour();
+            $endOfHour = $hour->copy()->endOfHour();
+            
+            return DB::table('failed_jobs')
+                ->whereBetween('failed_at', [$startOfHour, $endOfHour])
+                ->count();
+        } catch (\Exception $e) {
+            return 0;
         }
     }
 }

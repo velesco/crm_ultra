@@ -13,6 +13,7 @@ class GoogleSheetsSyncLog extends Model
 
     protected $fillable = [
         'integration_id',
+        'created_by',
         'action', // import, export, sync
         'status', // success, failed, partial
         'records_processed',
@@ -36,6 +37,11 @@ class GoogleSheetsSyncLog extends Model
     public function integration()
     {
         return $this->belongsTo(GoogleSheetsIntegration::class, 'integration_id');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     // Scopes

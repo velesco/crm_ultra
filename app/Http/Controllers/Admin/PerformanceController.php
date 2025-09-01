@@ -34,12 +34,40 @@ class PerformanceController extends Controller
         // Calculate performance scores
         $scores = $this->calculatePerformanceScores($currentMetrics);
 
+        // Get critical and warning metrics for alerts
+        $criticalMetrics = collect();
+        $warningMetrics = collect();
+        $metricTypes = ['cpu', 'memory', 'disk', 'database', 'cache', 'queue'];
+
+        // Parse current metrics for alerts
+        foreach ($currentMetrics as $category => $categoryMetrics) {
+            foreach ($categoryMetrics as $name => $data) {
+                $mockMetric = (object) [
+                    'metric_type' => $category,
+                    'metric_name' => $name,
+                    'value' => $data['value'],
+                    'unit' => $data['unit'],
+                    'formatted_value' => $data['value'] . ' ' . $data['unit'],
+                    'status' => $data['status'] ?? 'normal'
+                ];
+
+                if (($data['status'] ?? 'normal') === 'critical') {
+                    $criticalMetrics->push($mockMetric);
+                } elseif (($data['status'] ?? 'normal') === 'warning') {
+                    $warningMetrics->push($mockMetric);
+                }
+            }
+        }
+
         return view('admin.performance.index', compact(
             'currentMetrics',
             'historicalMetrics',
             'alerts',
             'scores',
-            'period'
+            'period',
+            'criticalMetrics',
+            'warningMetrics',
+            'metricTypes'
         ));
     }
 
@@ -203,42 +231,6 @@ class PerformanceController extends Controller
                     'failed_jobs' => $group->sum('failed_jobs'),
                 ];
             });
-    }
-
-    /**
-     * Calculate performance scores
-     */
-    private function calculatePerformanceScores($metrics)
-    {
-        $scores = [];
-
-        // System score (0-100)
-        $systemScore = 100;
-        $systemScore -= min($metrics['system']['cpu_usage'], 100);
-        $systemScore -= min($metrics['system']['memory_usage'], 100);
-        $systemScore -= min($metrics['system']['disk_usage'] / 2, 50);
-        $scores['system'] = max($systemScore, 0);
-
-        // Database score (0-100)
-        $dbScore = 100;
-        $dbScore -= min($metrics['database']['query_time_avg'] * 10, 50);
-        $dbScore -= min($metrics['database']['slow_queries'], 30);
-        $scores['database'] = max($dbScore, 0);
-
-        // Cache score (0-100)
-        $cacheScore = $metrics['cache']['hit_rate'];
-        $scores['cache'] = min(max($cacheScore, 0), 100);
-
-        // Queue score (0-100)
-        $queueScore = 100;
-        $queueScore -= min($metrics['queue']['failed_jobs'], 50);
-        $queueScore -= min($metrics['queue']['pending_jobs'] / 10, 30);
-        $scores['queue'] = max($queueScore, 0);
-
-        // Overall score
-        $scores['overall'] = array_sum($scores) / count($scores);
-
-        return $scores;
     }
 
     /**
@@ -406,7 +398,7 @@ class PerformanceController extends Controller
             $dbName = config('database.connections.mysql.database');
             $result = DB::select("
                 SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 1) AS 'size_mb'
-                FROM information_schema.tables 
+                FROM information_schema.tables
                 WHERE table_schema = ?
             ", [$dbName]);
 
@@ -557,6 +549,50 @@ class PerformanceController extends Controller
             case 'K': return $value * 1024;
             default: return $value;
         }
+    }
+
+
+    /**
+     * Calculate performance scores
+     */
+    private function calculatePerformanceScores($metrics)
+    {
+        $scores = [
+            'overall' => 100,
+            'cpu' => 100,
+            'memory' => 100,
+            'disk' => 100,
+            'database' => 100,
+        ];
+
+        // Calculate CPU score
+        if (isset($metrics['cpu']['usage_percentage']['value'])) {
+            $cpuUsage = $metrics['cpu']['usage_percentage']['value'];
+            $scores['cpu'] = max(0, 100 - $cpuUsage);
+        }
+
+        // Calculate Memory score
+        if (isset($metrics['memory']['usage_percentage']['value'])) {
+            $memUsage = $metrics['memory']['usage_percentage']['value'];
+            $scores['memory'] = max(0, 100 - $memUsage);
+        }
+
+        // Calculate Disk score
+        if (isset($metrics['disk']['usage_percentage']['value'])) {
+            $diskUsage = $metrics['disk']['usage_percentage']['value'];
+            $scores['disk'] = max(0, 100 - $diskUsage);
+        }
+
+        // Calculate Database score
+        if (isset($metrics['database']['query_response_time']['value'])) {
+            $queryTime = $metrics['database']['query_response_time']['value'];
+            $scores['database'] = max(0, 100 - ($queryTime * 2)); // Lower is better
+        }
+
+        // Calculate overall score
+        $scores['overall'] = array_sum(array_slice($scores, 1)) / 4;
+
+        return $scores;
     }
 
     private function getPeriodStartDate($period)

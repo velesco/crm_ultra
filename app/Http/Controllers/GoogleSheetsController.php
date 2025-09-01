@@ -27,8 +27,8 @@ class GoogleSheetsController extends Controller
     public function index()
     {
         $integrations = GoogleSheetsIntegration::withCount(['syncLogs'])
-            ->with(['user'])
-            ->orderBy('is_active', 'desc')
+            ->with(['creator'])
+            ->orderBy('sync_status', 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -45,7 +45,7 @@ class GoogleSheetsController extends Controller
         // Overall statistics
         $stats = [
             'total_integrations' => GoogleSheetsIntegration::count(),
-            'active_integrations' => GoogleSheetsIntegration::where('is_active', true)->count(),
+            'active_integrations' => GoogleSheetsIntegration::where('sync_status', 'active')->count(),
             'total_syncs' => GoogleSheetsSyncLog::count(),
             'successful_syncs' => GoogleSheetsSyncLog::where('status', 'completed')->count(),
             'failed_syncs' => GoogleSheetsSyncLog::where('status', 'failed')->count(),
@@ -183,7 +183,7 @@ class GoogleSheetsController extends Controller
 
             // Create integration
             $integration = GoogleSheetsIntegration::create([
-                'user_id' => Auth::id(),
+                'created_by' => Auth::id(),
                 'name' => $request->name,
                 'spreadsheet_id' => $request->spreadsheet_id,
                 'sheet_name' => $request->sheet_name,
@@ -193,10 +193,9 @@ class GoogleSheetsController extends Controller
                 'settings' => [
                     'has_headers' => $request->boolean('has_headers', true),
                     'start_row' => $request->start_row ?? 1,
+                    'oauth_tokens' => $tokens,
                 ],
-                'description' => $request->description,
-                'oauth_tokens' => $tokens,
-                'is_active' => true,
+                'sync_status' => 'active',
                 'last_sync_at' => null,
             ]);
 
@@ -217,7 +216,7 @@ class GoogleSheetsController extends Controller
      */
     public function show(GoogleSheetsIntegration $googleSheet)
     {
-        $googleSheet->load(['user', 'syncLogs' => function ($query) {
+        $googleSheet->load(['creator', 'syncLogs' => function ($query) {
             $query->latest()->limit(10);
         }]);
 
@@ -233,7 +232,7 @@ class GoogleSheetsController extends Controller
         ];
 
         // Recent sync logs
-        $recentLogs = $googleSheet->syncLogs()->with(['user'])->latest()->limit(5)->get();
+        $recentLogs = $googleSheet->syncLogs()->with(['creator'])->latest()->limit(5)->get();
 
         return view('google-sheets.show', compact('googleSheet', 'stats', 'recentLogs'));
     }
@@ -369,11 +368,13 @@ class GoogleSheetsController extends Controller
     public function toggleStatus(GoogleSheetsIntegration $googleSheet)
     {
         try {
+            $newStatus = $googleSheet->sync_status === 'active' ? 'inactive' : 'active';
+            
             $googleSheet->update([
-                'is_active' => ! $googleSheet->is_active,
+                'sync_status' => $newStatus,
             ]);
 
-            $status = $googleSheet->is_active ? 'activated' : 'deactivated';
+            $status = $newStatus === 'active' ? 'activated' : 'deactivated';
 
             return back()->with('success', "Integration {$status} successfully.");
 
@@ -387,7 +388,7 @@ class GoogleSheetsController extends Controller
      */
     public function sync(GoogleSheetsIntegration $googleSheet, Request $request)
     {
-        if (! $googleSheet->is_active) {
+        if ($googleSheet->sync_status !== 'active') {
             return back()->withErrors(['error' => 'Cannot sync inactive integration.']);
         }
 
@@ -463,7 +464,7 @@ class GoogleSheetsController extends Controller
      */
     public function syncLogs(GoogleSheetsIntegration $googleSheet, Request $request)
     {
-        $query = $googleSheet->syncLogs()->with(['user']);
+        $query = $googleSheet->syncLogs()->with(['creator']);
 
         // Apply filters
         if ($request->filled('status')) {

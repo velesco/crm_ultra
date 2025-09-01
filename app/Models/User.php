@@ -142,6 +142,11 @@ class User extends Authenticatable
         return $this->hasMany(GoogleSheetsIntegration::class, 'created_by');
     }
 
+    public function systemLogs()
+    {
+        return $this->hasMany(SystemLog::class);
+    }
+
     // Scopes
     public function scopeActive($query)
     {

@@ -17,6 +17,7 @@ class SmsProvider extends Model
         'sender_id',
         'webhook_url',
         'is_active',
+        'priority',
         'daily_limit',
         'sent_today',
         'cost_per_sms',

@@ -14,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Storage;
 
 class BackupController extends Controller
 {
@@ -338,37 +339,6 @@ class BackupController extends Controller
         return response()->json($validation);
     }
 
-    /**
-     * Cleanup old backups
-     */
-    public function cleanup(Request $request)
-    {
-        $request->validate([
-            'days_to_keep' => 'required|integer|min:1|max:365',
-        ]);
-
-        try {
-            $deleted = SystemBackup::cleanupOld($request->days_to_keep);
-
-            Log::info('Old backups cleaned up', [
-                'deleted_count' => $deleted,
-                'days_to_keep' => $request->days_to_keep,
-                'cleaned_by' => auth()->id(),
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => "Cleaned up {$deleted} old backups.",
-                'deleted_count' => $deleted,
-            ]);
-
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Cleanup failed: '.$e->getMessage(),
-            ], 500);
-        }
-    }
 
     /**
      * Bulk actions on backups
@@ -503,5 +473,83 @@ class BackupController extends Controller
             'failed' => $failed,
             'success_rate' => $total > 0 ? round(($successful / $total) * 100, 2) : 0,
         ];
+    }
+
+    /**
+     * Cleanup old backups
+     */
+    public function cleanup(Request $request)
+    {
+        $validated = $request->validate([
+            'days_to_keep' => 'required|integer|min:1|max:365',
+        ]);
+
+        try {
+            $cutoffDate = now()->subDays($validated['days_to_keep']);
+
+            // Find old backups
+            $oldBackups = SystemBackup::where('created_at', '<', $cutoffDate)
+                ->where('status', '!=', 'in_progress')
+                ->get();
+
+            $deletedCount = 0;
+            $totalSizeFreed = 0;
+            $errors = [];
+
+            foreach ($oldBackups as $backup) {
+                try {
+                    // Delete backup file if it exists
+                    if ($backup->file_path && Storage::disk('backups')->exists($backup->file_path)) {
+                        $fileSize = Storage::disk('backups')->size($backup->file_path);
+                        Storage::disk('backups')->delete($backup->file_path);
+                        $totalSizeFreed += $fileSize;
+                    }
+
+                    // Delete database record
+                    $backup->delete();
+                    $deletedCount++;
+
+                } catch (\Exception $e) {
+                    $errors[] = "Failed to delete backup {$backup->name}: " . $e->getMessage();
+                }
+            }
+
+            $message = "Successfully cleaned up {$deletedCount} old backup(s)";
+            if ($totalSizeFreed > 0) {
+                $message .= " and freed " . $this->formatBytes($totalSizeFreed) . " of disk space";
+            }
+
+            if (!empty($errors)) {
+                $message .= ". Some errors occurred: " . implode(', ', $errors);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'deleted_count' => $deletedCount,
+                'size_freed' => $totalSizeFreed,
+                'errors' => $errors,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to cleanup old backups: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Format bytes to human readable format
+     */
+    private function formatBytes($bytes, $precision = 2)
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+
+        for ($i = 0; $bytes >= 1024 && $i < 4; $i++) {
+            $bytes /= 1024;
+        }
+
+        return round($bytes, $precision) . ' ' . $units[$i];
     }
 }

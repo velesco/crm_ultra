@@ -277,12 +277,12 @@
                             </div>
                             <div class="flex items-center space-x-2">
                                 <button type="button" 
-                                        @click="insertVariable('{{name}}')"
+                                        @click="insertVariable('{name}')"
                                         class="px-2 py-1 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 rounded">
                                     Nume
                                 </button>
                                 <button type="button" 
-                                        @click="insertVariable('{{company}}')"
+                                        @click="insertVariable('{company}')"
                                         class="px-2 py-1 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 rounded">
                                     Companie
                                 </button>
@@ -297,7 +297,7 @@
                     <div x-show="message.length > 0" class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                         <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Previzualizare:</h4>
                         <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-3 max-w-sm">
-                            <p class="text-sm text-gray-900 dark:text-white" x-text="message.replace(/\{\{name\}\}/g, 'John Doe').replace(/\{\{company\}\}/g, 'ACME Corp')"></p>
+                            <p class="text-sm text-gray-900 dark:text-white" x-text="message.replace(/{name}/g, 'John Doe').replace(/{company}/g, 'ACME Corp')"></p>
                         </div>
                     </div>
                 </div>

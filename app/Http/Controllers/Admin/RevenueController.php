@@ -249,7 +249,7 @@ class RevenueController extends Controller
         // For demonstration, we'll calculate based on campaign performance and estimated values
 
         $emailRevenue = EmailCampaign::whereBetween('created_at', [$dateRange['start'], $dateRange['end']])
-            ->sum(DB::raw('COALESCE(opens_count, 0) * 0.1')); // $0.1 per email open
+            ->sum(DB::raw('COALESCE(opened_count, 0) * 0.1')); // $0.1 per email open
 
         $smsRevenue = SmsMessage::whereBetween('created_at', [$dateRange['start'], $dateRange['end']])
             ->where('status', 'delivered')
