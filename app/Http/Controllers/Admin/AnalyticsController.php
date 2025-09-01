@@ -271,7 +271,7 @@ class AnalyticsController extends Controller
             ->get()
             ->map(function ($segment) use ($startDate, $endDate) {
                 $contacts = $segment->contacts()
-                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->whereBetween('contacts.created_at', [$startDate, $endDate])
                     ->count();
 
                 return [

@@ -11,7 +11,7 @@
             <p class="text-gray-600 dark:text-gray-400">Manage your data import operations</p>
         </div>
         <div class="flex space-x-3">
-            <a href="{{ route('data.import.contacts') }}" class="btn-primary">
+            <a href="{{ route('data.import.create') }}" class="btn-primary">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                 </svg>
@@ -311,7 +311,7 @@
                                 </svg>
                                 <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No imports found</h3>
                                 <p class="text-gray-600 dark:text-gray-400 mb-6">Start by importing your first data file.</p>
-                                <a href="{{ route('data.import.contacts') }}" class="btn-primary">
+                                <a href="{{ route('data.import.create') }}" class="btn-primary">
                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                                     </svg>

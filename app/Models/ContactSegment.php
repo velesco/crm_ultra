@@ -14,6 +14,7 @@ class ContactSegment extends Model
         'description',
         'conditions',
         'is_dynamic',
+        'type',
         'color',
         'created_by',
     ];

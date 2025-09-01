@@ -34,12 +34,12 @@ class GoogleSheetsController extends Controller
 
         // Add statistics for each integration
         foreach ($integrations as $integration) {
-            $integration->successful_syncs = $integration->syncLogs()->where('status', 'completed')->count();
+            $integration->successful_syncs = $integration->syncLogs()->where('status', 'success')->count();
             $integration->failed_syncs = $integration->syncLogs()->where('status', 'failed')->count();
             $integration->last_sync_at = $integration->syncLogs()->latest()->first()?->started_at;
             $integration->contacts_synced = $integration->syncLogs()
-                ->where('status', 'completed')
-                ->sum('contacts_processed');
+                ->where('status', 'success')
+                ->sum('records_processed');
         }
 
         // Overall statistics
@@ -47,11 +47,11 @@ class GoogleSheetsController extends Controller
             'total_integrations' => GoogleSheetsIntegration::count(),
             'active_integrations' => GoogleSheetsIntegration::where('sync_status', 'active')->count(),
             'total_syncs' => GoogleSheetsSyncLog::count(),
-            'successful_syncs' => GoogleSheetsSyncLog::where('status', 'completed')->count(),
+            'successful_syncs' => GoogleSheetsSyncLog::where('status', 'success')->count(),
             'failed_syncs' => GoogleSheetsSyncLog::where('status', 'failed')->count(),
-            'contacts_synced_today' => GoogleSheetsSyncLog::where('status', 'completed')
+            'contacts_synced_today' => GoogleSheetsSyncLog::where('status', 'success')
                 ->whereDate('started_at', today())
-                ->sum('contacts_processed'),
+                ->sum('records_processed'),
         ];
 
         return view('google-sheets.index', compact('integrations', 'stats'));

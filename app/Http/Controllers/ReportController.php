@@ -136,10 +136,10 @@ class ReportController extends Controller
             'active_campaigns' => EmailCampaign::where('status', 'active')->count(),
             'completed_campaigns' => EmailCampaign::where('status', 'completed')->count(),
             'total_emails_sent' => EmailLog::where('status', 'sent')->count(),
-            'total_opens' => EmailLog::where('opened', true)->count(),
-            'total_clicks' => EmailLog::where('clicked', true)->count(),
-            'total_bounces' => EmailLog::where('bounced', true)->count(),
-            'total_unsubscribes' => EmailLog::where('unsubscribed', true)->count(),
+            'total_opens' => EmailLog::whereNotNull('opened_at')->count(),
+            'total_clicks' => EmailLog::whereNotNull('clicked_at')->count(),
+            'total_bounces' => EmailLog::whereNotNull('bounced_at')->count(),
+            'total_unsubscribes' => EmailLog::where('status', 'unsubscribed')->count(),
         ];
 
         // Calculate rates
@@ -165,8 +165,8 @@ class ReportController extends Controller
             ->map(function ($campaign) {
                 $logs = $campaign->emailLogs;
                 $sent = $logs->count();
-                $opens = $logs->where('opened', true)->count();
-                $clicks = $logs->where('clicked', true)->count();
+                $opens = $logs->whereNotNull('opened_at')->count();
+                $clicks = $logs->whereNotNull('clicked_at')->count();
 
                 return [
                     'campaign' => $campaign,
@@ -314,8 +314,8 @@ class ReportController extends Controller
         $commStats = [
             'email' => [
                 'sent' => EmailLog::where('status', 'sent')->count(),
-                'opened' => EmailLog::where('opened', true)->count(),
-                'clicked' => EmailLog::where('clicked', true)->count(),
+                'opened' => EmailLog::whereNotNull('opened_at')->count(),
+                'clicked' => EmailLog::whereNotNull('clicked_at')->count(),
             ],
             'sms' => [
                 'sent' => SmsMessage::count(),
@@ -428,7 +428,7 @@ class ReportController extends Controller
         foreach ($campaigns as $campaign) {
             $sent = $campaign->emailLogs->count();
             if ($sent > 0) {
-                $opens = $campaign->emailLogs->where('opened', true)->count();
+                $opens = $campaign->emailLogs->whereNotNull('opened_at')->count();
                 $totalOpenRate += ($opens / $sent) * 100;
                 $campaignCount++;
             }
@@ -459,8 +459,8 @@ class ReportController extends Controller
         return EmailLog::select(
             DB::raw('DATE(created_at) as date'),
             DB::raw('count(*) as sent'),
-            DB::raw('sum(opened) as opens'),
-            DB::raw('sum(clicked) as clicks')
+            DB::raw('sum(case when opened_at is not null then 1 else 0 end) as opens'),
+            DB::raw('sum(case when clicked_at is not null then 1 else 0 end) as clicks')
         )
             ->where('created_at', '>=', now()->subDays(30))
             ->groupBy('date')
@@ -558,8 +558,8 @@ class ReportController extends Controller
         return Contact::with(['emailLogs', 'smsMessages', 'whatsappMessages'])
             ->get()
             ->map(function ($contact) {
-                $emailEngagement = $contact->emailLogs->where('opened', true)->count() +
-                                 ($contact->emailLogs->where('clicked', true)->count() * 2);
+                $emailEngagement = $contact->emailLogs->whereNotNull('opened_at')->count() +
+                                 ($contact->emailLogs->whereNotNull('clicked_at')->count() * 2);
                 $smsEngagement = $contact->smsMessages->where('status', 'delivered')->count();
                 $whatsappEngagement = $contact->whatsappMessages->count();
 
@@ -579,7 +579,7 @@ class ReportController extends Controller
             ->get()
             ->map(function ($segment) {
                 $contactIds = $segment->contacts->pluck('id');
-                $emailEngagement = EmailLog::whereIn('contact_id', $contactIds)->where('opened', true)->count();
+                $emailEngagement = EmailLog::whereIn('contact_id', $contactIds)->whereNotNull('opened_at')->count();
                 $totalEmails = EmailLog::whereIn('contact_id', $contactIds)->count();
 
                 return [
@@ -607,8 +607,8 @@ class ReportController extends Controller
                 foreach ($campaigns as $campaign) {
                     $sent = $campaign->emailLogs->count();
                     $totalSent += $sent;
-                    $totalOpens += $campaign->emailLogs->where('opened', true)->count();
-                    $totalClicks += $campaign->emailLogs->where('clicked', true)->count();
+                    $totalOpens += $campaign->emailLogs->whereNotNull('opened_at')->count();
+                    $totalClicks += $campaign->emailLogs->whereNotNull('clicked_at')->count();
                 }
 
                 return [
@@ -624,7 +624,7 @@ class ReportController extends Controller
     {
         return EmailLog::select('user_agent', DB::raw('count(*) as count'))
             ->whereNotNull('user_agent')
-            ->where('opened', true)
+            ->whereNotNull('opened_at')
             ->groupBy('user_agent')
             ->orderBy('count', 'desc')
             ->take(10)
@@ -636,7 +636,7 @@ class ReportController extends Controller
         return EmailLog::select(
             DB::raw('HOUR(created_at) as hour'),
             DB::raw('count(*) as sent'),
-            DB::raw('sum(opened) as opens')
+            DB::raw('sum(case when opened_at is not null then 1 else 0 end) as opens')
         )
             ->where('status', 'sent')
             ->groupBy('hour')
@@ -748,8 +748,8 @@ class ReportController extends Controller
         $email = [
             'sent' => EmailLog::whereBetween('created_at', $dateRange)->count(),
             'delivered' => EmailLog::whereBetween('created_at', $dateRange)->where('status', 'sent')->count(),
-            'opened' => EmailLog::whereBetween('created_at', $dateRange)->where('opened', true)->count(),
-            'clicked' => EmailLog::whereBetween('created_at', $dateRange)->where('clicked', true)->count(),
+            'opened' => EmailLog::whereBetween('created_at', $dateRange)->whereNotNull('opened_at')->count(),
+            'clicked' => EmailLog::whereBetween('created_at', $dateRange)->whereNotNull('clicked_at')->count(),
         ];
 
         $sms = [
@@ -809,8 +809,8 @@ class ReportController extends Controller
         return Contact::with(['emailLogs', 'smsMessages', 'whatsappMessages'])
             ->get()
             ->map(function ($contact) {
-                $emailScore = $contact->emailLogs->where('opened', true)->count() * 2 +
-                             $contact->emailLogs->where('clicked', true)->count() * 5;
+                $emailScore = $contact->emailLogs->whereNotNull('opened_at')->count() * 2 +
+                             $contact->emailLogs->whereNotNull('clicked_at')->count() * 5;
                 $smsScore = $contact->smsMessages->where('status', 'delivered')->count() * 3;
                 $whatsappScore = $contact->whatsappMessages->where('direction', 'inbound')->count() * 4;
 
@@ -837,8 +837,8 @@ class ReportController extends Controller
             'email' => [
                 'total_sent' => EmailLog::count(),
                 'total_cost' => EmailLog::count() * $emailCost,
-                'opens' => EmailLog::where('opened', true)->count(),
-                'clicks' => EmailLog::where('clicked', true)->count(),
+                'opens' => EmailLog::whereNotNull('opened_at')->count(),
+                'clicks' => EmailLog::whereNotNull('clicked_at')->count(),
             ],
             'sms' => [
                 'total_sent' => SmsMessage::count(),
@@ -874,8 +874,8 @@ class ReportController extends Controller
             ->map(function ($campaign) {
                 $logs = $campaign->emailLogs;
                 $sent = $logs->count();
-                $opens = $logs->where('opened', true)->count();
-                $clicks = $logs->where('clicked', true)->count();
+                $opens = $logs->whereNotNull('opened_at')->count();
+                $clicks = $logs->whereNotNull('clicked_at')->count();
 
                 return [
                     'campaign_name' => $campaign->name,
@@ -945,8 +945,8 @@ class ReportController extends Controller
                     'contact_email' => $email->contact->email,
                     'subject' => $email->campaign->subject ?? 'N/A',
                     'status' => $email->status,
-                    'opened' => $email->opened ? 'Yes' : 'No',
-                    'clicked' => $email->clicked ? 'Yes' : 'No',
+                    'opened' => $email->opened_at ? 'Yes' : 'No',
+                    'clicked' => $email->clicked_at ? 'Yes' : 'No',
                     'timestamp' => $email->created_at,
                 ];
             });

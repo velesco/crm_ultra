@@ -3,21 +3,54 @@
 @section('title', 'Create API Key')
 
 @section('content')
-<div class="container-fluid">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <!-- Header Section -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="h3 mb-0 text-gray-800">
-                        <i class="fas fa-plus text-primary"></i>
-                        Create New API Key
-                    </h1>
-                    <p class="text-muted mb-0">Generate a new API key for external integrations</p>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
+                <svg class="w-8 h-8 text-indigo-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Create New API Key
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">Generate a new API key for external integrations</p>
+        </div>
+        <a href="{{ route('admin.api-keys.index') }}" class="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium rounded-md transition-colors">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            Back to API Keys
+        </a>
+    </div>
+
+    <!-- Progress Indicator -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-8">
+        <div class="px-6 py-4">
+            <div class="flex items-center justify-center space-x-8">
+                <div class="flex items-center step-progress active" id="progress1">
+                    <div class="flex items-center justify-center w-10 h-10 bg-indigo-600 text-white rounded-full mr-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <span class="font-medium text-gray-900 dark:text-white">Basic Info</span>
                 </div>
-                <a href="{{ route('admin.api-keys.index') }}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left"></i> Back to API Keys
-                </a>
+                <div class="flex items-center step-progress" id="progress2">
+                    <div class="flex items-center justify-center w-10 h-10 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full mr-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                        </svg>
+                    </div>
+                    <span class="font-medium text-gray-500 dark:text-gray-400">Permissions</span>
+                </div>
+                <div class="flex items-center step-progress" id="progress3">
+                    <div class="flex items-center justify-center w-10 h-10 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full mr-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                        </svg>
+                    </div>
+                    <span class="font-medium text-gray-500 dark:text-gray-400">Security</span>
+                </div>
             </div>
         </div>
     </div>
@@ -26,369 +59,328 @@
         @csrf
         
         <!-- Step 1: Basic Information -->
-        <div class="card shadow mb-4" id="step1">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">
-                    <span class="step-indicator">Step 1 of 3:</span> Basic Information
-                </h6>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-8" id="step1">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    <span class="text-indigo-600 dark:text-indigo-400 font-bold">Step 1 of 3:</span> Basic Information
+                </h3>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="name" class="form-label">API Key Name <span class="text-danger">*</span></label>
-                            <input type="text" 
-                                   class="form-control @error('name') is-invalid @enderror" 
-                                   id="name" 
-                                   name="name" 
-                                   value="{{ old('name') }}" 
-                                   placeholder="e.g., Mobile App API Key"
-                                   required>
-                            @error('name')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            <div class="form-text">Choose a descriptive name to identify this API key</div>
-                        </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            API Key Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" 
+                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 @error('name') border-red-500 @enderror" 
+                               id="name" 
+                               name="name" 
+                               value="{{ old('name') }}" 
+                               placeholder="e.g., Mobile App API Key"
+                               required>
+                        @error('name')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                        <p class="text-gray-500 text-sm mt-1">Choose a descriptive name to identify this API key</p>
                     </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="environment" class="form-label">Environment <span class="text-danger">*</span></label>
-                            <select class="form-select @error('environment') is-invalid @enderror" 
-                                    id="environment" 
-                                    name="environment" 
-                                    required>
-                                <option value="">Select Environment</option>
-                                <option value="production" {{ old('environment') === 'production' ? 'selected' : '' }}>
-                                    Production
-                                </option>
-                                <option value="staging" {{ old('environment') === 'staging' ? 'selected' : '' }}>
-                                    Staging
-                                </option>
-                                <option value="development" {{ old('environment') === 'development' ? 'selected' : '' }}>
-                                    Development
-                                </option>
-                            </select>
-                            @error('environment')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-12">
-                        <div class="mb-3">
-                            <label for="description" class="form-label">Description</label>
-                            <textarea class="form-control @error('description') is-invalid @enderror" 
-                                      id="description" 
-                                      name="description" 
-                                      rows="3" 
-                                      placeholder="Describe the purpose of this API key...">{{ old('description') }}</textarea>
-                            @error('description')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                    <div>
+                        <label for="environment" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Environment <span class="text-red-500">*</span>
+                        </label>
+                        <select class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 @error('environment') border-red-500 @enderror" 
+                                id="environment" 
+                                name="environment" 
+                                required>
+                            <option value="">Select Environment</option>
+                            <option value="production" {{ old('environment') === 'production' ? 'selected' : '' }}>
+                                Production
+                            </option>
+                            <option value="staging" {{ old('environment') === 'staging' ? 'selected' : '' }}>
+                                Staging
+                            </option>
+                            <option value="development" {{ old('environment') === 'development' ? 'selected' : '' }}>
+                                Development
+                            </option>
+                        </select>
+                        @error('environment')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="status" class="form-label">Initial Status <span class="text-danger">*</span></label>
-                            <select class="form-select @error('status') is-invalid @enderror" 
-                                    id="status" 
-                                    name="status" 
-                                    required>
-                                <option value="active" {{ old('status', 'active') === 'active' ? 'selected' : '' }}>
-                                    Active
-                                </option>
-                                <option value="inactive" {{ old('status') === 'inactive' ? 'selected' : '' }}>
-                                    Inactive
-                                </option>
-                            </select>
-                            @error('status')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                <div class="mt-6">
+                    <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+                    <textarea class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 @error('description') border-red-500 @enderror" 
+                              id="description" 
+                              name="description" 
+                              rows="3" 
+                              placeholder="Describe the purpose of this API key...">{{ old('description') }}</textarea>
+                    @error('description')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Initial Status <span class="text-red-500">*</span>
+                        </label>
+                        <select class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 @error('status') border-red-500 @enderror" 
+                                id="status" 
+                                name="status" 
+                                required>
+                            <option value="active" {{ old('status', 'active') === 'active' ? 'selected' : '' }}>
+                                Active
+                            </option>
+                            <option value="inactive" {{ old('status') === 'inactive' ? 'selected' : '' }}>
+                                Inactive
+                            </option>
+                        </select>
+                        @error('status')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="expires_at" class="form-label">Expiration Date (Optional)</label>
-                            <input type="datetime-local" 
-                                   class="form-control @error('expires_at') is-invalid @enderror" 
-                                   id="expires_at" 
-                                   name="expires_at" 
-                                   value="{{ old('expires_at') }}"
-                                   min="{{ now()->format('Y-m-d\TH:i') }}">
-                            @error('expires_at')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            <div class="form-text">Leave empty for keys that never expire</div>
-                        </div>
+                    <div>
+                        <label for="expires_at" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Expiration Date (Optional)</label>
+                        <input type="datetime-local" 
+                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 @error('expires_at') border-red-500 @enderror" 
+                               id="expires_at" 
+                               name="expires_at" 
+                               value="{{ old('expires_at') }}"
+                               min="{{ now()->format('Y-m-d\TH:i') }}">
+                        @error('expires_at')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                        <p class="text-gray-500 text-sm mt-1">Leave empty for keys that never expire</p>
                     </div>
                 </div>
 
-                <div class="text-end">
-                    <button type="button" class="btn btn-primary" onclick="nextStep(2)">
-                        Next: Permissions <i class="fas fa-arrow-right"></i>
+                <div class="flex justify-end mt-8">
+                    <button type="button" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 transition-colors" onclick="nextStep(2)">
+                        Next: Permissions
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
                     </button>
                 </div>
             </div>
         </div>
 
         <!-- Step 2: Permissions & Scopes -->
-        <div class="card shadow mb-4" id="step2" style="display: none;">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">
-                    <span class="step-indicator">Step 2 of 3:</span> Permissions & Scopes
-                </h6>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-8 hidden" id="step2">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    <span class="text-indigo-600 dark:text-indigo-400 font-bold">Step 2 of 3:</span> Permissions & Scopes
+                </h3>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6 class="font-weight-bold text-gray-800 mb-3">
-                            <i class="fas fa-lock text-primary"></i> API Permissions
-                        </h6>
-                        <div class="mb-3">
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
+                            <svg class="w-5 h-5 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            </svg>
+                            API Permissions
+                        </h4>
+                        <div class="space-y-3">
                             @foreach($availablePermissions as $key => $label)
-                                <div class="form-check">
-                                    <input class="form-check-input" 
+                                <label class="flex items-start p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+                                    <input class="w-4 h-4 text-indigo-600 bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500 dark:focus:ring-indigo-600 mt-1" 
                                            type="checkbox" 
                                            value="{{ $key }}" 
                                            id="permission_{{ $key }}" 
                                            name="permissions[]"
                                            {{ in_array($key, old('permissions', [])) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="permission_{{ $key }}">
-                                        <strong>{{ $key }}</strong>
-                                        <br><small class="text-muted">{{ $label }}</small>
-                                    </label>
-                                </div>
+                                    <div class="ml-3">
+                                        <div class="font-medium text-gray-900 dark:text-white">{{ $key }}</div>
+                                        <div class="text-sm text-gray-500 dark:text-gray-400">{{ $label }}</div>
+                                    </div>
+                                </label>
                             @endforeach
                             @error('permissions')
-                                <div class="text-danger small">{{ $message }}</div>
+                                <p class="text-red-500 text-sm">{{ $message }}</p>
                             @enderror
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <h6 class="font-weight-bold text-gray-800 mb-3">
-                            <i class="fas fa-layer-group text-primary"></i> Access Scopes
-                        </h6>
-                        <div class="mb-3">
+                    <div>
+                        <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
+                            <svg class="w-5 h-5 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                            Access Scopes
+                        </h4>
+                        <div class="space-y-3">
                             @foreach($availableScopes as $key => $label)
-                                <div class="form-check">
-                                    <input class="form-check-input" 
+                                <label class="flex items-start p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+                                    <input class="w-4 h-4 text-indigo-600 bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500 dark:focus:ring-indigo-600 mt-1" 
                                            type="checkbox" 
                                            value="{{ $key }}" 
                                            id="scope_{{ $key }}" 
                                            name="scopes[]"
                                            {{ in_array($key, old('scopes', [])) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="scope_{{ $key }}">
-                                        <strong>{{ $label }}</strong>
-                                        <br><small class="text-muted">Access to {{ strtolower($label) }} functionality</small>
-                                    </label>
-                                </div>
+                                    <div class="ml-3">
+                                        <div class="font-medium text-gray-900 dark:text-white">{{ $label }}</div>
+                                        <div class="text-sm text-gray-500 dark:text-gray-400">Access to {{ strtolower($label) }} functionality</div>
+                                    </div>
+                                </label>
                             @endforeach
                             @error('scopes')
-                                <div class="text-danger small">{{ $message }}</div>
+                                <p class="text-red-500 text-sm">{{ $message }}</p>
                             @enderror
                         </div>
                     </div>
                 </div>
 
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i>
-                    <strong>Note:</strong> Permissions define specific actions the API key can perform, while scopes determine which modules can be accessed. Select only the minimum required permissions for security.
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mt-6">
+                    <div class="flex">
+                        <svg class="w-5 h-5 text-blue-400 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <div>
+                            <h4 class="text-blue-800 dark:text-blue-200 font-medium">Permission Guidelines</h4>
+                            <p class="text-blue-700 dark:text-blue-300 text-sm mt-1">Permissions define specific actions the API key can perform, while scopes determine which modules can be accessed. Select only the minimum required permissions for security.</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="d-flex justify-content-between">
-                    <button type="button" class="btn btn-outline-secondary" onclick="prevStep(1)">
-                        <i class="fas fa-arrow-left"></i> Previous: Basic Info
+                <div class="flex justify-between mt-8">
+                    <button type="button" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium rounded-md transition-colors" onclick="prevStep(1)">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                        Previous: Basic Info
                     </button>
-                    <button type="button" class="btn btn-primary" onclick="nextStep(3)">
-                        Next: Security Settings <i class="fas fa-arrow-right"></i>
+                    <button type="button" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 transition-colors" onclick="nextStep(3)">
+                        Next: Security Settings
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
                     </button>
                 </div>
             </div>
         </div>
 
         <!-- Step 3: Security Settings -->
-        <div class="card shadow mb-4" id="step3" style="display: none;">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">
-                    <span class="step-indicator">Step 3 of 3:</span> Security & Rate Limiting
-                </h6>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-8 hidden" id="step3">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    <span class="text-indigo-600 dark:text-indigo-400 font-bold">Step 3 of 3:</span> Security & Rate Limiting
+                </h3>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6 class="font-weight-bold text-gray-800 mb-3">
-                            <i class="fas fa-shield-alt text-primary"></i> IP Restrictions
-                        </h6>
-                        <div class="mb-3">
-                            <label for="allowed_ips" class="form-label">Allowed IP Addresses (Optional)</label>
-                            <textarea class="form-control @error('allowed_ips') is-invalid @enderror" 
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
+                            <svg class="w-5 h-5 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                            </svg>
+                            IP Restrictions
+                        </h4>
+                        <div>
+                            <label for="allowed_ips" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Allowed IP Addresses (Optional)</label>
+                            <textarea class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 @error('allowed_ips') border-red-500 @enderror" 
                                       id="allowed_ips" 
                                       name="allowed_ips" 
                                       rows="3" 
                                       placeholder="192.168.1.1, 10.0.0.1, 203.0.113.5">{{ old('allowed_ips') }}</textarea>
                             @error('allowed_ips')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                             @enderror
-                            <div class="form-text">Enter comma-separated IP addresses. Leave empty to allow any IP.</div>
+                            <p class="text-gray-500 text-sm mt-1">Enter comma-separated IP addresses. Leave empty to allow any IP.</p>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <h6 class="font-weight-bold text-gray-800 mb-3">
-                            <i class="fas fa-tachometer-alt text-primary"></i> Rate Limiting
-                        </h6>
-                        <div class="mb-3">
-                            <label for="rate_limit_per_minute" class="form-label">Requests per Minute</label>
-                            <input type="number" 
-                                   class="form-control @error('rate_limit_per_minute') is-invalid @enderror" 
-                                   id="rate_limit_per_minute" 
-                                   name="rate_limit_per_minute" 
-                                   value="{{ old('rate_limit_per_minute', 60) }}" 
-                                   min="1" 
-                                   max="1000"
-                                   required>
-                            @error('rate_limit_per_minute')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                    <div>
+                        <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
+                            <svg class="w-5 h-5 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                            Rate Limiting
+                        </h4>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="rate_limit_per_minute" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Requests per Minute</label>
+                                <input type="number" 
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 @error('rate_limit_per_minute') border-red-500 @enderror" 
+                                       id="rate_limit_per_minute" 
+                                       name="rate_limit_per_minute" 
+                                       value="{{ old('rate_limit_per_minute', 60) }}" 
+                                       min="1" 
+                                       max="1000"
+                                       required>
+                                @error('rate_limit_per_minute')
+                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
 
-                        <div class="mb-3">
-                            <label for="rate_limit_per_hour" class="form-label">Requests per Hour</label>
-                            <input type="number" 
-                                   class="form-control @error('rate_limit_per_hour') is-invalid @enderror" 
-                                   id="rate_limit_per_hour" 
-                                   name="rate_limit_per_hour" 
-                                   value="{{ old('rate_limit_per_hour', 1000) }}" 
-                                   min="1" 
-                                   max="50000"
-                                   required>
-                            @error('rate_limit_per_hour')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                            <div>
+                                <label for="rate_limit_per_hour" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Requests per Hour</label>
+                                <input type="number" 
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 @error('rate_limit_per_hour') border-red-500 @enderror" 
+                                       id="rate_limit_per_hour" 
+                                       name="rate_limit_per_hour" 
+                                       value="{{ old('rate_limit_per_hour', 1000) }}" 
+                                       min="1" 
+                                       max="50000"
+                                       required>
+                                @error('rate_limit_per_hour')
+                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
 
-                        <div class="mb-3">
-                            <label for="rate_limit_per_day" class="form-label">Requests per Day</label>
-                            <input type="number" 
-                                   class="form-control @error('rate_limit_per_day') is-invalid @enderror" 
-                                   id="rate_limit_per_day" 
-                                   name="rate_limit_per_day" 
-                                   value="{{ old('rate_limit_per_day', 10000) }}" 
-                                   min="1" 
-                                   max="1000000"
-                                   required>
-                            @error('rate_limit_per_day')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            <div>
+                                <label for="rate_limit_per_day" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Requests per Day</label>
+                                <input type="number" 
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 @error('rate_limit_per_day') border-red-500 @enderror" 
+                                       id="rate_limit_per_day" 
+                                       name="rate_limit_per_day" 
+                                       value="{{ old('rate_limit_per_day', 10000) }}" 
+                                       min="1" 
+                                       max="1000000"
+                                       required>
+                                @error('rate_limit_per_day')
+                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <strong>Security Notice:</strong> 
-                    <ul class="mb-0 mt-2">
-                        <li>The API key will be generated automatically and shown only once after creation</li>
-                        <li>Store the API key securely - it cannot be recovered if lost</li>
-                        <li>Rate limits help protect against abuse and ensure fair usage</li>
-                        <li>IP restrictions add an extra layer of security</li>
-                    </ul>
+                <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mt-6">
+                    <div class="flex">
+                        <svg class="w-5 h-5 text-yellow-400 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                        <div>
+                            <h4 class="text-yellow-800 dark:text-yellow-200 font-medium">Security Notice</h4>
+                            <ul class="text-yellow-700 dark:text-yellow-300 text-sm mt-1 list-disc list-inside space-y-1">
+                                <li>The API key will be generated automatically and shown only once after creation</li>
+                                <li>Store the API key securely - it cannot be recovered if lost</li>
+                                <li>Rate limits help protect against abuse and ensure fair usage</li>
+                                <li>IP restrictions add an extra layer of security</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="d-flex justify-content-between">
-                    <button type="button" class="btn btn-outline-secondary" onclick="prevStep(2)">
-                        <i class="fas fa-arrow-left"></i> Previous: Permissions
+                <div class="flex justify-between mt-8">
+                    <button type="button" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium rounded-md transition-colors" onclick="prevStep(2)">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                        Previous: Permissions
                     </button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-key"></i> Create API Key
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1721 9z"></path>
+                        </svg>
+                        Create API Key
                     </button>
                 </div>
             </div>
         </div>
     </form>
-
-    <!-- Progress Indicator -->
-    <div class="card shadow mb-4" id="progressCard">
-        <div class="card-body py-2">
-            <div class="row text-center">
-                <div class="col-4">
-                    <div class="progress-step active" id="progress1">
-                        <i class="fas fa-info-circle"></i>
-                        <span>Basic Info</span>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="progress-step" id="progress2">
-                        <i class="fas fa-lock"></i>
-                        <span>Permissions</span>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="progress-step" id="progress3">
-                        <i class="fas fa-shield-alt"></i>
-                        <span>Security</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 @endsection
-
-@push('styles')
-<style>
-.progress-step {
-    padding: 10px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-}
-
-.progress-step.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    transform: scale(1.05);
-}
-
-.progress-step i {
-    display: block;
-    font-size: 1.5rem;
-    margin-bottom: 5px;
-}
-
-.progress-step span {
-    font-size: 0.9rem;
-    font-weight: 600;
-}
-
-.step-indicator {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: bold;
-}
-
-.form-check {
-    padding: 8px;
-    margin-bottom: 8px;
-    border: 1px solid #e3e6f0;
-    border-radius: 5px;
-    transition: all 0.2s ease;
-}
-
-.form-check:hover {
-    background-color: #f8f9fc;
-    border-color: #d1d3e2;
-}
-
-.form-check-input:checked + .form-check-label {
-    color: #5a5c69;
-}
-</style>
-@endpush
 
 @push('scripts')
 <script>
@@ -401,24 +393,40 @@ function nextStep(step) {
     }
 
     // Hide current step
-    document.getElementById('step' + currentStep).style.display = 'none';
-    document.getElementById('progress' + currentStep).classList.remove('active');
+    document.getElementById('step' + currentStep).classList.add('hidden');
+    updateProgressStep(currentStep, false);
 
     // Show next step
     currentStep = step;
-    document.getElementById('step' + currentStep).style.display = 'block';
-    document.getElementById('progress' + currentStep).classList.add('active');
+    document.getElementById('step' + currentStep).classList.remove('hidden');
+    updateProgressStep(currentStep, true);
 }
 
 function prevStep(step) {
     // Hide current step
-    document.getElementById('step' + currentStep).style.display = 'none';
-    document.getElementById('progress' + currentStep).classList.remove('active');
+    document.getElementById('step' + currentStep).classList.add('hidden');
+    updateProgressStep(currentStep, false);
 
     // Show previous step
     currentStep = step;
-    document.getElementById('step' + currentStep).style.display = 'block';
-    document.getElementById('progress' + currentStep).classList.add('active');
+    document.getElementById('step' + currentStep).classList.remove('hidden');
+    updateProgressStep(currentStep, true);
+}
+
+function updateProgressStep(stepNumber, isActive) {
+    const progressElement = document.getElementById('progress' + stepNumber);
+    const circle = progressElement.querySelector('div');
+    const text = progressElement.querySelector('span');
+    
+    if (isActive) {
+        progressElement.classList.add('active');
+        circle.className = 'flex items-center justify-center w-10 h-10 bg-indigo-600 text-white rounded-full mr-3';
+        text.className = 'font-medium text-gray-900 dark:text-white';
+    } else {
+        progressElement.classList.remove('active');
+        circle.className = 'flex items-center justify-center w-10 h-10 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 rounded-full mr-3';
+        text.className = 'font-medium text-gray-500 dark:text-gray-400';
+    }
 }
 
 function validateStep(step) {
@@ -449,24 +457,24 @@ function validateStep(step) {
 
 function showFieldError(fieldId, message) {
     const field = document.getElementById(fieldId);
-    field.classList.add('is-invalid');
+    field.classList.add('border-red-500');
     
     // Remove existing error message
-    const existingError = field.parentNode.querySelector('.invalid-feedback.custom-error');
+    const existingError = field.parentNode.querySelector('.custom-error');
     if (existingError) {
         existingError.remove();
     }
     
     // Add new error message
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'invalid-feedback custom-error';
+    const errorDiv = document.createElement('p');
+    errorDiv.className = 'text-red-500 text-sm mt-1 custom-error';
     errorDiv.textContent = message;
     field.parentNode.appendChild(errorDiv);
     
     // Remove error on input
     field.addEventListener('input', function() {
-        this.classList.remove('is-invalid');
-        const errorMsg = this.parentNode.querySelector('.invalid-feedback.custom-error');
+        this.classList.remove('border-red-500');
+        const errorMsg = this.parentNode.querySelector('.custom-error');
         if (errorMsg) {
             errorMsg.remove();
         }
@@ -511,7 +519,7 @@ document.getElementById('createApiKeyForm').addEventListener('submit', function(
     // Show loading state
     const submitButton = this.querySelector('button[type="submit"]');
     const originalText = submitButton.innerHTML;
-    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating API Key...';
+    submitButton.innerHTML = '<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Creating API Key...';
     submitButton.disabled = true;
     
     // Reset button if there are validation errors (will be handled by Laravel)

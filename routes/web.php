@@ -69,7 +69,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Contact Segments
-    Route::resource('segments', ContactSegmentController::class)->except(['show']);
+    Route::resource('segments', ContactSegmentController::class);
     Route::prefix('segments')->name('segments.')->group(function () {
         Route::post('/{segment}/refresh', [ContactSegmentController::class, 'refresh'])->name('refresh');
         Route::get('/{segment}/preview', [ContactSegmentController::class, 'preview'])->name('preview');
@@ -155,6 +155,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/billing', [SettingsController::class, 'billing'])->name('billing');
         Route::get('/support', [SettingsController::class, 'support'])->name('support');
         Route::post('/update', [SettingsController::class, 'update'])->name('update');
+        Route::post('/security/password', [SettingsController::class, 'updatePassword'])->name('security.password');
+        Route::post('/notifications/update', [SettingsController::class, 'updateNotifications'])->name('notifications.update');
     });
 
     // Export Management (Accessible to all authenticated users)

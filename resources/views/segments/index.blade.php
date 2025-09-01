@@ -149,7 +149,7 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div>
                                 <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                    <a href="{{ route('segments.show', $segment) }}" class="hover:text-blue-600 dark:hover:text-blue-400">
+                                    <a href="{{ route('segments.show', ['segment' => $segment->id]) }}" class="hover:text-blue-600 dark:hover:text-blue-400">
                                         {{ $segment->name }}
                                     </a>
                                 </div>

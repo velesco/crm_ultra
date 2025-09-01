@@ -146,7 +146,7 @@ class SettingsController extends Controller
         $userStats = [
             'campaigns_created' => \App\Models\EmailCampaign::where('created_by', $user->id)->count(),
             'contacts_created' => \App\Models\Contact::where('created_by', $user->id)->count(),
-            'sms_sent' => \App\Models\SmsMessage::where('created_by', $user->id)->count(),
+            'sms_sent' => \App\Models\SmsMessage::whereHas('contact', function($q) use ($user) { $q->where('created_by', $user->id); })->count(),
             'last_login' => $user->last_login_at,
             'account_created' => $user->created_at,
         ];
@@ -382,7 +382,7 @@ class SettingsController extends Controller
                 'name' => 'Google Services',
                 'status' => config('services.google.client_id') ? 'configured' : 'not_configured',
                 'features' => ['OAuth Login', 'Google Sheets', 'Gmail API'],
-                'connected_accounts' => GoogleSheetsIntegration::where('user_id', Auth::id())->count(),
+                'connected_accounts' => GoogleSheetsIntegration::where('created_by', Auth::id())->count(),
             ],
             'smtp' => [
                 'name' => 'SMTP Servers',
@@ -460,7 +460,7 @@ class SettingsController extends Controller
             'key' => 'crm_'.Str::random(40),
             'permissions' => $request->permissions,
             'expires_at' => $request->expires_at,
-            'user_id' => Auth::id(),
+            'created_by' => Auth::id(),
             'created_at' => now(),
         ];
 

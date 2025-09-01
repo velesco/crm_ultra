@@ -295,7 +295,7 @@ class RevenueController extends Controller
 
         $successfulCampaigns = EmailCampaign::whereBetween('created_at', [$dateRange['start'], $dateRange['end']])
             ->where('status', 'sent')
-            ->where('opens_count', '>', 0)
+            ->where('opened_count', '>', 0)
             ->count();
 
         return $totalCampaigns > 0 ? ($successfulCampaigns / $totalCampaigns) * 100 : 0;
@@ -377,7 +377,7 @@ class RevenueController extends Controller
         return [
             'email' => [
                 'revenue' => EmailCampaign::whereBetween('created_at', [$dateRange['start'], $dateRange['end']])
-                    ->sum(DB::raw('COALESCE(opens_count, 0) * 0.1')),
+                    ->sum(DB::raw('COALESCE(opened_count, 0) * 0.1')),
                 'count' => EmailCampaign::whereBetween('created_at', [$dateRange['start'], $dateRange['end']])->count(),
             ],
             'sms' => [
