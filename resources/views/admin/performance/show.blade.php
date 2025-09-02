@@ -1,421 +1,437 @@
 @extends('layouts.app')
 
+@section('title', ucfirst($metric) . ' Performance Details')
+
 @section('content')
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0">
-                <i class="fas fa-chart-line me-2 text-primary"></i>
-                {{ ucfirst($metric) }} Performance Details
-            </h1>
-            <p class="text-muted mb-0">Detailed metrics and analysis for {{ $period }}</p>
-        </div>
-        
-        <div class="d-flex gap-2">
-            <a href="{{ route('admin.performance.index') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i>
-                Back to Dashboard
-            </a>
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between">
+            <div class="mb-4 sm:mb-0">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-chart-line text-blue-600 text-lg"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <h1 class="text-2xl font-bold text-gray-900">{{ ucfirst($metric) }} Performance Details</h1>
+                        <p class="text-gray-600">Detailed metrics and analysis for {{ $period }}</p>
+                    </div>
+                </div>
+            </div>
             
-            <select id="periodFilter" class="form-select" style="width: auto;">
-                <option value="1h" {{ $period === '1h' ? 'selected' : '' }}>Last Hour</option>
-                <option value="24h" {{ $period === '24h' ? 'selected' : '' }}>Last 24 Hours</option>
-                <option value="7d" {{ $period === '7d' ? 'selected' : '' }}>Last 7 Days</option>
-                <option value="30d" {{ $period === '30d' ? 'selected' : '' }}>Last 30 Days</option>
-            </select>
+            <div class="flex items-center space-x-3">
+                <a href="{{ route('admin.performance.index') }}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Dashboard
+                </a>
+                
+                <select id="periodFilter" 
+                        class="rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="1h" {{ $period === '1h' ? 'selected' : '' }}>Last Hour</option>
+                    <option value="24h" {{ $period === '24h' ? 'selected' : '' }}>Last 24 Hours</option>
+                    <option value="7d" {{ $period === '7d' ? 'selected' : '' }}>Last 7 Days</option>
+                    <option value="30d" {{ $period === '30d' ? 'selected' : '' }}>Last 30 Days</option>
+                </select>
+            </div>
         </div>
-    </div>
 
-    <!-- Metric Overview Cards -->
-    <div class="row mb-4">
-        @switch($metric)
-            @case('system')
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <div class="text-primary h2 mb-1">{{ number_format($data['current']['cpu_usage'] ?? 0, 1) }}%</div>
-                            <h6 class="card-title">CPU Usage</h6>
-                            <small class="text-muted">Current utilization</small>
+        <!-- Metric Overview Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            @switch($metric)
+                @case('system')
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="p-6 text-center">
+                            <div class="text-3xl font-bold text-blue-600 mb-2">{{ number_format($data['current']['cpu_usage'] ?? 0, 1) }}%</div>
+                            <h3 class="text-sm font-medium text-gray-900 mb-1">CPU Usage</h3>
+                            <p class="text-xs text-gray-500">Current utilization</p>
                         </div>
                     </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <div class="text-info h2 mb-1">{{ number_format($data['current']['memory_usage'] ?? 0, 1) }}%</div>
-                            <h6 class="card-title">Memory Usage</h6>
-                            <small class="text-muted">RAM utilization</small>
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="p-6 text-center">
+                            <div class="text-3xl font-bold text-purple-600 mb-2">{{ number_format($data['current']['memory_usage'] ?? 0, 1) }}%</div>
+                            <h3 class="text-sm font-medium text-gray-900 mb-1">Memory Usage</h3>
+                            <p class="text-xs text-gray-500">RAM utilization</p>
                         </div>
                     </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <div class="text-warning h2 mb-1">{{ number_format($data['current']['disk_usage'] ?? 0, 1) }}%</div>
-                            <h6 class="card-title">Disk Usage</h6>
-                            <small class="text-muted">Storage utilization</small>
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="p-6 text-center">
+                            <div class="text-3xl font-bold text-yellow-600 mb-2">{{ number_format($data['current']['disk_usage'] ?? 0, 1) }}%</div>
+                            <h3 class="text-sm font-medium text-gray-900 mb-1">Disk Usage</h3>
+                            <p class="text-xs text-gray-500">Storage utilization</p>
                         </div>
                     </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <div class="text-success h2 mb-1">{{ implode(', ', array_map(fn($load) => number_format($load, 2), $data['current']['load_average'] ?? [0, 0, 0])) }}</div>
-                            <h6 class="card-title">Load Average</h6>
-                            <small class="text-muted">1m, 5m, 15m</small>
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="p-6 text-center">
+                            <div class="text-xl font-bold text-green-600 mb-2">{{ implode(', ', array_map(fn($load) => number_format($load, 2), $data['current']['load_average'] ?? [0, 0, 0])) }}</div>
+                            <h3 class="text-sm font-medium text-gray-900 mb-1">Load Average</h3>
+                            <p class="text-xs text-gray-500">1m, 5m, 15m</p>
                         </div>
                     </div>
-                </div>
-                @break
+                    @break
 
-            @case('database')
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <div class="text-primary h2 mb-1">{{ $data['current']['connections'] ?? 0 }}</div>
-                            <h6 class="card-title">Active Connections</h6>
-                            <small class="text-muted">Current connections</small>
+                @case('database')
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="p-6 text-center">
+                            <div class="text-3xl font-bold text-blue-600 mb-2">{{ $data['current']['connections'] ?? 0 }}</div>
+                            <h3 class="text-sm font-medium text-gray-900 mb-1">Active Connections</h3>
+                            <p class="text-xs text-gray-500">Current connections</p>
                         </div>
                     </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <div class="text-info h2 mb-1">{{ number_format($data['current']['avg_query_time'] ?? 0, 2) }}ms</div>
-                            <h6 class="card-title">Avg Query Time</h6>
-                            <small class="text-muted">Response time</small>
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="p-6 text-center">
+                            <div class="text-3xl font-bold text-purple-600 mb-2">{{ number_format($data['current']['avg_query_time'] ?? 0, 2) }}ms</div>
+                            <h3 class="text-sm font-medium text-gray-900 mb-1">Avg Query Time</h3>
+                            <p class="text-xs text-gray-500">Response time</p>
                         </div>
                     </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <div class="text-warning h2 mb-1">{{ $data['current']['slow_queries'] ?? 0 }}</div>
-                            <h6 class="card-title">Slow Queries</h6>
-                            <small class="text-muted">Need optimization</small>
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="p-6 text-center">
+                            <div class="text-3xl font-bold text-yellow-600 mb-2">{{ $data['current']['slow_queries'] ?? 0 }}</div>
+                            <h3 class="text-sm font-medium text-gray-900 mb-1">Slow Queries</h3>
+                            <p class="text-xs text-gray-500">Need optimization</p>
                         </div>
                     </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <div class="text-success h2 mb-1">{{ number_format($data['current']['database_size'] ?? 0, 1) }}MB</div>
-                            <h6 class="card-title">Database Size</h6>
-                            <small class="text-muted">Total size</small>
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="p-6 text-center">
+                            <div class="text-3xl font-bold text-green-600 mb-2">{{ number_format($data['current']['database_size'] ?? 0, 1) }}MB</div>
+                            <h3 class="text-sm font-medium text-gray-900 mb-1">Database Size</h3>
+                            <p class="text-xs text-gray-500">Total size</p>
                         </div>
                     </div>
-                </div>
-                @break
+                    @break
 
-            @case('cache')
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <div class="text-primary h2 mb-1">{{ number_format($data['current']['hit_rate'] ?? 0, 1) }}%</div>
-                            <h6 class="card-title">Hit Rate</h6>
-                            <small class="text-muted">Cache efficiency</small>
+                @case('cache')
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="p-6 text-center">
+                            <div class="text-3xl font-bold text-blue-600 mb-2">{{ number_format($data['current']['hit_rate'] ?? 0, 1) }}%</div>
+                            <h3 class="text-sm font-medium text-gray-900 mb-1">Hit Rate</h3>
+                            <p class="text-xs text-gray-500">Cache efficiency</p>
                         </div>
                     </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <div class="text-info h2 mb-1">{{ number_format($data['current']['memory_usage'] ?? 0, 1) }}MB</div>
-                            <h6 class="card-title">Memory Usage</h6>
-                            <small class="text-muted">Cache size</small>
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="p-6 text-center">
+                            <div class="text-3xl font-bold text-purple-600 mb-2">{{ number_format($data['current']['memory_usage'] ?? 0, 1) }}MB</div>
+                            <h3 class="text-sm font-medium text-gray-900 mb-1">Memory Usage</h3>
+                            <p class="text-xs text-gray-500">Cache size</p>
                         </div>
                     </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <div class="text-success h2 mb-1">{{ number_format($data['current']['keys_count'] ?? 0) }}</div>
-                            <h6 class="card-title">Keys Stored</h6>
-                            <small class="text-muted">Active keys</small>
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="p-6 text-center">
+                            <div class="text-3xl font-bold text-green-600 mb-2">{{ number_format($data['current']['keys_count'] ?? 0) }}</div>
+                            <h3 class="text-sm font-medium text-gray-900 mb-1">Keys Stored</h3>
+                            <p class="text-xs text-gray-500">Active keys</p>
                         </div>
                     </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <div class="text-warning h2 mb-1">{{ $data['current']['evictions'] ?? 0 }}</div>
-                            <h6 class="card-title">Evictions</h6>
-                            <small class="text-muted">Keys removed</small>
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="p-6 text-center">
+                            <div class="text-3xl font-bold text-yellow-600 mb-2">{{ $data['current']['evictions'] ?? 0 }}</div>
+                            <h3 class="text-sm font-medium text-gray-900 mb-1">Evictions</h3>
+                            <p class="text-xs text-gray-500">Keys removed</p>
                         </div>
                     </div>
-                </div>
-                @break
+                    @break
 
-            @case('queue')
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <div class="text-warning h2 mb-1">{{ $data['current']['pending_jobs'] ?? 0 }}</div>
-                            <h6 class="card-title">Pending Jobs</h6>
-                            <small class="text-muted">Waiting to process</small>
+                @case('queue')
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="p-6 text-center">
+                            <div class="text-3xl font-bold text-yellow-600 mb-2">{{ $data['current']['pending_jobs'] ?? 0 }}</div>
+                            <h3 class="text-sm font-medium text-gray-900 mb-1">Pending Jobs</h3>
+                            <p class="text-xs text-gray-500">Waiting to process</p>
                         </div>
                     </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <div class="text-danger h2 mb-1">{{ $data['current']['failed_jobs'] ?? 0 }}</div>
-                            <h6 class="card-title">Failed Jobs</h6>
-                            <small class="text-muted">Need attention</small>
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="p-6 text-center">
+                            <div class="text-3xl font-bold text-red-600 mb-2">{{ $data['current']['failed_jobs'] ?? 0 }}</div>
+                            <h3 class="text-sm font-medium text-gray-900 mb-1">Failed Jobs</h3>
+                            <p class="text-xs text-gray-500">Need attention</p>
                         </div>
                     </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <div class="text-success h2 mb-1">{{ $data['current']['processed_jobs'] ?? 0 }}</div>
-                            <h6 class="card-title">Processed Jobs</h6>
-                            <small class="text-muted">Completed successfully</small>
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="p-6 text-center">
+                            <div class="text-3xl font-bold text-green-600 mb-2">{{ $data['current']['processed_jobs'] ?? 0 }}</div>
+                            <h3 class="text-sm font-medium text-gray-900 mb-1">Processed Jobs</h3>
+                            <p class="text-xs text-gray-500">Completed successfully</p>
                         </div>
                     </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <div class="text-info h2 mb-1">{{ number_format($data['current']['avg_processing_time'] ?? 0, 2) }}ms</div>
-                            <h6 class="card-title">Avg Processing Time</h6>
-                            <small class="text-muted">Per job</small>
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="p-6 text-center">
+                            <div class="text-3xl font-bold text-purple-600 mb-2">{{ number_format($data['current']['avg_processing_time'] ?? 0, 2) }}ms</div>
+                            <h3 class="text-sm font-medium text-gray-900 mb-1">Avg Processing Time</h3>
+                            <p class="text-xs text-gray-500">Per job</p>
                         </div>
                     </div>
-                </div>
-                @break
-        @endswitch
-    </div>
+                    @break
+            @endswitch
+        </div>
 
-    <!-- Historical Chart -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-area me-2"></i>
+        <!-- Historical Chart -->
+        <div class="mb-8">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-chart-area text-blue-500 mr-2"></i>
                         Historical Trends - {{ ucfirst($metric) }}
-                    </h5>
+                    </h3>
                 </div>
-                <div class="card-body">
-                    <canvas id="detailChart" height="100"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Statistics Table -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h6 class="card-title mb-0">
-                        <i class="fas fa-chart-bar me-2"></i>
-                        Statistics Summary
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <table class="table table-sm">
-                        <tbody>
-                            <tr>
-                                <td class="text-muted">Average</td>
-                                <td class="fw-bold">{{ number_format($data['statistics']['average'] ?? 0, 2) }}</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">Maximum</td>
-                                <td class="fw-bold text-danger">{{ number_format($data['statistics']['max'] ?? 0, 2) }}</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">Minimum</td>
-                                <td class="fw-bold text-success">{{ number_format($data['statistics']['min'] ?? 0, 2) }}</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">Data Points</td>
-                                <td class="fw-bold">{{ number_format($data['statistics']['count'] ?? 0) }}</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">Trend</td>
-                                <td>
-                                    @if(($data['statistics']['trend'] ?? 0) > 0)
-                                        <span class="badge bg-success">
-                                            <i class="fas fa-arrow-up me-1"></i>
-                                            Improving
-                                        </span>
-                                    @elseif(($data['statistics']['trend'] ?? 0) < 0)
-                                        <span class="badge bg-danger">
-                                            <i class="fas fa-arrow-down me-1"></i>
-                                            Declining
-                                        </span>
-                                    @else
-                                        <span class="badge bg-secondary">
-                                            <i class="fas fa-minus me-1"></i>
-                                            Stable
-                                        </span>
-                                    @endif
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h6 class="card-title mb-0">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Recommendations
-                    </h6>
-                </div>
-                <div class="card-body">
-                    @switch($metric)
-                        @case('system')
-                            <div class="alert alert-info mb-2">
-                                <small><strong>CPU:</strong> Keep under 80% for optimal performance</small>
-                            </div>
-                            <div class="alert alert-warning mb-2">
-                                <small><strong>Memory:</strong> Monitor for memory leaks if consistently high</small>
-                            </div>
-                            <div class="alert alert-success mb-0">
-                                <small><strong>Disk:</strong> Clean up logs and temp files when over 85%</small>
-                            </div>
-                            @break
-
-                        @case('database')
-                            <div class="alert alert-info mb-2">
-                                <small><strong>Connections:</strong> Monitor for connection pool exhaustion</small>
-                            </div>
-                            <div class="alert alert-warning mb-2">
-                                <small><strong>Query Time:</strong> Optimize queries taking over 100ms</small>
-                            </div>
-                            <div class="alert alert-success mb-0">
-                                <small><strong>Slow Queries:</strong> Add indexes and optimize WHERE clauses</small>
-                            </div>
-                            @break
-
-                        @case('cache')
-                            <div class="alert alert-info mb-2">
-                                <small><strong>Hit Rate:</strong> Target 90%+ for optimal performance</small>
-                            </div>
-                            <div class="alert alert-warning mb-2">
-                                <small><strong>Memory:</strong> Increase cache size if hit rate is low</small>
-                            </div>
-                            <div class="alert alert-success mb-0">
-                                <small><strong>Evictions:</strong> High evictions indicate insufficient cache size</small>
-                            </div>
-                            @break
-
-                        @case('queue')
-                            <div class="alert alert-info mb-2">
-                                <small><strong>Pending Jobs:</strong> Scale workers if consistently high</small>
-                            </div>
-                            <div class="alert alert-warning mb-2">
-                                <small><strong>Failed Jobs:</strong> Review and retry failed jobs regularly</small>
-                            </div>
-                            <div class="alert alert-success mb-0">
-                                <small><strong>Processing:</strong> Optimize job logic to reduce execution time</small>
-                            </div>
-                            @break
-                    @endswitch
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Recent Data Table -->
-    @if(isset($data['recent']) && count($data['recent']) > 0)
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h6 class="card-title mb-0">
-                        <i class="fas fa-table me-2"></i>
-                        Recent Data Points
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-striped table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Timestamp</th>
-                                    @switch($metric)
-                                        @case('system')
-                                            <th>CPU %</th>
-                                            <th>Memory %</th>
-                                            <th>Disk %</th>
-                                            <th>Load Avg</th>
-                                            @break
-                                        @case('database')
-                                            <th>Connections</th>
-                                            <th>Query Time (ms)</th>
-                                            <th>Slow Queries</th>
-                                            <th>Size (MB)</th>
-                                            @break
-                                        @case('cache')
-                                            <th>Hit Rate %</th>
-                                            <th>Memory (MB)</th>
-                                            <th>Keys</th>
-                                            <th>Evictions</th>
-                                            @break
-                                        @case('queue')
-                                            <th>Pending</th>
-                                            <th>Failed</th>
-                                            <th>Processed</th>
-                                            <th>Avg Time (ms)</th>
-                                            @break
-                                    @endswitch
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach(array_slice($data['recent'], 0, 20) as $point)
-                                <tr>
-                                    <td>
-                                        <small>{{ \Carbon\Carbon::parse($point['timestamp'])->format('M j, H:i') }}</small>
-                                    </td>
-                                    @switch($metric)
-                                        @case('system')
-                                            <td>{{ number_format($point['cpu_usage'], 1) }}%</td>
-                                            <td>{{ number_format($point['memory_usage'], 1) }}%</td>
-                                            <td>{{ number_format($point['disk_usage'], 1) }}%</td>
-                                            <td><small>{{ implode(', ', array_map(fn($load) => number_format($load, 2), json_decode($point['load_average'], true) ?? [])) }}</small></td>
-                                            @break
-                                        @case('database')
-                                            <td>{{ $point['database_connections'] }}</td>
-                                            <td>{{ number_format($point['avg_query_time'], 2) }}</td>
-                                            <td>{{ $point['slow_queries'] }}</td>
-                                            <td>{{ number_format($point['database_size'], 1) }}</td>
-                                            @break
-                                        @case('cache')
-                                            <td>{{ number_format($point['cache_hit_rate'], 1) }}%</td>
-                                            <td>{{ number_format($point['cache_memory_usage'], 1) }}</td>
-                                            <td>{{ number_format($point['cache_keys_count']) }}</td>
-                                            <td>{{ $point['cache_evictions'] }}</td>
-                                            @break
-                                        @case('queue')
-                                            <td>{{ $point['pending_jobs'] }}</td>
-                                            <td>{{ $point['failed_jobs'] }}</td>
-                                            <td>{{ $point['processed_jobs'] }}</td>
-                                            <td>{{ number_format($point['avg_processing_time'], 2) }}</td>
-                                            @break
-                                    @endswitch
-                                    <td>
-                                        <span class="badge bg-{{ $point['health_status'] === 'good' ? 'success' : ($point['health_status'] === 'warning' ? 'warning' : 'danger') }}">
-                                            {{ ucfirst($point['health_status']) }}
-                                        </span>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                <div class="p-6">
+                    <div style="height: 400px;">
+                        <canvas id="detailChart"></canvas>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Statistics and Recommendations Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Statistics Summary -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-chart-bar text-blue-500 mr-2"></i>
+                        Statistics Summary
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Average</span>
+                            <span class="font-semibold text-gray-900">{{ number_format($data['statistics']['average'] ?? 0, 2) }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Maximum</span>
+                            <span class="font-semibold text-red-600">{{ number_format($data['statistics']['max'] ?? 0, 2) }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Minimum</span>
+                            <span class="font-semibold text-green-600">{{ number_format($data['statistics']['min'] ?? 0, 2) }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Data Points</span>
+                            <span class="font-semibold text-gray-900">{{ number_format($data['statistics']['count'] ?? 0) }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Trend</span>
+                            <div>
+                                @if(($data['statistics']['trend'] ?? 0) > 0)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <i class="fas fa-arrow-up mr-1"></i>
+                                        Improving
+                                    </span>
+                                @elseif(($data['statistics']['trend'] ?? 0) < 0)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        <i class="fas fa-arrow-down mr-1"></i>
+                                        Declining
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        <i class="fas fa-minus mr-1"></i>
+                                        Stable
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recommendations -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                        Recommendations
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-3">
+                        @switch($metric)
+                            @case('system')
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                    <div class="text-sm text-blue-800">
+                                        <strong>CPU:</strong> Keep under 80% for optimal performance
+                                    </div>
+                                </div>
+                                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                                    <div class="text-sm text-yellow-800">
+                                        <strong>Memory:</strong> Monitor for memory leaks if consistently high
+                                    </div>
+                                </div>
+                                <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                                    <div class="text-sm text-green-800">
+                                        <strong>Disk:</strong> Clean up logs and temp files when over 85%
+                                    </div>
+                                </div>
+                                @break
+
+                            @case('database')
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                    <div class="text-sm text-blue-800">
+                                        <strong>Connections:</strong> Monitor for connection pool exhaustion
+                                    </div>
+                                </div>
+                                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                                    <div class="text-sm text-yellow-800">
+                                        <strong>Query Time:</strong> Optimize queries taking over 100ms
+                                    </div>
+                                </div>
+                                <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                                    <div class="text-sm text-green-800">
+                                        <strong>Slow Queries:</strong> Add indexes and optimize WHERE clauses
+                                    </div>
+                                </div>
+                                @break
+
+                            @case('cache')
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                    <div class="text-sm text-blue-800">
+                                        <strong>Hit Rate:</strong> Target 90%+ for optimal performance
+                                    </div>
+                                </div>
+                                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                                    <div class="text-sm text-yellow-800">
+                                        <strong>Memory:</strong> Increase cache size if hit rate is low
+                                    </div>
+                                </div>
+                                <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                                    <div class="text-sm text-green-800">
+                                        <strong>Evictions:</strong> High evictions indicate insufficient cache size
+                                    </div>
+                                </div>
+                                @break
+
+                            @case('queue')
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                    <div class="text-sm text-blue-800">
+                                        <strong>Pending Jobs:</strong> Scale workers if consistently high
+                                    </div>
+                                </div>
+                                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                                    <div class="text-sm text-yellow-800">
+                                        <strong>Failed Jobs:</strong> Review and retry failed jobs regularly
+                                    </div>
+                                </div>
+                                <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                                    <div class="text-sm text-green-800">
+                                        <strong>Processing:</strong> Optimize job logic to reduce execution time
+                                    </div>
+                                </div>
+                                @break
+                        @endswitch
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Data Table -->
+        @if(isset($data['recent']) && count($data['recent']) > 0)
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                    <i class="fas fa-table text-blue-500 mr-2"></i>
+                    Recent Data Points
+                </h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                            @switch($metric)
+                                @case('system')
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CPU %</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Memory %</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disk %</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Load Avg</th>
+                                    @break
+                                @case('database')
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Connections</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Query Time (ms)</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Slow Queries</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size (MB)</th>
+                                    @break
+                                @case('cache')
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hit Rate %</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Memory (MB)</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Keys</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Evictions</th>
+                                    @break
+                                @case('queue')
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pending</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Failed</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Processed</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Time (ms)</th>
+                                    @break
+                            @endswitch
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach(array_slice($data['recent'], 0, 20) as $point)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ \Carbon\Carbon::parse($point['timestamp'])->format('M j, H:i') }}
+                            </td>
+                            @switch($metric)
+                                @case('system')
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($point['cpu_usage'], 1) }}%</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($point['memory_usage'], 1) }}%</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($point['disk_usage'], 1) }}%</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ implode(', ', array_map(fn($load) => number_format($load, 2), json_decode($point['load_average'], true) ?? [])) }}</td>
+                                    @break
+                                @case('database')
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $point['database_connections'] }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($point['avg_query_time'], 2) }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $point['slow_queries'] }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($point['database_size'], 1) }}</td>
+                                    @break
+                                @case('cache')
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($point['cache_hit_rate'], 1) }}%</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($point['cache_memory_usage'], 1) }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($point['cache_keys_count']) }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $point['cache_evictions'] }}</td>
+                                    @break
+                                @case('queue')
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $point['pending_jobs'] }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $point['failed_jobs'] }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $point['processed_jobs'] }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ number_format($point['avg_processing_time'], 2) }}</td>
+                                    @break
+                            @endswitch
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @php
+                                    $statusClasses = match($point['health_status']) {
+                                        'good' => 'bg-green-100 text-green-800',
+                                        'warning' => 'bg-yellow-100 text-yellow-800',
+                                        default => 'bg-red-100 text-red-800'
+                                    };
+                                @endphp
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusClasses }}">
+                                    {{ ucfirst($point['health_status']) }}
+                                </span>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @endif
     </div>
-    @endif
 </div>
 @endsection
 

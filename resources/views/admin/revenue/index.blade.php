@@ -3,33 +3,45 @@
 @section('title', 'Revenue Analytics - Admin')
 
 @section('content')
-<div class="container-fluid">
+<div class="min-h-screen bg-gray-50">
     <!-- Page Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="h2 mb-1">
-                        <i class="fas fa-chart-line me-2 text-success"></i>
-                        Revenue Analytics
-                    </h1>
-                    <p class="text-muted">
-                        Comprehensive revenue tracking and financial performance analysis
-                    </p>
-                </div>
-                <div>
-                    <div class="btn-group me-2" role="group">
-                        <button type="button" class="btn btn-outline-primary btn-sm period-filter" data-period="7_days">7 Days</button>
-                        <button type="button" class="btn btn-primary btn-sm period-filter" data-period="30_days">30 Days</button>
-                        <button type="button" class="btn btn-outline-primary btn-sm period-filter" data-period="90_days">90 Days</button>
-                        <button type="button" class="btn btn-outline-primary btn-sm period-filter" data-period="this_year">This Year</button>
+    <div class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="flex-1">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-chart-line text-white text-lg"></i>
+                            </div>
+                        </div>
+                        <div class="ml-3">
+                            <h1 class="text-2xl font-bold text-gray-900">Revenue Analytics</h1>
+                            <p class="text-sm text-gray-600">Comprehensive revenue tracking and financial performance analysis</p>
+                        </div>
                     </div>
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-success btn-sm" onclick="exportRevenue('summary')">
-                            <i class="fas fa-download me-1"></i>Export
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="flex rounded-lg shadow-sm bg-white border border-gray-300">
+                        <button type="button" class="period-filter px-3 py-2 text-sm font-medium rounded-l-lg border-r border-gray-300 text-gray-700 hover:bg-gray-50 focus:z-10 focus:ring-2 focus:ring-blue-500" data-period="7_days">
+                            7 Days
                         </button>
-                        <button type="button" class="btn btn-info btn-sm" onclick="refreshStats()">
-                            <i class="fas fa-sync me-1"></i>Refresh
+                        <button type="button" class="period-filter px-3 py-2 text-sm font-medium border-r border-gray-300 bg-blue-600 text-white" data-period="30_days">
+                            30 Days
+                        </button>
+                        <button type="button" class="period-filter px-3 py-2 text-sm font-medium border-r border-gray-300 text-gray-700 hover:bg-gray-50 focus:z-10 focus:ring-2 focus:ring-blue-500" data-period="90_days">
+                            90 Days
+                        </button>
+                        <button type="button" class="period-filter px-3 py-2 text-sm font-medium rounded-r-lg text-gray-700 hover:bg-gray-50 focus:z-10 focus:ring-2 focus:ring-blue-500" data-period="this_year">
+                            This Year
+                        </button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150" onclick="exportRevenue('summary')">
+                            <i class="fas fa-download mr-2"></i>Export
+                        </button>
+                        <button type="button" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150" onclick="refreshStats()">
+                            <i class="fas fa-sync mr-2"></i>Refresh
                         </button>
                     </div>
                 </div>
@@ -37,277 +49,291 @@
         </div>
     </div>
 
-    <!-- Revenue Statistics Cards -->
-    <div class="row mb-4" id="statsCards">
-        <div class="col-xl-3 col-lg-6 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-success bg-gradient text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                <i class="fas fa-dollar-sign"></i>
-                            </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Revenue Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" id="statsCards">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-dollar-sign text-white text-lg"></i>
                         </div>
-                        <div class="ms-3">
-                            <h6 class="text-muted mb-1">Total Revenue</h6>
-                            <h3 class="mb-0" id="totalRevenue">${{ number_format($stats['total_revenue'] ?? 0, 2) }}</h3>
-                            @if(isset($stats['revenue_growth']) && $stats['revenue_growth'] != 0)
-                                <small class="text-{{ $stats['revenue_growth'] >= 0 ? 'success' : 'danger' }}">
-                                    <i class="fas fa-{{ $stats['revenue_growth'] >= 0 ? 'arrow-up' : 'arrow-down' }} me-1"></i>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <p class="text-sm font-medium text-gray-600">Total Revenue</p>
+                        <p class="text-2xl font-bold text-gray-900" id="totalRevenue">${{ number_format($stats['total_revenue'] ?? 0, 2) }}</p>
+                        @if(isset($stats['revenue_growth']) && $stats['revenue_growth'] != 0)
+                            <div class="mt-1 flex items-center text-sm">
+                                <i class="fas fa-{{ $stats['revenue_growth'] >= 0 ? 'arrow-up' : 'arrow-down' }} text-{{ $stats['revenue_growth'] >= 0 ? 'green' : 'red' }}-500 mr-1"></i>
+                                <span class="text-{{ $stats['revenue_growth'] >= 0 ? 'green' : 'red' }}-600 font-medium">
                                     {{ number_format(abs($stats['revenue_growth']), 1) }}% vs previous period
-                                </small>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-lg-6 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-primary bg-gradient text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                <i class="fas fa-shopping-cart"></i>
+                                </span>
                             </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-shopping-cart text-white text-lg"></i>
                         </div>
-                        <div class="ms-3">
-                            <h6 class="text-muted mb-1">Avg. Order Value</h6>
-                            <h3 class="mb-0" id="avgOrderValue">${{ number_format($stats['average_order_value'] ?? 0, 2) }}</h3>
-                            <small class="text-muted">Per campaign</small>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <p class="text-sm font-medium text-gray-600">Avg. Order Value</p>
+                        <p class="text-2xl font-bold text-gray-900" id="avgOrderValue">${{ number_format($stats['average_order_value'] ?? 0, 2) }}</p>
+                        <p class="text-xs text-gray-500 mt-1">Per campaign</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-users text-white text-lg"></i>
                         </div>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <p class="text-sm font-medium text-gray-600">Active Customers</p>
+                        <p class="text-2xl font-bold text-gray-900" id="customerCount">{{ number_format($stats['customer_count'] ?? 0) }}</p>
+                        <p class="text-xs text-gray-500 mt-1">This period</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-percentage text-white text-lg"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <p class="text-sm font-medium text-gray-600">Conversion Rate</p>
+                        <p class="text-2xl font-bold text-gray-900" id="conversionRate">{{ number_format($stats['conversion_rate'] ?? 0, 1) }}%</p>
+                        <p class="text-xs text-gray-500 mt-1">Campaign success</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-lg-6 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-info bg-gradient text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                <i class="fas fa-users"></i>
-                            </div>
-                        </div>
-                        <div class="ms-3">
-                            <h6 class="text-muted mb-1">Active Customers</h6>
-                            <h3 class="mb-0" id="customerCount">{{ number_format($stats['customer_count'] ?? 0) }}</h3>
-                            <small class="text-muted">This period</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-lg-6 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-warning bg-gradient text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                <i class="fas fa-percentage"></i>
-                            </div>
-                        </div>
-                        <div class="ms-3">
-                            <h6 class="text-muted mb-1">Conversion Rate</h6>
-                            <h3 class="mb-0" id="conversionRate">{{ number_format($stats['conversion_rate'] ?? 0, 1) }}%</h3>
-                            <small class="text-muted">Campaign success</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Revenue Trends Chart and Channel Breakdown -->
-    <div class="row mb-4">
-        <div class="col-xl-8 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-transparent border-0">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-area me-2 text-primary"></i>
-                        Revenue Trends
-                    </h5>
-                    <small class="text-muted">Daily revenue over selected period</small>
-                </div>
-                <div class="card-body">
-                    <div class="position-relative" style="height: 300px;">
-                        <canvas id="revenueTrendsChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-4 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-transparent border-0">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-pie me-2 text-success"></i>
-                        Channel Revenue
-                    </h5>
-                    <small class="text-muted">Revenue by communication channel</small>
-                </div>
-                <div class="card-body">
-                    <div class="position-relative" style="height: 300px;">
-                        <canvas id="channelRevenueChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Top Customers and Channel Breakdown -->
-    <div class="row mb-4">
-        <div class="col-xl-8 mb-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-crown me-2 text-warning"></i>
-                            Top Customers by Revenue
-                        </h5>
-                        <small class="text-muted">Highest value customers this period</small>
-                    </div>
-                    <button class="btn btn-outline-primary btn-sm" onclick="exportRevenue('customers')">
-                        <i class="fas fa-download me-1"></i>Export
-                    </button>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="border-0">Customer</th>
-                                    <th class="border-0">Company</th>
-                                    <th class="border-0">Email Interactions</th>
-                                    <th class="border-0">SMS Interactions</th>
-                                    <th class="border-0">Est. Revenue</th>
-                                    <th class="border-0">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($topCustomers as $customer)
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar-sm me-2">
-                                                <div class="avatar-initial bg-primary text-white rounded-circle">
-                                                    {{ strtoupper(substr($customer->first_name, 0, 1)) }}{{ strtoupper(substr($customer->last_name, 0, 1)) }}
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <strong>{{ $customer->first_name }} {{ $customer->last_name }}</strong>
-                                                <br>
-                                                <small class="text-muted">{{ $customer->email }}</small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>{{ $customer->company ?? 'N/A' }}</td>
-                                    <td>
-                                        <span class="badge bg-info">{{ $customer->email_interactions }}</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-success">{{ $customer->sms_interactions }}</span>
-                                    </td>
-                                    <td>
-                                        <strong class="text-success">${{ number_format($customer->estimated_revenue, 2) }}</strong>
-                                    </td>
-                                    <td>
-                                        <a href="{{ route('contacts.show', $customer->id) }}" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="6" class="text-center py-4">
-                                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
-                                        <p class="text-muted mb-0">No customer data available for this period</p>
-                                    </td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-4 mb-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-transparent border-0">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-bar me-2 text-info"></i>
-                        Channel Performance
-                    </h5>
-                    <small class="text-muted">Detailed channel breakdown</small>
-                </div>
-                <div class="card-body">
-                    @foreach($channelRevenue as $channel => $data)
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="d-flex align-items-center">
-                            <div class="me-3">
-                                @if($channel === 'email')
-                                    <i class="fas fa-envelope fa-lg text-primary"></i>
-                                @elseif($channel === 'sms')
-                                    <i class="fas fa-sms fa-lg text-success"></i>
-                                @elseif($channel === 'whatsapp')
-                                    <i class="fab fa-whatsapp fa-lg text-success"></i>
-                                @endif
+        <!-- Revenue Trends Chart and Channel Breakdown -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-chart-area text-blue-600"></i>
                             </div>
                             <div>
-                                <strong>{{ ucfirst($channel) }}</strong>
-                                <br>
-                                <small class="text-muted">{{ $data['count'] }} messages</small>
+                                <h3 class="text-lg font-semibold text-gray-900">Revenue Trends</h3>
+                                <p class="text-sm text-gray-600">Daily revenue over selected period</p>
                             </div>
                         </div>
-                        <div class="text-end">
-                            <strong class="text-success">${{ number_format($data['revenue'], 2) }}</strong>
+                    </div>
+                    <div class="p-6">
+                        <div class="relative h-80">
+                            <canvas id="revenueTrendsChart"></canvas>
                         </div>
                     </div>
-                    @endforeach
+                </div>
+            </div>
+
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 h-full">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-chart-pie text-green-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">Channel Revenue</h3>
+                                <p class="text-sm text-gray-600">Revenue by communication channel</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="relative h-80">
+                            <canvas id="channelRevenueChart"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Quick Actions -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">
-                        <i class="fas fa-tools me-2 text-primary"></i>
-                        Quick Actions
-                    </h5>
-                    <div class="row">
-                        <div class="col-md-3 mb-3">
-                            <a href="{{ route('admin.revenue.monthly') }}" class="btn btn-outline-primary w-100">
-                                <i class="fas fa-calendar-alt mb-2 d-block fa-2x"></i>
-                                Monthly Analysis
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <a href="{{ route('admin.revenue.customers') }}" class="btn btn-outline-success w-100">
-                                <i class="fas fa-users mb-2 d-block fa-2x"></i>
-                                Customer Analytics
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <a href="{{ route('admin.revenue.forecast') }}" class="btn btn-outline-warning w-100">
-                                <i class="fas fa-crystal-ball mb-2 d-block fa-2x"></i>
-                                Revenue Forecast
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <button onclick="exportRevenue('all')" class="btn btn-outline-info w-100">
-                                <i class="fas fa-file-export mb-2 d-block fa-2x"></i>
-                                Export All Data
+        <!-- Top Customers and Channel Breakdown -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fas fa-crown text-yellow-600"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900">Top Customers by Revenue</h3>
+                                    <p class="text-sm text-gray-600">Highest value customers this period</p>
+                                </div>
+                            </div>
+                            <button class="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150" onclick="exportRevenue('customers')">
+                                <i class="fas fa-download mr-2"></i>Export
                             </button>
                         </div>
                     </div>
+                    <div class="overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">SMS</th>
+                                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue</th>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @forelse($topCustomers as $customer)
+                                    <tr class="hover:bg-gray-50 transition duration-150">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 w-8 h-8">
+                                                    <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                                        {{ strtoupper(substr($customer->first_name, 0, 1)) }}{{ strtoupper(substr($customer->last_name, 0, 1)) }}
+                                                    </div>
+                                                </div>
+                                                <div class="ml-3">
+                                                    <div class="text-sm font-medium text-gray-900">{{ $customer->first_name }} {{ $customer->last_name }}</div>
+                                                    <div class="text-sm text-gray-500">{{ $customer->email }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $customer->company ?? 'N/A' }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">{{ $customer->email_interactions }}</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">{{ $customer->sms_interactions }}</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                                            <span class="text-sm font-semibold text-green-600">${{ number_format($customer->estimated_revenue, 2) }}</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                                            <a href="{{ route('contacts.show', $customer->id) }}" class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-lg hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="6" class="px-6 py-12 text-center">
+                                            <div class="flex flex-col items-center">
+                                                <i class="fas fa-users text-gray-300 text-4xl mb-4"></i>
+                                                <p class="text-gray-500">No customer data available for this period</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 h-full">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-chart-bar text-indigo-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">Channel Performance</h3>
+                                <p class="text-sm text-gray-600">Detailed channel breakdown</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        @foreach($channelRevenue as $channel => $data)
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 flex items-center justify-center rounded-lg mr-3
+                                    @if($channel === 'email') bg-blue-100
+                                    @elseif($channel === 'sms') bg-green-100
+                                    @elseif($channel === 'whatsapp') bg-green-100
+                                    @endif">
+                                    @if($channel === 'email')
+                                        <i class="fas fa-envelope text-blue-600 text-lg"></i>
+                                    @elseif($channel === 'sms')
+                                        <i class="fas fa-sms text-green-600 text-lg"></i>
+                                    @elseif($channel === 'whatsapp')
+                                        <i class="fab fa-whatsapp text-green-600 text-lg"></i>
+                                    @endif
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">{{ ucfirst($channel) }}</div>
+                                    <div class="text-xs text-gray-500">{{ $data['count'] }} messages</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-lg font-semibold text-green-600">${{ number_format($data['revenue'], 2) }}</div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-tools text-blue-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Quick Actions</h3>
+                        <p class="text-sm text-gray-600">Access detailed analytics and reports</p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <a href="{{ route('admin.revenue.monthly') }}" class="group p-6 bg-gray-50 rounded-xl hover:bg-blue-50 border-2 border-transparent hover:border-blue-200 transition-all duration-200 text-center">
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors duration-200">
+                            <i class="fas fa-calendar-alt text-blue-600 text-xl"></i>
+                        </div>
+                        <div class="text-sm font-medium text-gray-900 group-hover:text-blue-700">Monthly Analysis</div>
+                    </a>
+
+                    <a href="{{ route('admin.revenue.customers') }}" class="group p-6 bg-gray-50 rounded-xl hover:bg-green-50 border-2 border-transparent hover:border-green-200 transition-all duration-200 text-center">
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 transition-colors duration-200">
+                            <i class="fas fa-users text-green-600 text-xl"></i>
+                        </div>
+                        <div class="text-sm font-medium text-gray-900 group-hover:text-green-700">Customer Analytics</div>
+                    </a>
+
+                    <a href="{{ route('admin.revenue.forecast') }}" class="group p-6 bg-gray-50 rounded-xl hover:bg-yellow-50 border-2 border-transparent hover:border-yellow-200 transition-all duration-200 text-center">
+                        <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-yellow-200 transition-colors duration-200">
+                            <i class="fas fa-crystal-ball text-yellow-600 text-xl"></i>
+                        </div>
+                        <div class="text-sm font-medium text-gray-900 group-hover:text-yellow-700">Revenue Forecast</div>
+                    </a>
+
+                    <button onclick="exportRevenue('all')" class="group p-6 bg-gray-50 rounded-xl hover:bg-indigo-50 border-2 border-transparent hover:border-indigo-200 transition-all duration-200 text-center w-full">
+                        <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-indigo-200 transition-colors duration-200">
+                            <i class="fas fa-file-export text-indigo-600 text-xl"></i>
+                        </div>
+                        <div class="text-sm font-medium text-gray-900 group-hover:text-indigo-700">Export All Data</div>
+                    </button>
                 </div>
             </div>
         </div>
@@ -315,72 +341,63 @@
 </div>
 
 <!-- Custom Date Range Modal -->
-<div class="modal fade" id="customDateModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Custom Date Range</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="customDateForm">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label for="start_date" class="form-label">Start Date</label>
-                            <input type="date" class="form-control" id="start_date" name="start_date" required>
+<div x-data="{ showModal: false }" 
+     x-show="showModal" 
+     x-cloak
+     class="fixed inset-0 z-50 overflow-y-auto"
+     @keydown.escape.window="showModal = false"
+     id="customDateModal">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div x-show="showModal" 
+             x-transition:enter="ease-out duration-300" 
+             x-transition:enter-start="opacity-0" 
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="ease-in duration-200" 
+             x-transition:leave-start="opacity-100" 
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" 
+             @click="showModal = false">
+        </div>
+
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+
+        <div x-show="showModal" 
+             x-transition:enter="ease-out duration-300" 
+             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave="ease-in duration-200" 
+             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
+             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div class="sm:flex sm:items-start">
+                <div class="w-full">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Custom Date Range</h3>
+                    <form id="customDateForm" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="start_date" class="block text-sm font-medium text-gray-700">Start Date</label>
+                                <input type="date" id="start_date" name="start_date" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
+                            <div>
+                                <label for="end_date" class="block text-sm font-medium text-gray-700">End Date</label>
+                                <input type="date" id="end_date" name="end_date" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <label for="end_date" class="form-label">End Date</label>
-                            <input type="date" class="form-control" id="end_date" name="end_date" required>
-                        </div>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="applyCustomDate()">Apply</button>
+            <div class="mt-5 sm:mt-6 sm:flex sm:flex-row-reverse">
+                <button type="button" onclick="applyCustomDate()" class="w-full inline-flex justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto transition duration-150">
+                    Apply
+                </button>
+                <button type="button" @click="showModal = false" class="mt-3 w-full inline-flex justify-center px-4 py-2 bg-white text-gray-900 text-sm font-medium rounded-lg border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto transition duration-150">
+                    Cancel
+                </button>
             </div>
         </div>
     </div>
 </div>
 @endsection
-
-@push('styles')
-<style>
-    .avatar-sm {
-        width: 40px;
-        height: 40px;
-    }
-    
-    .avatar-initial {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-        font-weight: 600;
-    }
-
-    .card {
-        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    }
-    
-    .card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-    }
-    
-    .period-filter.btn-primary {
-        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-        border: none;
-    }
-    
-    .table tbody tr:hover {
-        background-color: rgba(0, 123, 255, 0.05);
-    }
-</style>
-@endpush
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -397,11 +414,11 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function() {
             // Update button states
             document.querySelectorAll('.period-filter').forEach(btn => {
-                btn.classList.remove('btn-primary');
-                btn.classList.add('btn-outline-primary');
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.add('text-gray-700', 'hover:bg-gray-50');
             });
-            this.classList.remove('btn-outline-primary');
-            this.classList.add('btn-primary');
+            this.classList.remove('text-gray-700', 'hover:bg-gray-50');
+            this.classList.add('bg-blue-600', 'text-white');
             
             currentPeriod = this.getAttribute('data-period');
             loadRevenueData(currentPeriod);
@@ -419,12 +436,13 @@ function initializeCharts() {
             datasets: [{
                 label: 'Revenue ($)',
                 data: @json(collect($trends)->pluck('revenue')),
-                borderColor: '#007bff',
-                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                borderColor: '#3B82F6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
                 fill: true,
                 tension: 0.4,
                 pointRadius: 4,
-                pointHoverRadius: 6
+                pointHoverRadius: 6,
+                borderWidth: 2
             }]
         },
         options: {
@@ -442,6 +460,14 @@ function initializeCharts() {
                         callback: function(value) {
                             return '$' + value.toLocaleString();
                         }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
                     }
                 }
             },
@@ -463,12 +489,12 @@ function initializeCharts() {
             datasets: [{
                 data: Object.values(channelData).map(data => data.revenue),
                 backgroundColor: [
-                    '#007bff',  // Email - Blue
-                    '#28a745',  // SMS - Green
+                    '#3B82F6',  // Email - Blue
+                    '#10B981',  // SMS - Green
                     '#25D366'   // WhatsApp - WhatsApp Green
                 ],
-                borderWidth: 2,
-                borderColor: '#fff'
+                borderWidth: 0,
+                cutout: '60%'
             }]
         },
         options: {
@@ -476,7 +502,11 @@ function initializeCharts() {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    position: 'bottom'
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
                 }
             }
         }
@@ -484,9 +514,6 @@ function initializeCharts() {
 }
 
 function loadRevenueData(period) {
-    // Show loading state
-    const loadingOverlay = '<div class="d-flex justify-content-center align-items-center" style="height: 200px;"><div class="spinner-border text-primary" role="status"></div></div>';
-    
     fetch(`{{ route('admin.revenue.stats') }}?period=${period}`, {
         method: 'GET',
         headers: {
@@ -537,23 +564,41 @@ function refreshStats() {
     showToast('Revenue statistics refreshed', 'success');
 }
 
+function applyCustomDate() {
+    const startDate = document.getElementById('start_date').value;
+    const endDate = document.getElementById('end_date').value;
+    
+    if (!startDate || !endDate) {
+        showToast('Please select both start and end dates', 'error');
+        return;
+    }
+    
+    // Close modal and load data for custom range
+    document.getElementById('customDateModal').style.display = 'none';
+    loadRevenueData(`${startDate}_${endDate}`);
+    showToast('Custom date range applied', 'success');
+}
+
 function showToast(message, type = 'info') {
     // Create toast notification
     const toast = document.createElement('div');
-    toast.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
-    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-    toast.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
+    toast.className = `fixed top-4 right-4 z-50 px-4 py-2 rounded-lg text-white text-sm font-medium transition-all duration-300 transform translate-x-0 ${
+        type === 'success' ? 'bg-green-500' : 
+        type === 'error' ? 'bg-red-500' : 
+        'bg-blue-500'
+    }`;
+    toast.innerHTML = message;
     
     document.body.appendChild(toast);
     
     // Auto remove after 3 seconds
     setTimeout(() => {
-        if (toast.parentNode) {
-            toast.parentNode.removeChild(toast);
-        }
+        toast.classList.add('translate-x-full');
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
     }, 3000);
 }
 </script>

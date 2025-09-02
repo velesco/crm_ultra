@@ -1,429 +1,493 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid">
-    {{-- Header --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-2">
-                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('admin.webhook-logs.index') }}">Webhook Logs</a></li>
-                    <li class="breadcrumb-item active">Webhook #{{ $webhookLog->id }}</li>
-                </ol>
-            </nav>
-            <h1 class="h3 mb-0 text-gradient fw-bold">Webhook Details</h1>
-            <p class="text-muted mb-0">{{ ucfirst($webhookLog->webhook_type) }} webhook from {{ ucfirst($webhookLog->provider) }}</p>
+<div class="min-h-screen bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {{-- Header --}}
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
+            <div class="mb-4 lg:mb-0">
+                <nav class="flex text-sm text-gray-500 mb-3" aria-label="Breadcrumb">
+                    <a href="{{ route('admin.dashboard') }}" class="hover:text-gray-700 transition-colors duration-200">Admin</a>
+                    <span class="mx-2">/</span>
+                    <a href="{{ route('admin.webhook-logs.index') }}" class="hover:text-gray-700 transition-colors duration-200">Webhook Logs</a>
+                    <span class="mx-2">/</span>
+                    <span class="text-gray-900">Webhook #{{ $webhookLog->id }}</span>
+                </nav>
+                <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    Webhook Details
+                </h1>
+                <p class="text-gray-600 mt-2">{{ ucfirst($webhookLog->webhook_type) }} webhook from {{ ucfirst($webhookLog->provider) }}</p>
+            </div>
+            <div class="flex flex-wrap gap-3">
+                @if($webhookLog->canRetry())
+                    <button type="button" 
+                            onclick="retryWebhook()" 
+                            class="inline-flex items-center px-4 py-2 bg-yellow-600 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition-all duration-200">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Retry Webhook
+                    </button>
+                @endif
+                <a href="{{ route('admin.webhook-logs.index') }}" 
+                   class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Back to List
+                </a>
+            </div>
         </div>
-        <div class="d-flex gap-2">
-            @if($webhookLog->canRetry())
-                <button type="button" class="btn btn-warning" onclick="retryWebhook()">
-                    <i class="fas fa-redo"></i> Retry Webhook
-                </button>
-            @endif
-            <a href="{{ route('admin.webhook-logs.index') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left"></i> Back to List
-            </a>
-        </div>
-    </div>
 
-    <div class="row">
-        {{-- Main Details --}}
-        <div class="col-lg-8">
-            {{-- Status Overview --}}
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-transparent border-0">
-                    <h5 class="card-title mb-0">Status Overview</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="text-center mb-3">
-                                <div class="mb-2">
-                                    <span class="badge {{ $webhookLog->status_badge_class }} fs-6 px-3 py-2">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {{-- Main Details --}}
+            <div class="lg:col-span-2 space-y-6">
+                {{-- Status Overview --}}
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-6">Status Overview</h3>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
+                        <div class="text-center">
+                            <div class="mb-3">
+                                @if($webhookLog->status === 'pending')
+                                    <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800">
+                                        Pending
+                                    </span>
+                                @elseif($webhookLog->status === 'processing')
+                                    <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+                                        Processing
+                                    </span>
+                                @elseif($webhookLog->status === 'completed')
+                                    <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-green-100 text-green-800">
+                                        Completed
+                                    </span>
+                                @elseif($webhookLog->status === 'failed')
+                                    <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-red-100 text-red-800">
+                                        Failed
+                                    </span>
+                                @elseif($webhookLog->status === 'retrying')
+                                    <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-gray-100 text-gray-800">
+                                        Retrying
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-gray-100 text-gray-800">
                                         {{ ucfirst($webhookLog->status) }}
                                     </span>
-                                </div>
-                                <small class="text-muted">Current Status</small>
+                                @endif
                             </div>
+                            <div class="text-xs text-gray-500">Current Status</div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="text-center mb-3">
-                                <div class="h5 mb-1">{{ $webhookLog->attempts }}</div>
-                                <small class="text-muted">Attempts</small>
-                            </div>
+                        <div class="text-center">
+                            <div class="text-xl font-semibold text-gray-900 mb-1">{{ $webhookLog->attempts }}</div>
+                            <div class="text-xs text-gray-500">Attempts</div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="text-center mb-3">
-                                <div class="h5 mb-1">
-                                    @if($webhookLog->processing_time)
-                                        {{ number_format($webhookLog->processing_time, 2) }}ms
-                                    @else
-                                        -
-                                    @endif
-                                </div>
-                                <small class="text-muted">Processing Time</small>
+                        <div class="text-center">
+                            <div class="text-xl font-semibold text-gray-900 mb-1">
+                                @if($webhookLog->processing_time)
+                                    {{ number_format($webhookLog->processing_time, 2) }}ms
+                                @else
+                                    -
+                                @endif
                             </div>
+                            <div class="text-xs text-gray-500">Processing Time</div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="text-center mb-3">
-                                <div class="h5 mb-1">
-                                    @if($webhookLog->response_code)
-                                        <span class="badge {{ $webhookLog->response_code < 300 ? 'bg-success' : 'bg-danger' }}">
-                                            {{ $webhookLog->response_code }}
-                                        </span>
-                                    @else
-                                        -
-                                    @endif
-                                </div>
-                                <small class="text-muted">Response Code</small>
+                        <div class="text-center">
+                            <div class="text-xl font-semibold mb-1">
+                                @if($webhookLog->response_code)
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $webhookLog->response_code < 300 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                        {{ $webhookLog->response_code }}
+                                    </span>
+                                @else
+                                    <span class="text-gray-500">-</span>
+                                @endif
                             </div>
+                            <div class="text-xs text-gray-500">Response Code</div>
                         </div>
                     </div>
                     
                     @if($webhookLog->status === 'failed' && $webhookLog->next_retry_at)
-                        <div class="alert alert-warning">
-                            <i class="fas fa-clock"></i>
-                            Next retry scheduled for: <strong>{{ $webhookLog->next_retry_at->format('M j, Y H:i:s') }}</strong>
-                            ({{ $webhookLog->next_retry_at->diffForHumans() }})
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-yellow-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <div>
+                                    <p class="text-yellow-800">
+                                        Next retry scheduled for: <strong>{{ $webhookLog->next_retry_at->format('M j, Y H:i:s') }}</strong>
+                                        ({{ $webhookLog->next_retry_at->diffForHumans() }})
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     @endif
 
                     @if($webhookLog->error_message)
-                        <div class="alert alert-danger">
-                            <h6><i class="fas fa-exclamation-triangle"></i> Error Message</h6>
-                            <p class="mb-0">{{ $webhookLog->error_message }}</p>
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <div class="flex items-start">
+                                <svg class="w-5 h-5 text-red-600 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                </svg>
+                                <div>
+                                    <h4 class="text-red-800 font-semibold mb-2">Error Message</h4>
+                                    <p class="text-red-700">{{ $webhookLog->error_message }}</p>
+                                </div>
+                            </div>
                         </div>
                     @endif
                 </div>
-            </div>
 
-            {{-- Webhook Information --}}
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-transparent border-0">
-                    <h5 class="card-title mb-0">Webhook Information</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <strong>Type:</strong>
-                            <div class="mt-1">
-                                <i class="{{ $webhookLog->type_icon }} me-2"></i>
-                                {{ ucfirst($webhookLog->webhook_type) }}
+                {{-- Webhook Information --}}
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-6">Webhook Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <div class="text-sm font-medium text-gray-500 mb-2">Type</div>
+                            <div class="flex items-center">
+                                @if($webhookLog->webhook_type === 'email')
+                                    <svg class="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                    </svg>
+                                @elseif($webhookLog->webhook_type === 'sms')
+                                    <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+                                    </svg>
+                                @elseif($webhookLog->webhook_type === 'api')
+                                    <svg class="w-5 h-5 text-purple-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                                    </svg>
+                                @else
+                                    <svg class="w-5 h-5 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                                    </svg>
+                                @endif
+                                <span class="text-gray-900">{{ ucfirst($webhookLog->webhook_type) }}</span>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <strong>Provider:</strong>
-                            <div class="mt-1">
-                                <i class="{{ $webhookLog->provider_icon }} me-2"></i>
-                                {{ ucfirst($webhookLog->provider) }}
+                        <div>
+                            <div class="text-sm font-medium text-gray-500 mb-2">Provider</div>
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path>
+                                </svg>
+                                <span class="text-gray-900">{{ ucfirst($webhookLog->provider) }}</span>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <strong>Event Type:</strong>
-                            <div class="mt-1">
-                                <i class="{{ $webhookLog->event_type_icon }} me-2"></i>
-                                {{ ucfirst(str_replace('_', ' ', $webhookLog->event_type)) }}
+                        <div>
+                            <div class="text-sm font-medium text-gray-500 mb-2">Event Type</div>
+                            <div class="flex items-center">
+                                @if($webhookLog->event_type === 'delivered')
+                                    <svg class="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                @elseif($webhookLog->event_type === 'failed')
+                                    <svg class="w-4 h-4 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                @else
+                                    <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                @endif
+                                <span class="text-gray-900">{{ ucfirst(str_replace('_', ' ', $webhookLog->event_type)) }}</span>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <strong>Method:</strong>
-                            <div class="mt-1">
-                                <span class="badge bg-primary">{{ $webhookLog->method }}</span>
-                            </div>
+                        <div>
+                            <div class="text-sm font-medium text-gray-500 mb-2">Method</div>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {{ $webhookLog->method }}
+                            </span>
                         </div>
-                        <div class="col-md-12">
-                            <strong>URL:</strong>
-                            <div class="mt-1">
-                                <code class="bg-light p-2 rounded d-block">{{ $webhookLog->url }}</code>
-                            </div>
+                        <div class="md:col-span-2">
+                            <div class="text-sm font-medium text-gray-500 mb-2">URL</div>
+                            <code class="block bg-gray-100 px-3 py-2 rounded-lg text-sm text-gray-900 break-all">{{ $webhookLog->url }}</code>
                         </div>
                         @if($webhookLog->reference_id && $webhookLog->reference_type)
-                        <div class="col-md-6">
-                            <strong>Reference:</strong>
-                            <div class="mt-1">
-                                {{ $webhookLog->reference_type }}: {{ $webhookLog->reference_id }}
-                            </div>
+                        <div>
+                            <div class="text-sm font-medium text-gray-500 mb-2">Reference</div>
+                            <div class="text-gray-900">{{ $webhookLog->reference_type }}: {{ $webhookLog->reference_id }}</div>
                         </div>
                         @endif
                         @if($webhookLog->webhook_id)
-                        <div class="col-md-6">
-                            <strong>Webhook ID:</strong>
-                            <div class="mt-1">
-                                <code>{{ $webhookLog->webhook_id }}</code>
-                            </div>
+                        <div>
+                            <div class="text-sm font-medium text-gray-500 mb-2">Webhook ID</div>
+                            <code class="text-sm text-gray-900">{{ $webhookLog->webhook_id }}</code>
                         </div>
                         @endif
                     </div>
                 </div>
-            </div>
 
-            {{-- Timeline --}}
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-transparent border-0">
-                    <h5 class="card-title mb-0">Timeline</h5>
-                </div>
-                <div class="card-body">
-                    <div class="timeline">
-                        <div class="timeline-item">
-                            <div class="timeline-marker bg-primary"></div>
-                            <div class="timeline-content">
-                                <h6 class="mb-1">Webhook Received</h6>
-                                <p class="text-muted mb-0">{{ $webhookLog->webhook_received_at->format('M j, Y H:i:s') }}</p>
-                                <small class="text-muted">{{ $webhookLog->webhook_received_at->diffForHumans() }}</small>
-                            </div>
-                        </div>
-                        
-                        @if($webhookLog->processed_at)
-                        <div class="timeline-item">
-                            <div class="timeline-marker {{ $webhookLog->status === 'completed' ? 'bg-success' : 'bg-danger' }}"></div>
-                            <div class="timeline-content">
-                                <h6 class="mb-1">Processing {{ $webhookLog->status === 'completed' ? 'Completed' : 'Failed' }}</h6>
-                                <p class="text-muted mb-0">{{ $webhookLog->processed_at->format('M j, Y H:i:s') }}</p>
-                                <small class="text-muted">{{ $webhookLog->processed_at->diffForHumans() }}</small>
-                                @if($webhookLog->processing_time)
-                                    <small class="text-info d-block">Took {{ number_format($webhookLog->processing_time, 2) }}ms</small>
-                                @endif
-                            </div>
-                        </div>
-                        @endif
-                        
-                        @if($webhookLog->next_retry_at)
-                        <div class="timeline-item">
-                            <div class="timeline-marker bg-warning"></div>
-                            <div class="timeline-content">
-                                <h6 class="mb-1">Next Retry Scheduled</h6>
-                                <p class="text-muted mb-0">{{ $webhookLog->next_retry_at->format('M j, Y H:i:s') }}</p>
-                                <small class="text-muted">{{ $webhookLog->next_retry_at->diffForHumans() }}</small>
-                            </div>
-                        </div>
-                        @endif
+                {{-- Timeline --}}
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-6">Timeline</h3>
+                    <div class="flow-root">
+                        <ul class="-mb-8">
+                            <li>
+                                <div class="relative pb-8">
+                                    <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"></span>
+                                    <div class="relative flex space-x-3">
+                                        <div class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center ring-8 ring-white">
+                                            <svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                        </div>
+                                        <div class="min-w-0 flex-1 pt-1.5">
+                                            <div>
+                                                <p class="text-sm font-medium text-gray-900">Webhook Received</p>
+                                                <p class="text-sm text-gray-500">{{ $webhookLog->webhook_received_at->format('M j, Y H:i:s') }}</p>
+                                                <p class="text-xs text-gray-400">{{ $webhookLog->webhook_received_at->diffForHumans() }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            @if($webhookLog->processed_at)
+                            <li>
+                                <div class="relative pb-8">
+                                    @if($webhookLog->next_retry_at)
+                                        <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"></span>
+                                    @endif
+                                    <div class="relative flex space-x-3">
+                                        <div class="h-8 w-8 rounded-full {{ $webhookLog->status === 'completed' ? 'bg-green-500' : 'bg-red-500' }} flex items-center justify-center ring-8 ring-white">
+                                            @if($webhookLog->status === 'completed')
+                                                <svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                </svg>
+                                            @else
+                                                <svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
+                                            @endif
+                                        </div>
+                                        <div class="min-w-0 flex-1 pt-1.5">
+                                            <div>
+                                                <p class="text-sm font-medium text-gray-900">Processing {{ $webhookLog->status === 'completed' ? 'Completed' : 'Failed' }}</p>
+                                                <p class="text-sm text-gray-500">{{ $webhookLog->processed_at->format('M j, Y H:i:s') }}</p>
+                                                <p class="text-xs text-gray-400">{{ $webhookLog->processed_at->diffForHumans() }}</p>
+                                                @if($webhookLog->processing_time)
+                                                    <p class="text-xs text-blue-600">Took {{ number_format($webhookLog->processing_time, 2) }}ms</p>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            @endif
+                            
+                            @if($webhookLog->next_retry_at)
+                            <li>
+                                <div class="relative">
+                                    <div class="relative flex space-x-3">
+                                        <div class="h-8 w-8 rounded-full bg-yellow-500 flex items-center justify-center ring-8 ring-white">
+                                            <svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                            </svg>
+                                        </div>
+                                        <div class="min-w-0 flex-1 pt-1.5">
+                                            <div>
+                                                <p class="text-sm font-medium text-gray-900">Next Retry Scheduled</p>
+                                                <p class="text-sm text-gray-500">{{ $webhookLog->next_retry_at->format('M j, Y H:i:s') }}</p>
+                                                <p class="text-xs text-gray-400">{{ $webhookLog->next_retry_at->diffForHumans() }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            @endif
+                        </ul>
                     </div>
                 </div>
-            </div>
 
-            {{-- Headers --}}
-            @if($webhookLog->headers)
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-transparent border-0">
-                    <h5 class="card-title mb-0">Request Headers</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            @foreach($webhookLog->headers as $key => $value)
-                            <tr>
-                                <td class="fw-medium text-end" style="width: 200px;">{{ $key }}:</td>
-                                <td><code class="text-muted">{{ is_array($value) ? implode(', ', $value) : $value }}</code></td>
-                            </tr>
-                            @endforeach
+                {{-- Headers --}}
+                @if($webhookLog->headers)
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-6">Request Headers</h3>
+                    <div class="overflow-hidden">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <tbody class="divide-y divide-gray-200">
+                                @foreach($webhookLog->headers as $key => $value)
+                                <tr>
+                                    <td class="py-3 pr-6 text-sm font-medium text-gray-900 text-right" style="width: 200px;">{{ $key }}:</td>
+                                    <td class="py-3 text-sm">
+                                        <code class="text-gray-600 bg-gray-100 px-2 py-1 rounded">{{ is_array($value) ? implode(', ', $value) : $value }}</code>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
                         </table>
                     </div>
                 </div>
-            </div>
-            @endif
+                @endif
 
-            {{-- Payload --}}
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Raw Payload</h5>
-                    <div class="btn-group btn-group-sm" role="group">
-                        <input type="radio" class="btn-check" name="payloadFormat" id="payloadRaw" autocomplete="off" checked>
-                        <label class="btn btn-outline-primary" for="payloadRaw">Raw</label>
-                        <input type="radio" class="btn-check" name="payloadFormat" id="payloadFormatted" autocomplete="off">
-                        <label class="btn btn-outline-primary" for="payloadFormatted">Formatted</label>
+                {{-- Payload --}}
+                <div x-data="{ format: 'raw' }" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900">Raw Payload</h3>
+                        <div class="flex items-center bg-gray-100 rounded-lg p-1">
+                            <button @click="format = 'raw'" 
+                                    :class="format === 'raw' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-600'"
+                                    class="px-3 py-1 text-sm font-medium rounded-md cursor-pointer hover:bg-white hover:shadow-sm transition-all duration-150">
+                                Raw
+                            </button>
+                            <button @click="format = 'formatted'" 
+                                    :class="format === 'formatted' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-600'"
+                                    class="px-3 py-1 text-sm font-medium rounded-md cursor-pointer hover:bg-white hover:shadow-sm transition-all duration-150">
+                                Formatted
+                            </button>
+                        </div>
                     </div>
+                    <pre id="payloadContent" class="bg-gray-100 p-4 rounded-lg text-sm text-gray-800 overflow-auto max-h-96"><code>{{ $webhookLog->payload }}</code></pre>
                 </div>
-                <div class="card-body">
-                    <pre id="payloadContent" class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;"><code>{{ $webhookLog->payload }}</code></pre>
+
+                {{-- Processed Data --}}
+                @if($webhookLog->processed_data)
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-6">Processed Data</h3>
+                    <pre class="bg-gray-100 p-4 rounded-lg text-sm text-gray-800 overflow-auto max-h-72"><code>{{ json_encode($webhookLog->processed_data, JSON_PRETTY_PRINT) }}</code></pre>
                 </div>
+                @endif
+
+                {{-- Response --}}
+                @if($webhookLog->response)
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-6">Response</h3>
+                    <pre class="bg-gray-100 p-4 rounded-lg text-sm text-gray-800"><code>{{ $webhookLog->response }}</code></pre>
+                </div>
+                @endif
+
+                {{-- Error Context --}}
+                @if($webhookLog->error_context)
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-red-600 mb-6">Error Context</h3>
+                    <pre class="bg-red-50 p-4 rounded-lg text-sm text-red-800"><code>{{ json_encode($webhookLog->error_context, JSON_PRETTY_PRINT) }}</code></pre>
+                </div>
+                @endif
             </div>
 
-            {{-- Processed Data --}}
-            @if($webhookLog->processed_data)
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-transparent border-0">
-                    <h5 class="card-title mb-0">Processed Data</h5>
-                </div>
-                <div class="card-body">
-                    <pre class="bg-light p-3 rounded" style="max-height: 300px; overflow-y: auto;"><code>{{ json_encode($webhookLog->processed_data, JSON_PRETTY_PRINT) }}</code></pre>
-                </div>
-            </div>
-            @endif
-
-            {{-- Response --}}
-            @if($webhookLog->response)
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-transparent border-0">
-                    <h5 class="card-title mb-0">Response</h5>
-                </div>
-                <div class="card-body">
-                    <pre class="bg-light p-3 rounded"><code>{{ $webhookLog->response }}</code></pre>
-                </div>
-            </div>
-            @endif
-
-            {{-- Error Context --}}
-            @if($webhookLog->error_context)
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-transparent border-0">
-                    <h5 class="card-title mb-0 text-danger">Error Context</h5>
-                </div>
-                <div class="card-body">
-                    <pre class="bg-danger bg-opacity-10 p-3 rounded"><code>{{ json_encode($webhookLog->error_context, JSON_PRETTY_PRINT) }}</code></pre>
-                </div>
-            </div>
-            @endif
-        </div>
-
-        {{-- Sidebar --}}
-        <div class="col-lg-4">
-            {{-- Quick Actions --}}
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-transparent border-0">
-                    <h5 class="card-title mb-0">Quick Actions</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
+            {{-- Sidebar --}}
+            <div class="space-y-6">
+                {{-- Quick Actions --}}
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-6">Quick Actions</h3>
+                    <div class="space-y-3">
                         @if($webhookLog->canRetry())
-                            <button type="button" class="btn btn-warning" onclick="retryWebhook()">
-                                <i class="fas fa-redo"></i> Retry This Webhook
+                            <button type="button" 
+                                    onclick="retryWebhook()" 
+                                    class="w-full inline-flex items-center justify-center px-4 py-2 bg-yellow-600 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition-all duration-200">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                                Retry This Webhook
                             </button>
                         @endif
-                        <button type="button" class="btn btn-outline-primary" onclick="copyToClipboard('payload')">
-                            <i class="fas fa-copy"></i> Copy Payload
+                        <button type="button" 
+                                onclick="copyToClipboard('payload')"
+                                class="w-full inline-flex items-center justify-center px-4 py-2 bg-white border border-blue-300 rounded-lg shadow-sm text-sm font-medium text-blue-700 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+                            </svg>
+                            Copy Payload
                         </button>
                         @if($webhookLog->processed_data)
-                            <button type="button" class="btn btn-outline-info" onclick="copyToClipboard('processed')">
-                                <i class="fas fa-copy"></i> Copy Processed Data
+                            <button type="button" 
+                                    onclick="copyToClipboard('processed')"
+                                    class="w-full inline-flex items-center justify-center px-4 py-2 bg-white border border-cyan-300 rounded-lg shadow-sm text-sm font-medium text-cyan-700 hover:bg-cyan-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition-all duration-200">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+                                </svg>
+                                Copy Processed Data
                             </button>
                         @endif
                         <a href="{{ route('admin.webhook-logs.export') }}?webhook_ids[]={{ $webhookLog->id }}" 
-                           class="btn btn-outline-success">
-                            <i class="fas fa-download"></i> Export This Log
+                           class="w-full inline-flex items-center justify-center px-4 py-2 bg-white border border-green-300 rounded-lg shadow-sm text-sm font-medium text-green-700 hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Export This Log
                         </a>
                     </div>
                 </div>
-            </div>
 
-            {{-- Metadata --}}
-            @if($webhookLog->metadata)
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-transparent border-0">
-                    <h5 class="card-title mb-0">Metadata</h5>
+                {{-- Metadata --}}
+                @if($webhookLog->metadata)
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-6">Metadata</h3>
+                    <pre class="bg-gray-100 p-4 rounded-lg text-sm text-gray-800"><code>{{ json_encode($webhookLog->metadata, JSON_PRETTY_PRINT) }}</code></pre>
                 </div>
-                <div class="card-body">
-                    <pre class="bg-light p-3 rounded"><code>{{ json_encode($webhookLog->metadata, JSON_PRETTY_PRINT) }}</code></pre>
-                </div>
-            </div>
-            @endif
+                @endif
 
-            {{-- System Information --}}
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-transparent border-0">
-                    <h5 class="card-title mb-0">System Information</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <strong>IP Address:</strong>
-                            <div class="mt-1">{{ $webhookLog->ip_address ?? 'Unknown' }}</div>
+                {{-- System Information --}}
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-6">System Information</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="text-sm font-medium text-gray-500 mb-1">IP Address</div>
+                            <div class="text-sm text-gray-900">{{ $webhookLog->ip_address ?? 'Unknown' }}</div>
                         </div>
                         @if($webhookLog->user_agent)
-                        <div class="col-12">
-                            <strong>User Agent:</strong>
-                            <div class="mt-1">
-                                <small class="text-muted">{{ $webhookLog->user_agent }}</small>
-                            </div>
+                        <div>
+                            <div class="text-sm font-medium text-gray-500 mb-1">User Agent</div>
+                            <div class="text-xs text-gray-600 break-all">{{ $webhookLog->user_agent }}</div>
                         </div>
                         @endif
-                        <div class="col-12">
-                            <strong>Created:</strong>
-                            <div class="mt-1">{{ $webhookLog->created_at->format('M j, Y H:i:s') }}</div>
+                        <div>
+                            <div class="text-sm font-medium text-gray-500 mb-1">Created</div>
+                            <div class="text-sm text-gray-900">{{ $webhookLog->created_at->format('M j, Y H:i:s') }}</div>
                         </div>
-                        <div class="col-12">
-                            <strong>Updated:</strong>
-                            <div class="mt-1">{{ $webhookLog->updated_at->format('M j, Y H:i:s') }}</div>
+                        <div>
+                            <div class="text-sm font-medium text-gray-500 mb-1">Updated</div>
+                            <div class="text-sm text-gray-900">{{ $webhookLog->updated_at->format('M j, Y H:i:s') }}</div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {{-- Related Webhooks --}}
-            @if($relatedLogs->isNotEmpty())
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-transparent border-0">
-                    <h5 class="card-title mb-0">Related Webhooks</h5>
-                </div>
-                <div class="card-body">
-                    <div class="list-group list-group-flush">
+                {{-- Related Webhooks --}}
+                @if($relatedLogs->isNotEmpty())
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-6">Related Webhooks</h3>
+                    <div class="space-y-3">
                         @foreach($relatedLogs as $related)
-                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <div>
-                                <div class="fw-medium">{{ ucfirst($related->event_type) }}</div>
-                                <small class="text-muted">{{ $related->webhook_received_at->format('M j, H:i') }}</small>
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+                            <div class="flex-1 min-w-0">
+                                <div class="text-sm font-medium text-gray-900">{{ ucfirst($related->event_type) }}</div>
+                                <div class="text-xs text-gray-500">{{ $related->webhook_received_at->format('M j, H:i') }}</div>
                             </div>
-                            <div>
-                                <span class="badge {{ $related->status_badge_class }} me-2">
-                                    {{ ucfirst($related->status) }}
-                                </span>
+                            <div class="flex items-center space-x-2">
+                                @if($related->status === 'completed')
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Completed
+                                    </span>
+                                @elseif($related->status === 'failed')
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        Failed
+                                    </span>
+                                @elseif($related->status === 'pending')
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        Pending
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        {{ ucfirst($related->status) }}
+                                    </span>
+                                @endif
                                 <a href="{{ route('admin.webhook-logs.show', $related) }}" 
-                                   class="btn btn-outline-primary btn-sm">
-                                    <i class="fas fa-eye"></i>
+                                   class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors duration-200">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
                                 </a>
                             </div>
                         </div>
                         @endforeach
                     </div>
                 </div>
+                @endif
             </div>
-            @endif
         </div>
     </div>
 </div>
 @endsection
-
-@push('styles')
-<style>
-.timeline {
-    position: relative;
-    padding-left: 2rem;
-}
-
-.timeline::before {
-    content: '';
-    position: absolute;
-    left: 1rem;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: #e9ecef;
-}
-
-.timeline-item {
-    position: relative;
-    margin-bottom: 2rem;
-}
-
-.timeline-marker {
-    position: absolute;
-    left: -2rem;
-    top: 0.5rem;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    border: 2px solid #fff;
-    box-shadow: 0 0 0 2px #e9ecef;
-}
-
-.timeline-content {
-    background: #f8f9fa;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    border-left: 3px solid #dee2e6;
-}
-</style>
-@endpush
 
 @push('scripts')
 <script>
@@ -470,27 +534,6 @@ function copyToClipboard(type) {
         showToast('error', 'Failed to copy to clipboard');
     });
 }
-
-// Format payload toggle
-document.addEventListener('DOMContentLoaded', function() {
-    const payloadContent = document.getElementById('payloadContent');
-    const rawPayload = @json($webhookLog->payload);
-    
-    document.querySelectorAll('input[name="payloadFormat"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            if (this.id === 'payloadFormatted') {
-                try {
-                    const formatted = JSON.stringify(JSON.parse(rawPayload), null, 2);
-                    payloadContent.innerHTML = `<code>${formatted}</code>`;
-                } catch (e) {
-                    payloadContent.innerHTML = `<code>${rawPayload}</code>`;
-                }
-            } else {
-                payloadContent.innerHTML = `<code>${rawPayload}</code>`;
-            }
-        });
-    });
-});
 
 function showToast(type, message) {
     // Implement your toast notification system here

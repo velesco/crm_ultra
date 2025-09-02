@@ -1,299 +1,254 @@
 @extends('layouts.app')
 
 @section('title', 'Job Details')
-@section('page-title', 'Job Details')
-
-@section('breadcrumbs')
-<nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-        <li class="breadcrumb-item"><a href="{{ route('admin.queue-monitor.index') }}">Queue Monitor</a></li>
-        <li class="breadcrumb-item active">Job Details</li>
-    </ol>
-</nav>
-@endsection
-
-@push('styles')
-<style>
-    .job-detail-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 15px;
-        color: white;
-        margin-bottom: 30px;
-    }
-    .job-status-badge {
-        font-size: 1rem;
-        padding: 0.5rem 1rem;
-        border-radius: 25px;
-    }
-    .json-viewer {
-        background: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        padding: 15px;
-        max-height: 400px;
-        overflow-y: auto;
-        font-family: 'Courier New', monospace;
-        font-size: 0.9rem;
-    }
-    .exception-viewer {
-        background: #f8d7da;
-        border: 1px solid #f5c6cb;
-        border-radius: 8px;
-        padding: 15px;
-        max-height: 300px;
-        overflow-y: auto;
-        font-family: 'Courier New', monospace;
-        font-size: 0.9rem;
-        color: #721c24;
-    }
-    .info-table th {
-        background-color: #f8f9fa;
-        border-top: none;
-        width: 150px;
-    }
-    .action-buttons {
-        gap: 10px;
-    }
-</style>
-@endpush
 
 @section('content')
-<div class="container-fluid">
-    <!-- Job Header Card -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card job-detail-card">
-                <div class="card-body text-center">
-                    <i class="fas fa-cog fa-3x mb-3 opacity-75"></i>
-                    <h2 class="mb-2">{{ class_basename($jobDetails['name'] ?? 'Unknown Job') }}</h2>
-                    <p class="mb-3 opacity-75">Job ID: {{ $jobDetails['id'] }}</p>
-                    <span class="job-status-badge badge bg-{{ $jobDetails['status'] === 'completed' ? 'success' : ($jobDetails['status'] === 'failed' ? 'danger' : 'warning') }}">
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <!-- Job Header Card -->
+        <div class="mb-8">
+            <div class="bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl shadow-lg text-white overflow-hidden">
+                <div class="p-8 text-center">
+                    <i class="fas fa-cog text-5xl mb-4 opacity-75"></i>
+                    <h2 class="text-3xl font-bold mb-2">{{ class_basename($jobDetails['name'] ?? 'Unknown Job') }}</h2>
+                    <p class="text-lg mb-4 opacity-75">Job ID: {{ $jobDetails['id'] }}</p>
+                    @php
+                        $statusClasses = match($jobDetails['status'] ?? 'pending') {
+                            'completed' => 'bg-green-500 text-white',
+                            'failed' => 'bg-red-500 text-white',
+                            default => 'bg-yellow-500 text-black'
+                        };
+                    @endphp
+                    <span class="inline-flex items-center px-4 py-2 rounded-full text-base font-medium {{ $statusClasses }}">
                         {{ ucfirst($jobDetails['status'] ?? 'pending') }}
                     </span>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Job Information -->
-    <div class="row mb-4">
-        <!-- Basic Information -->
-        <div class="col-md-6">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Basic Information</h5>
+        <!-- Job Information -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Basic Information -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                        Basic Information
+                    </h3>
                 </div>
-                <div class="card-body p-0">
-                    <table class="table table-striped info-table mb-0">
-                        <tbody>
-                            <tr>
-                                <th>Job ID</th>
-                                <td>{{ $jobDetails['id'] }}</td>
-                            </tr>
-                            <tr>
-                                <th>Job Name</th>
-                                <td>
-                                    <code>{{ $jobDetails['name'] ?? 'Unknown' }}</code>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Queue</th>
-                                <td>
-                                    <span class="badge bg-primary">{{ $jobDetails['queue'] ?? 'default' }}</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Status</th>
-                                <td>
-                                    <span class="badge bg-{{ $jobDetails['status'] === 'completed' ? 'success' : ($jobDetails['status'] === 'failed' ? 'danger' : 'warning') }}">
-                                        {{ ucfirst($jobDetails['status'] ?? 'pending') }}
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Attempts</th>
-                                <td>
-                                    <span class="badge bg-info">{{ $jobDetails['attempts'] ?? 0 }}</span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="divide-y divide-gray-200">
+                    <div class="px-6 py-4 flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-500">Job ID</span>
+                        <span class="text-sm text-gray-900">{{ $jobDetails['id'] }}</span>
+                    </div>
+                    <div class="px-6 py-4 flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-500">Job Name</span>
+                        <span class="text-sm font-mono text-gray-900 bg-gray-100 px-2 py-1 rounded">
+                            {{ $jobDetails['name'] ?? 'Unknown' }}
+                        </span>
+                    </div>
+                    <div class="px-6 py-4 flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-500">Queue</span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {{ $jobDetails['queue'] ?? 'default' }}
+                        </span>
+                    </div>
+                    <div class="px-6 py-4 flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-500">Status</span>
+                        @php
+                            $statusBadgeClasses = match($jobDetails['status'] ?? 'pending') {
+                                'completed' => 'bg-green-100 text-green-800',
+                                'failed' => 'bg-red-100 text-red-800',
+                                default => 'bg-yellow-100 text-yellow-800'
+                            };
+                        @endphp
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusBadgeClasses }}">
+                            {{ ucfirst($jobDetails['status'] ?? 'pending') }}
+                        </span>
+                    </div>
+                    <div class="px-6 py-4 flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-500">Attempts</span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            {{ $jobDetails['attempts'] ?? 0 }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timing Information -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-clock text-blue-500 mr-2"></i>
+                        Timing Information
+                    </h3>
+                </div>
+                <div class="divide-y divide-gray-200">
+                    <div class="px-6 py-4">
+                        <div class="flex justify-between items-start">
+                            <span class="text-sm font-medium text-gray-500">Started At</span>
+                            <div class="text-right">
+                                @if($jobDetails['started_at'])
+                                    <div class="text-sm text-gray-900">{{ \Carbon\Carbon::parse($jobDetails['started_at'])->format('Y-m-d H:i:s') }}</div>
+                                    <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($jobDetails['started_at'])->diffForHumans() }}</div>
+                                @else
+                                    <span class="text-sm text-gray-500">Not started</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-6 py-4">
+                        <div class="flex justify-between items-start">
+                            <span class="text-sm font-medium text-gray-500">Finished At</span>
+                            <div class="text-right">
+                                @if($jobDetails['finished_at'])
+                                    <div class="text-sm text-gray-900">{{ \Carbon\Carbon::parse($jobDetails['finished_at'])->format('Y-m-d H:i:s') }}</div>
+                                    <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($jobDetails['finished_at'])->diffForHumans() }}</div>
+                                @else
+                                    <span class="text-sm text-gray-500">Not finished</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-6 py-4">
+                        <div class="flex justify-between items-start">
+                            <span class="text-sm font-medium text-gray-500">Failed At</span>
+                            <div class="text-right">
+                                @if($jobDetails['failed_at'])
+                                    <div class="text-sm text-gray-900">{{ \Carbon\Carbon::parse($jobDetails['failed_at'])->format('Y-m-d H:i:s') }}</div>
+                                    <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($jobDetails['failed_at'])->diffForHumans() }}</div>
+                                @else
+                                    <span class="text-sm text-gray-500">Not failed</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-6 py-4 flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-500">Runtime</span>
+                        @if($jobDetails['runtime'])
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                {{ $jobDetails['runtime'] }}ms
+                            </span>
+                        @else
+                            <span class="text-sm text-gray-500">N/A</span>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Timing Information -->
-        <div class="col-md-6">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Timing Information</h5>
+        <!-- Action Buttons -->
+        <div class="mb-8">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-tools text-blue-500 mr-2"></i>
+                        Actions
+                    </h3>
                 </div>
-                <div class="card-body p-0">
-                    <table class="table table-striped info-table mb-0">
-                        <tbody>
-                            <tr>
-                                <th>Started At</th>
-                                <td>
-                                    @if($jobDetails['started_at'])
-                                        {{ \Carbon\Carbon::parse($jobDetails['started_at'])->format('Y-m-d H:i:s') }}
-                                        <br><small class="text-muted">{{ \Carbon\Carbon::parse($jobDetails['started_at'])->diffForHumans() }}</small>
-                                    @else
-                                        <span class="text-muted">Not started</span>
-                                    @endif
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Finished At</th>
-                                <td>
-                                    @if($jobDetails['finished_at'])
-                                        {{ \Carbon\Carbon::parse($jobDetails['finished_at'])->format('Y-m-d H:i:s') }}
-                                        <br><small class="text-muted">{{ \Carbon\Carbon::parse($jobDetails['finished_at'])->diffForHumans() }}</small>
-                                    @else
-                                        <span class="text-muted">Not finished</span>
-                                    @endif
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Failed At</th>
-                                <td>
-                                    @if($jobDetails['failed_at'])
-                                        {{ \Carbon\Carbon::parse($jobDetails['failed_at'])->format('Y-m-d H:i:s') }}
-                                        <br><small class="text-muted">{{ \Carbon\Carbon::parse($jobDetails['failed_at'])->diffForHumans() }}</small>
-                                    @else
-                                        <span class="text-muted">Not failed</span>
-                                    @endif
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Runtime</th>
-                                <td>
-                                    @if($jobDetails['runtime'])
-                                        <span class="badge bg-success">{{ $jobDetails['runtime'] }}ms</span>
-                                    @else
-                                        <span class="text-muted">N/A</span>
-                                    @endif
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Action Buttons -->
-    @if($jobDetails['status'] === 'failed')
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-tools me-2"></i>Actions</h5>
-                    <div class="d-flex action-buttons">
-                        <button type="button" class="btn btn-success" onclick="retryJob('{{ $jobDetails['id'] }}')">
-                            <i class="fas fa-redo me-2"></i>Retry Job
-                        </button>
-                        <button type="button" class="btn btn-danger" onclick="deleteJob('{{ $jobDetails['id'] }}')">
-                            <i class="fas fa-trash me-2"></i>Delete Job
-                        </button>
-                        <a href="{{ route('admin.queue-monitor.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left me-2"></i>Back to Monitor
+                <div class="p-6">
+                    <div class="flex flex-wrap gap-3">
+                        @if($jobDetails['status'] === 'failed')
+                            <button type="button" onclick="retryJob('{{ $jobDetails['id'] }}')" 
+                                    class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors">
+                                <i class="fas fa-redo mr-2"></i>Retry Job
+                            </button>
+                            <button type="button" onclick="deleteJob('{{ $jobDetails['id'] }}')" 
+                                    class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors">
+                                <i class="fas fa-trash mr-2"></i>Delete Job
+                            </button>
+                        @endif
+                        <a href="{{ route('admin.queue-monitor.index') }}" 
+                           class="inline-flex items-center px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors">
+                            <i class="fas fa-arrow-left mr-2"></i>Back to Monitor
                         </a>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    @else
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <a href="{{ route('admin.queue-monitor.index') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>Back to Monitor
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
 
-    <!-- Payload Information -->
-    @if($jobDetails['payload'])
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-code me-2"></i>Job Payload</h5>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('payloadContent')">
-                        <i class="fas fa-copy me-1"></i>Copy
-                    </button>
+        <!-- Payload Information -->
+        @if($jobDetails['payload'])
+        <div class="mb-8">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="fas fa-code text-blue-500 mr-2"></i>
+                            Job Payload
+                        </h3>
+                        <button type="button" onclick="copyToClipboard('payloadContent')" 
+                                class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                            <i class="fas fa-copy mr-1"></i>Copy
+                        </button>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div id="payloadContent" class="json-viewer">
-                        <pre>{{ json_encode($jobDetails['payload'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
+                <div class="p-6">
+                    <div id="payloadContent" class="bg-gray-50 border border-gray-200 rounded-lg p-4 max-h-96 overflow-y-auto">
+                        <pre class="text-sm font-mono text-gray-800">{{ json_encode($jobDetails['payload'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    @endif
+        @endif
 
-    <!-- Exception Information -->
-    @if($jobDetails['exception'])
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-danger">
-                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Exception Details</h5>
-                    <button type="button" class="btn btn-sm btn-outline-light" onclick="copyToClipboard('exceptionContent')">
-                        <i class="fas fa-copy me-1"></i>Copy
-                    </button>
+        <!-- Exception Information -->
+        @if($jobDetails['exception'])
+        <div class="mb-8">
+            <div class="bg-white rounded-xl shadow-sm border border-red-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-red-200 bg-red-50">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-red-900 flex items-center">
+                            <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
+                            Exception Details
+                        </h3>
+                        <button type="button" onclick="copyToClipboard('exceptionContent')" 
+                                class="inline-flex items-center px-3 py-1.5 border border-red-300 text-sm font-medium rounded-lg text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors">
+                            <i class="fas fa-copy mr-1"></i>Copy
+                        </button>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div id="exceptionContent" class="exception-viewer">
-                        <pre>{{ $jobDetails['exception'] }}</pre>
+                <div class="p-6">
+                    <div id="exceptionContent" class="bg-red-50 border border-red-200 rounded-lg p-4 max-h-72 overflow-y-auto">
+                        <pre class="text-sm font-mono text-red-800">{{ $jobDetails['exception'] }}</pre>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    @endif
+        @endif
 
-    <!-- Additional Information -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Job Statistics</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-md-3">
-                            <div class="border-end">
-                                <h4 class="text-primary">{{ $jobDetails['attempts'] ?? 0 }}</h4>
-                                <small class="text-muted">Total Attempts</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="border-end">
-                                <h4 class="text-success">{{ $jobDetails['runtime'] ? $jobDetails['runtime'] . 'ms' : 'N/A' }}</h4>
-                                <small class="text-muted">Execution Time</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="border-end">
-                                <h4 class="text-info">{{ $jobDetails['queue'] ?? 'default' }}</h4>
-                                <small class="text-muted">Queue Name</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <h4 class="text-{{ $jobDetails['status'] === 'completed' ? 'success' : ($jobDetails['status'] === 'failed' ? 'danger' : 'warning') }}">
-                                {{ ucfirst($jobDetails['status'] ?? 'pending') }}
-                            </h4>
-                            <small class="text-muted">Current Status</small>
-                        </div>
+        <!-- Job Statistics -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                    <i class="fas fa-chart-bar text-blue-500 mr-2"></i>
+                    Job Statistics
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-blue-600 mb-1">{{ $jobDetails['attempts'] ?? 0 }}</div>
+                        <div class="text-sm text-gray-500">Total Attempts</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-green-600 mb-1">{{ $jobDetails['runtime'] ? $jobDetails['runtime'] . 'ms' : 'N/A' }}</div>
+                        <div class="text-sm text-gray-500">Execution Time</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-purple-600 mb-1">{{ $jobDetails['queue'] ?? 'default' }}</div>
+                        <div class="text-sm text-gray-500">Queue Name</div>
+                    </div>
+                    <div class="text-center">
+                        @php
+                            $statusTextColor = match($jobDetails['status'] ?? 'pending') {
+                                'completed' => 'text-green-600',
+                                'failed' => 'text-red-600',
+                                default => 'text-yellow-600'
+                            };
+                        @endphp
+                        <div class="text-2xl font-bold {{ $statusTextColor }} mb-1">{{ ucfirst($jobDetails['status'] ?? 'pending') }}</div>
+                        <div class="text-sm text-gray-500">Current Status</div>
                     </div>
                 </div>
             </div>
@@ -375,35 +330,38 @@ function deleteJob(id) {
 }
 
 function showToast(message, type = 'info') {
-    // Create toast element
+    const toastClasses = {
+        'success': 'bg-green-500',
+        'error': 'bg-red-500',
+        'info': 'bg-blue-500',
+        'warning': 'bg-yellow-500'
+    }[type] || 'bg-blue-500';
+    
     const toast = document.createElement('div');
-    toast.className = `toast align-items-center text-white bg-${type === 'error' ? 'danger' : type} border-0`;
-    toast.setAttribute('role', 'alert');
+    toast.className = `fixed top-4 right-4 ${toastClasses} text-white px-4 py-2 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300`;
     toast.innerHTML = `
-        <div class="d-flex">
-            <div class="toast-body">${message}</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        <div class="flex items-center">
+            <span>${message}</span>
+            <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
     `;
     
-    // Add to toast container or create one
-    let container = document.querySelector('.toast-container');
-    if (!container) {
-        container = document.createElement('div');
-        container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
-        document.body.appendChild(container);
-    }
+    document.body.appendChild(toast);
     
-    container.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.remove('translate-x-full');
+    }, 100);
     
-    // Show toast
-    const bsToast = new bootstrap.Toast(toast);
-    bsToast.show();
-    
-    // Remove toast element after it's hidden
-    toast.addEventListener('hidden.bs.toast', () => {
-        toast.remove();
-    });
+    setTimeout(() => {
+        toast.classList.add('translate-x-full');
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, 5000);
 }
 </script>
 @endpush

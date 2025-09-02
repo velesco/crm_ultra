@@ -1,189 +1,340 @@
 @if($reports->count() > 0)
-<div class="table-responsive">
-    <table class="table table-hover mb-0">
-        <thead>
-            <tr>
-                <th style="width: 40px;">
-                    <input type="checkbox" class="form-check-input" id="selectAll">
-                </th>
-                <th>Report Details</th>
-                <th>Data Source</th>
-                <th>Category</th>
-                <th>Visibility</th>
-                <th>Usage</th>
-                <th>Last Run</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($reports as $report)
-            <tr>
-                <td>
-                    <input type="checkbox" class="form-check-input checkbox-selection" value="{{ $report->id }}">
-                </td>
-                <td>
-                    <div class="d-flex align-items-center">
-                        <div>
-                            <h6 class="mb-0">
-                                <a href="{{ route('admin.custom-reports.show', $report) }}" class="text-decoration-none">
+<div class="overflow-hidden">
+    <!-- Desktop Table View -->
+    <div class="hidden lg:block overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gradient-to-r from-blue-500 to-purple-600">
+                <tr>
+                    <th class="px-6 py-3 text-left">
+                        <input type="checkbox" 
+                               id="selectAll"
+                               class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Report Details</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Data Source</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Category</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Visibility</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Usage</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Last Run</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @foreach($reports as $index => $report)
+                <tr class="{{ $index % 2 === 0 ? 'bg-white' : 'bg-gray-50' }} hover:bg-blue-50 transition-colors duration-200">
+                    <td class="px-6 py-4">
+                        <input type="checkbox" 
+                               class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 checkbox-selection" 
+                               value="{{ $report->id }}">
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <a href="{{ route('admin.custom-reports.show', $report) }}" 
+                                       class="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors duration-200">
+                                        {{ $report->name }}
+                                    </a>
+                                    @if(!$report->is_active)
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                            Inactive
+                                        </span>
+                                    @endif
+                                </div>
+                                @if($report->description)
+                                    <p class="text-sm text-gray-600 mt-1">{{ Str::limit($report->description, 80) }}</p>
+                                @endif
+                                <div class="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                                    <div class="flex items-center gap-1">
+                                        <i class="fas fa-user"></i>
+                                        <span>{{ $report->creator->name }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <i class="fas fa-calendar"></i>
+                                        <span>{{ $report->created_at->format('M d, Y') }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        @php
+                            $dataSources = (new \App\Models\CustomReport())->getAvailableDataSources();
+                            $sourceInfo = $dataSources[$report->data_source] ?? null;
+                        @endphp
+                        @if($sourceInfo)
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800">
+                                {{ $sourceInfo['label'] }}
+                            </span>
+                        @else
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                {{ $report->data_source }}
+                            </span>
+                        @endif
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        @php
+                            $categories = \App\Models\CustomReport::getCategories();
+                            $categoryLabel = $categories[$report->category] ?? $report->category;
+                            $badgeClass = match($report->category) {
+                                'general' => 'bg-blue-100 text-blue-800',
+                                'contacts' => 'bg-green-100 text-green-800',
+                                'campaigns' => 'bg-yellow-100 text-yellow-800',
+                                'revenue' => 'bg-cyan-100 text-cyan-800',
+                                'system' => 'bg-gray-100 text-gray-800',
+                                default => 'bg-gray-100 text-gray-800'
+                            };
+                        @endphp
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $badgeClass }}">
+                            {{ $categoryLabel }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        @php
+                            $visibilityClass = match($report->visibility) {
+                                'public' => 'bg-green-100 text-green-800',
+                                'shared' => 'bg-yellow-100 text-yellow-800',
+                                'private' => 'bg-gray-100 text-gray-800',
+                                default => 'bg-gray-100 text-gray-800'
+                            };
+                            $visibilityIcon = match($report->visibility) {
+                                'public' => 'fas fa-globe',
+                                'shared' => 'fas fa-users',
+                                'private' => 'fas fa-lock',
+                                default => 'fas fa-question'
+                            };
+                        @endphp
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $visibilityClass }}">
+                            <i class="{{ $visibilityIcon }} mr-1"></i>{{ ucfirst($report->visibility) }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">
+                            <div class="font-medium">{{ number_format($report->run_count) }} runs</div>
+                            @if($report->is_scheduled)
+                                <div class="flex items-center gap-1 text-xs text-blue-600 mt-1">
+                                    <i class="fas fa-clock"></i>
+                                    <span>Scheduled</span>
+                                </div>
+                            @endif
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        @if($report->last_run_at)
+                            <div class="text-sm text-gray-900">
+                                <div>{{ $report->last_run_at->diffForHumans() }}</div>
+                                <div class="text-xs text-gray-500 mt-1">{{ $report->last_run_at->format('M d, Y H:i') }}</div>
+                            </div>
+                        @else
+                            <span class="text-sm text-gray-500">Never</span>
+                        @endif
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="relative" x-data="{ open: false }">
+                            <button @click="open = !open"
+                                    class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-xs leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <i class="fas fa-cog mr-1"></i>
+                                <i class="fas fa-chevron-down ml-1 text-xs" :class="{ 'rotate-180': open }"></i>
+                            </button>
+                            <div x-show="open" 
+                                 @click.away="open = false"
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0 transform scale-95"
+                                 x-transition:enter-end="opacity-100 transform scale-100"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100 transform scale-100"
+                                 x-transition:leave-end="opacity-0 transform scale-95"
+                                 class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50"
+                                 style="display: none;">
+                                <a href="{{ route('admin.custom-reports.show', $report) }}" 
+                                   class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                    <i class="fas fa-eye mr-3 text-gray-400"></i>View Report
+                                </a>
+                                @if($report->canUserAccess(Auth::id()))
+                                    <button type="button" 
+                                            class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200 text-left action-execute" 
+                                            data-url="{{ route('admin.custom-reports.execute', $report) }}">
+                                        <i class="fas fa-play mr-3 text-gray-400"></i>Execute Now
+                                    </button>
+                                @endif
+                                <hr class="my-2 border-gray-100">
+                                @if(Auth::user()->can('update', $report))
+                                    <a href="{{ route('admin.custom-reports.edit', $report) }}" 
+                                       class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                        <i class="fas fa-edit mr-3 text-gray-400"></i>Edit
+                                    </a>
+                                @endif
+                                @if($report->canUserAccess(Auth::id()))
+                                    <button type="button"
+                                            class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200 text-left action-duplicate" 
+                                            onclick="window.location.href='{{ route('admin.custom-reports.duplicate', $report) }}'">
+                                        <i class="fas fa-copy mr-3 text-gray-400"></i>Duplicate
+                                    </button>
+                                    <a href="{{ route('admin.custom-reports.export', $report) }}?format=csv" 
+                                       class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                        <i class="fas fa-download mr-3 text-gray-400"></i>Export CSV
+                                    </a>
+                                @endif
+                                <hr class="my-2 border-gray-100">
+                                @if(Auth::user()->can('delete', $report))
+                                    <button type="button" 
+                                            class="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200 text-left action-delete" 
+                                            data-url="{{ route('admin.custom-reports.destroy', $report) }}">
+                                        <i class="fas fa-trash mr-3"></i>Delete
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Mobile Card View -->
+    <div class="block lg:hidden space-y-4">
+        @foreach($reports as $report)
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300">
+                <div class="p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <input type="checkbox" 
+                                       class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 checkbox-selection" 
+                                       value="{{ $report->id }}">
+                                <a href="{{ route('admin.custom-reports.show', $report) }}" 
+                                   class="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors duration-200">
                                     {{ $report->name }}
                                 </a>
                                 @if(!$report->is_active)
-                                    <span class="badge bg-secondary ms-1">Inactive</span>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        Inactive
+                                    </span>
                                 @endif
-                            </h6>
+                            </div>
                             @if($report->description)
-                                <small class="text-muted">{{ Str::limit($report->description, 80) }}</small>
+                                <p class="text-sm text-gray-600 mb-3">{{ Str::limit($report->description, 120) }}</p>
                             @endif
-                            <div class="mt-1">
-                                <small class="text-muted">
-                                    <i class="fas fa-user fa-xs me-1"></i>{{ $report->creator->name }}
-                                    <i class="fas fa-calendar fa-xs ms-2 me-1"></i>{{ $report->created_at->format('M d, Y') }}
-                                </small>
+                        </div>
+                    </div>
+
+                    <!-- Tags -->
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        @php
+                            $dataSources = (new \App\Models\CustomReport())->getAvailableDataSources();
+                            $sourceInfo = $dataSources[$report->data_source] ?? null;
+                        @endphp
+                        @if($sourceInfo)
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800">
+                                {{ $sourceInfo['label'] }}
+                            </span>
+                        @endif
+
+                        @php
+                            $categories = \App\Models\CustomReport::getCategories();
+                            $categoryLabel = $categories[$report->category] ?? $report->category;
+                            $badgeClass = match($report->category) {
+                                'general' => 'bg-blue-100 text-blue-800',
+                                'contacts' => 'bg-green-100 text-green-800',
+                                'campaigns' => 'bg-yellow-100 text-yellow-800',
+                                'revenue' => 'bg-cyan-100 text-cyan-800',
+                                'system' => 'bg-gray-100 text-gray-800',
+                                default => 'bg-gray-100 text-gray-800'
+                            };
+                        @endphp
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $badgeClass }}">
+                            {{ $categoryLabel }}
+                        </span>
+
+                        @php
+                            $visibilityClass = match($report->visibility) {
+                                'public' => 'bg-green-100 text-green-800',
+                                'shared' => 'bg-yellow-100 text-yellow-800',
+                                'private' => 'bg-gray-100 text-gray-800',
+                                default => 'bg-gray-100 text-gray-800'
+                            };
+                            $visibilityIcon = match($report->visibility) {
+                                'public' => 'fas fa-globe',
+                                'shared' => 'fas fa-users',
+                                'private' => 'fas fa-lock',
+                                default => 'fas fa-question'
+                            };
+                        @endphp
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $visibilityClass }}">
+                            <i class="{{ $visibilityIcon }} mr-1"></i>{{ ucfirst($report->visibility) }}
+                        </span>
+                    </div>
+
+                    <!-- Stats & Actions -->
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <div class="flex items-center gap-4 text-sm text-gray-600">
+                            <div class="flex items-center gap-1">
+                                <i class="fas fa-user"></i>
+                                <span>{{ $report->creator->name }}</span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <i class="fas fa-play"></i>
+                                <span>{{ number_format($report->run_count) }} runs</span>
+                            </div>
+                        </div>
+                        
+                        <div class="relative" x-data="{ open: false }">
+                            <button @click="open = !open"
+                                    class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-xs leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <!-- Same dropdown content as desktop version -->
+                            <div x-show="open" 
+                                 @click.away="open = false"
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0 transform scale-95"
+                                 x-transition:enter-end="opacity-100 transform scale-100"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100 transform scale-100"
+                                 x-transition:leave-end="opacity-0 transform scale-95"
+                                 class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50"
+                                 style="display: none;">
+                                <!-- Same dropdown items as above -->
+                                <a href="{{ route('admin.custom-reports.show', $report) }}" 
+                                   class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                                    <i class="fas fa-eye mr-3 text-gray-400"></i>View Report
+                                </a>
+                                @if($report->canUserAccess(Auth::id()))
+                                    <button type="button" 
+                                            class="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200 text-left action-execute" 
+                                            data-url="{{ route('admin.custom-reports.execute', $report) }}">
+                                        <i class="fas fa-play mr-3 text-gray-400"></i>Execute Now
+                                    </button>
+                                @endif
                             </div>
                         </div>
                     </div>
-                </td>
-                <td>
-                    @php
-                        $dataSources = (new \App\Models\CustomReport())->getAvailableDataSources();
-                        $sourceInfo = $dataSources[$report->data_source] ?? null;
-                    @endphp
-                    @if($sourceInfo)
-                        <span class="badge data-source-badge">
-                            {{ $sourceInfo['label'] }}
-                        </span>
-                    @else
-                        <span class="badge bg-secondary">{{ $report->data_source }}</span>
-                    @endif
-                </td>
-                <td>
-                    @php
-                        $categories = \App\Models\CustomReport::getCategories();
-                        $categoryLabel = $categories[$report->category] ?? $report->category;
-                        $badgeClass = match($report->category) {
-                            'general' => 'bg-primary',
-                            'contacts' => 'bg-success',
-                            'campaigns' => 'bg-warning',
-                            'revenue' => 'bg-info',
-                            'system' => 'bg-dark',
-                            default => 'bg-secondary'
-                        };
-                    @endphp
-                    <span class="badge {{ $badgeClass }} badge-category">
-                        {{ $categoryLabel }}
-                    </span>
-                </td>
-                <td>
-                    @php
-                        $visibilityClass = match($report->visibility) {
-                            'public' => 'bg-success',
-                            'shared' => 'bg-warning',
-                            'private' => 'bg-secondary',
-                            default => 'bg-secondary'
-                        };
-                        $visibilityIcon = match($report->visibility) {
-                            'public' => 'fas fa-globe',
-                            'shared' => 'fas fa-users',
-                            'private' => 'fas fa-lock',
-                            default => 'fas fa-question'
-                        };
-                    @endphp
-                    <span class="badge {{ $visibilityClass }} visibility-badge">
-                        <i class="{{ $visibilityIcon }} me-1"></i>{{ ucfirst($report->visibility) }}
-                    </span>
-                </td>
-                <td>
-                    <div class="run-stats">
-                        <strong>{{ number_format($report->run_count) }}</strong> runs
-                        @if($report->is_scheduled)
-                            <br><i class="fas fa-clock fa-xs text-primary"></i> Scheduled
-                        @endif
-                    </div>
-                </td>
-                <td>
-                    @if($report->last_run_at)
-                        <div class="run-stats">
-                            {{ $report->last_run_at->diffForHumans() }}
-                            <br><small class="text-muted">{{ $report->last_run_at->format('M d, Y H:i') }}</small>
-                        </div>
-                    @else
-                        <span class="text-muted">Never</span>
-                    @endif
-                </td>
-                <td>
-                    <div class="btn-group report-actions" role="group">
-                        <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
-                            <i class="fas fa-cog"></i>
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li>
-                                <a class="dropdown-item" href="{{ route('admin.custom-reports.show', $report) }}">
-                                    <i class="fas fa-eye me-2"></i>View Report
-                                </a>
-                            </li>
-                            @if($report->canUserAccess(Auth::id()))
-                                <li>
-                                    <button type="button" class="dropdown-item action-execute" data-url="{{ route('admin.custom-reports.execute', $report) }}">
-                                        <i class="fas fa-play me-2"></i>Execute Now
-                                    </button>
-                                </li>
-                            @endif
-                            <li><hr class="dropdown-divider"></li>
-                            @if(Auth::user()->can('update', $report))
-                                <li>
-                                    <a class="dropdown-item" href="{{ route('admin.custom-reports.edit', $report) }}">
-                                        <i class="fas fa-edit me-2"></i>Edit
-                                    </a>
-                                </li>
-                            @endif
-                            @if($report->canUserAccess(Auth::id()))
-                                <li>
-                                    <a class="dropdown-item action-duplicate" href="{{ route('admin.custom-reports.duplicate', $report) }}">
-                                        <i class="fas fa-copy me-2"></i>Duplicate
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="{{ route('admin.custom-reports.export', $report) }}?format=csv">
-                                        <i class="fas fa-download me-2"></i>Export CSV
-                                    </a>
-                                </li>
-                            @endif
-                            <li><hr class="dropdown-divider"></li>
-                            @if(Auth::user()->can('delete', $report))
-                                <li>
-                                    <button type="button" class="dropdown-item text-danger action-delete" data-url="{{ route('admin.custom-reports.destroy', $report) }}">
-                                        <i class="fas fa-trash me-2"></i>Delete
-                                    </button>
-                                </li>
-                            @endif
-                        </ul>
-                    </div>
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
+                </div>
+            </div>
+        @endforeach
+    </div>
 </div>
 
 <!-- Pagination -->
-<div class="card-footer d-flex justify-content-between align-items-center">
-    <div class="text-muted">
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
+    <div class="text-sm text-gray-600">
         Showing {{ $reports->firstItem() ?? 0 }} to {{ $reports->lastItem() ?? 0 }} of {{ $reports->total() }} results
     </div>
     <div>
-        {{ $reports->links() }}
+        {{ $reports->appends(request()->query())->links() }}
     </div>
 </div>
 @else
-<div class="text-center py-5">
-    <div class="mb-3">
-        <i class="fas fa-chart-bar fa-3x text-muted"></i>
+<div class="text-center py-16">
+    <div class="flex items-center justify-center w-24 h-24 bg-blue-100 rounded-full mx-auto mb-6">
+        <i class="fas fa-chart-bar text-blue-500 text-3xl"></i>
     </div>
-    <h5 class="text-muted">No custom reports found</h5>
-    <p class="text-muted mb-4">Create your first custom report to get started with advanced analytics.</p>
-    <a href="{{ route('admin.custom-reports.create') }}" class="btn btn-primary">
-        <i class="fas fa-plus me-1"></i>Create Report
+    <h5 class="text-xl font-semibold text-gray-900 mb-2">No custom reports found</h5>
+    <p class="text-gray-600 mb-6">Create your first custom report to get started with advanced analytics.</p>
+    <a href="{{ route('admin.custom-reports.create') }}" 
+       class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-105 transition-all duration-200 shadow-lg">
+        <i class="fas fa-plus mr-2"></i>Create Report
     </a>
 </div>
 @endif
@@ -195,8 +346,9 @@ $(document).ready(function() {
         e.preventDefault();
         const url = $(this).data('url');
         const btn = $(this);
+        const originalHtml = btn.html();
         
-        btn.html('<i class="fas fa-spinner fa-spin me-2"></i>Executing...');
+        btn.html('<i class="fas fa-spinner fa-spin mr-2"></i>Executing...');
         
         $.post(url, { _token: '{{ csrf_token() }}' })
         .done(function(response) {
@@ -213,8 +365,34 @@ $(document).ready(function() {
             showNotification('error', response.error || 'Execution failed');
         })
         .always(function() {
-            btn.html('<i class="fas fa-play me-2"></i>Execute Now');
+            btn.html(originalHtml);
         });
     });
+
+    function showNotification(type, message) {
+        const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+        const icon = type === 'success' ? 'check-circle' : 'exclamation-triangle';
+        
+        const notification = $(`
+            <div class="fixed top-4 right-4 z-50 flex items-center p-4 ${bgColor} text-white rounded-xl shadow-2xl transform transition-all duration-500 translate-x-full">
+                <i class="fas fa-${icon} mr-3"></i>
+                <span class="font-medium">${message}</span>
+                <button class="ml-4 text-white hover:text-gray-200" onclick="$(this).parent().remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `);
+        
+        $('body').append(notification);
+        
+        // Animate in
+        setTimeout(() => notification.removeClass('translate-x-full'), 100);
+        
+        // Auto remove
+        setTimeout(() => {
+            notification.addClass('translate-x-full');
+            setTimeout(() => notification.remove(), 500);
+        }, 5000);
+    }
 });
 </script>

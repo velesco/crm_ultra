@@ -405,6 +405,380 @@ $(document).ready(function() {
     }
 });
 
+// Step validation functions
+function validateStep(step) {
+    let isValid = true;
+    
+    switch(step) {
+        case 1:
+            // Validate basic information
+            if (!$('input[name="name"]').val().trim()) {
+                showNotification('error', 'Report name is required');
+                isValid = false;
+            }
+            if (!$('select[name="category"]').val()) {
+                showNotification('error', 'Category is required');
+                isValid = false;
+            }
+            if (!$('select[name="data_source"]').val()) {
+                showNotification('error', 'Data source is required');
+                isValid = false;
+            }
+            break;
+            
+        case 2:
+            // Validate column selection
+            if ($('input[name="columns[]"]:checked').length === 0) {
+                showNotification('error', 'At least one column must be selected');
+                isValid = false;
+            }
+            break;
+    }
+    
+    return isValid;
+}
+
+function loadColumns(dataSource) {
+    $.get(`{{ route('admin.custom-reports.get-columns', '') }}/${dataSource}`)
+    .done(function(response) {
+        if (response.success) {
+            availableColumns = response.columns;
+            renderColumnSelection();
+            updateFilterOptions();
+            updateSortOptions();
+            updateChartOptions();
+        }
+    })
+    .fail(function() {
+        showNotification('error', 'Failed to load columns');
+    });
+}
+
+function renderColumnSelection() {
+    let html = `
+        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+    `;
+    
+    availableColumns.forEach((column, index) => {
+        const checked = index < 5 ? 'checked' : ''; // Auto-select first 5 columns
+        const displayName = column.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        html += `
+            <label class="flex items-center p-3 bg-white border border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-all duration-200">
+                <input type="checkbox" 
+                       name="columns[]" 
+                       value="${column}" 
+                       ${checked} 
+                       class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
+                <span class="ml-3 text-sm font-medium text-gray-900">${displayName}</span>
+            </label>
+        `;
+    });
+    
+    html += `
+            </div>
+            <div class="flex gap-3">
+                <button type="button" 
+                        onclick="selectAllColumns()" 
+                        class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200">
+                    Select All
+                </button>
+                <button type="button" 
+                        onclick="selectNoneColumns()" 
+                        class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200">
+                    Select None
+                </button>
+            </div>
+        </div>
+    `;
+    
+    $('#columnSelection').html(html);
+}
+
+function selectAllColumns() {
+    $('input[name="columns[]"]').prop('checked', true);
+}
+
+function selectNoneColumns() {
+    $('input[name="columns[]"]').prop('checked', false);
+}
+
+function addFilterRow() {
+    filterCount++;
+    const html = `
+        <div class="filter-row bg-gray-50 border border-gray-200 rounded-xl p-6 mb-4" data-filter-id="${filterCount}">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Column</label>
+                    <select name="filters[${filterCount}][column]" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200">
+                        <option value="">Select column...</option>
+                        ${availableColumns.map(col => `<option value="${col}">${col.replace(/_/g, ' ')}</option>`).join('')}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Operator</label>
+                    <select name="filters[${filterCount}][operator]" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200">
+                        @foreach($operators as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Value</label>
+                    <input type="text" 
+                           name="filters[${filterCount}][value]" 
+                           class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200" 
+                           placeholder="Enter value...">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">&nbsp;</label>
+                    <button type="button" 
+                            onclick="removeFilterRow(${filterCount})" 
+                            class="w-full px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    $('#filtersContainer .bg-blue-50').remove();
+    $('#filtersContainer').append(html);
+}
+
+function removeFilterRow(filterId) {
+    $(`.filter-row[data-filter-id="${filterId}"]`).remove();
+}
+
+function addSortRow() {
+    sortCount++;
+    const html = `
+        <div class="sort-row bg-gray-50 border border-gray-200 rounded-xl p-6 mb-4" data-sort-id="${sortCount}">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Column</label>
+                    <select name="sorting[${sortCount}][column]" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200">
+                        <option value="">Select column...</option>
+                        ${availableColumns.map(col => `<option value="${col}">${col.replace(/_/g, ' ')}</option>`).join('')}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Direction</label>
+                    <select name="sorting[${sortCount}][direction]" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200">
+                        <option value="asc">Ascending</option>
+                        <option value="desc">Descending</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">&nbsp;</label>
+                    <button type="button" 
+                            onclick="removeSortRow(${sortCount})" 
+                            class="w-full px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    $('#sortingContainer').append(html);
+}
+
+function removeSortRow(sortId) {
+    $(`.sort-row[data-sort-id="${sortId}"]`).remove();
+}
+
+function updateFilterOptions() {
+    // Update existing filter column options
+    $('.filter-row select[name*="[column]"]').each(function() {
+        const currentValue = $(this).val();
+        $(this).html(`
+            <option value="">Select column...</option>
+            ${availableColumns.map(col => `<option value="${col}" ${col === currentValue ? 'selected' : ''}>${col.replace(/_/g, ' ')}</option>`).join('')}
+        `);
+    });
+}
+
+function updateSortOptions() {
+    // Update existing sort column options
+    $('.sort-row select[name*="[column]"]').each(function() {
+        const currentValue = $(this).val();
+        $(this).html(`
+            <option value="">Select column...</option>
+            ${availableColumns.map(col => `<option value="${col}" ${col === currentValue ? 'selected' : ''}>${col.replace(/_/g, ' ')}</option>`).join('')}
+        `);
+    });
+}
+
+function updateChartOptions() {
+    const options = availableColumns.map(col => `<option value="${col}">${col.replace(/_/g, ' ')}</option>`).join('');
+    $('#xAxisSelect, #yAxisSelect').html('<option value="">Select column...</option>' + options);
+}
+
+function previewReport() {
+    const btn = $('#previewBtn');
+    const formData = new FormData($('#reportForm')[0]);
+    
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>Loading Preview...');
+    
+    $.ajax({
+        url: '{{ route("admin.custom-reports.preview") }}',
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false
+    })
+    .done(function(response) {
+        if (response.success) {
+            renderPreview(response.data);
+            $('#previewContainer').removeClass('hidden');
+        }
+    })
+    .fail(function(xhr) {
+        const response = xhr.responseJSON;
+        showNotification('error', response.error || 'Preview failed');
+    })
+    .always(function() {
+        btn.prop('disabled', false).html('<i class="fas fa-play mr-2"></i>Preview Report (First 10 rows)');
+    });
+}
+
+function renderPreview(data) {
+    if (data.length === 0) {
+        $('#previewContent').html('<div class="bg-blue-50 border border-blue-200 text-blue-800 rounded-xl p-4"><i class="fas fa-info-circle mr-2"></i>No data found with the current configuration.</div>');
+        return;
+    }
+
+    const columns = Object.keys(data[0]);
+    let html = `
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 rounded-xl overflow-hidden shadow">
+                <thead class="bg-gradient-to-r from-blue-500 to-purple-600">
+                    <tr>
+                        ${columns.map(col => `<th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">${col.replace(/_/g, ' ')}</th>`).join('')}
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    ${data.map((row, index) => `
+                        <tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 transition-colors duration-200">
+                            ${columns.map(col => `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${row[col] || ''}</td>`).join('')}
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+        <div class="bg-blue-50 border border-blue-200 text-blue-800 rounded-xl p-4 mt-4">
+            <i class="fas fa-info-circle mr-2"></i>
+            Showing first ${data.length} rows. Full report may contain more data.
+        </div>
+    `;
+    
+    $('#previewContent').html(html);
+}
+
+// Form submission
+$('#reportForm').submit(function(e) {
+    e.preventDefault();
+    
+    const btn = $('#saveBtn');
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>Saving...');
+    
+    $.ajax({
+        url: $(this).attr('action'),
+        method: 'POST',
+        data: new FormData(this),
+        processData: false,
+        contentType: false
+    })
+    .done(function(response) {
+        if (response.success) {
+            showNotification('success', response.message);
+            if (response.redirect) {
+                setTimeout(() => {
+                    window.location.href = response.redirect;
+                }, 1000);
+            }
+        }
+    })
+    .fail(function(xhr) {
+        const response = xhr.responseJSON;
+        if (response.errors) {
+            Object.keys(response.errors).forEach(field => {
+                showNotification('error', response.errors[field][0]);
+            });
+        } else {
+            showNotification('error', response.error || 'Save failed');
+        }
+    })
+    .always(function() {
+        btn.prop('disabled', false).html('<i class="fas fa-save mr-2"></i>Save Report');
+    });
+});
+
+// Alpine.js validation function
+window.validateStep = function(step) {
+    let isValid = true;
+    
+    switch(step) {
+        case 1:
+            if (!$('input[name="name"]').val().trim()) {
+                showNotification('error', 'Report name is required');
+                isValid = false;
+            }
+            if (!$('select[name="category"]').val()) {
+                showNotification('error', 'Category is required');
+                isValid = false;
+            }
+            if (!$('select[name="data_source"]').val()) {
+                showNotification('error', 'Data source is required');
+                isValid = false;
+            }
+            break;
+            
+        case 2:
+            if ($('input[name="columns[]"]:checked').length === 0) {
+                showNotification('error', 'At least one column must be selected');
+                isValid = false;
+            }
+            break;
+    }
+    
+    return isValid;
+};
+
+function showNotification(type, message) {
+    const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+    const icon = type === 'success' ? 'check-circle' : 'exclamation-triangle';
+    
+    const notification = $(`
+        <div class="fixed top-4 right-4 z-50 flex items-center p-4 ${bgColor} text-white rounded-xl shadow-2xl transform transition-all duration-500 translate-x-full">
+            <i class="fas fa-${icon} mr-3"></i>
+            <span class="font-medium">${message}</span>
+            <button class="ml-4 text-white hover:text-gray-200" onclick="$(this).parent().remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `);
+    
+    $('body').append(notification);
+    
+    // Animate in
+    setTimeout(() => notification.removeClass('translate-x-full'), 100);
+    
+    // Auto remove
+    setTimeout(() => {
+        notification.addClass('translate-x-full');
+        setTimeout(() => notification.remove(), 500);
+    }, 5000);
+}
+</script>
+@endpushselected
+    const initialDataSource = $('#dataSourceSelect').val();
+    if (initialDataSource) {
+        loadColumns(initialDataSource);
+    }
+});
+
 function nextStep(step) {
     // Validate current step
     const currentStep = $('.card[id^="step"]:visible').attr('id').replace('step', '');

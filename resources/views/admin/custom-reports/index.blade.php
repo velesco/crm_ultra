@@ -1,302 +1,294 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div class="container mx-auto px-4 py-8">
         <!-- Page Header -->
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1 class="h3 text-gray-800 mb-0">
-                        <i class="fas fa-chart-bar text-primary me-2"></i>Custom Reports
-                    </h1>
-                    <p class="text-muted mb-0">Create and manage custom reports with advanced filtering and visualization</p>
+        <div class="mb-8">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div class="flex-1">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-lg">
+                            <i class="fas fa-chart-bar text-white text-lg"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-3xl font-bold text-gray-900">Custom Reports</h1>
+                            <p class="text-gray-600 mt-1">Create and manage custom reports with advanced filtering and visualization</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#bulkActionModal" id="bulkActionBtn" style="display: none;">
-                        <i class="fas fa-tasks me-1"></i>Bulk Actions
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button type="button" 
+                            x-data
+                            @click="$dispatch('open-modal', 'bulk-action-modal')"
+                            class="hidden px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm"
+                            id="bulkActionBtn">
+                        <i class="fas fa-tasks mr-2"></i>Bulk Actions
                     </button>
-                    <a href="{{ route('admin.custom-reports.create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus me-1"></i>New Report
+                    <a href="{{ route('admin.custom-reports.create') }}" 
+                       class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-105 transition-all duration-200 shadow-lg">
+                        <i class="fas fa-plus mr-2"></i>New Report
                     </a>
                 </div>
             </div>
         </div>
 
         <!-- Statistics Cards -->
-        <div class="col-12">
-            <div class="row mb-4">
-                <div class="col-xl-3 col-md-6 mb-4">
-                    <div class="card border-left-primary shadow h-100 py-2">
-                        <div class="card-body">
-                            <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
-                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                        Total Reports</div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['total_reports'] ?? 0 }}</div>
-                                </div>
-                                <div class="col-auto">
-                                    <i class="fas fa-chart-bar fa-2x text-gray-300"></i>
-                                </div>
-                            </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group">
+                <div class="p-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Total Reports</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-2">{{ $stats['total_reports'] ?? 0 }}</p>
+                        </div>
+                        <div class="flex items-center justify-center w-14 h-14 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-chart-bar text-white text-xl"></i>
                         </div>
                     </div>
                 </div>
+                <div class="h-1 bg-gradient-to-r from-blue-500 to-blue-600"></div>
+            </div>
 
-                <div class="col-xl-3 col-md-6 mb-4">
-                    <div class="card border-left-success shadow h-100 py-2">
-                        <div class="card-body">
-                            <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
-                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                        My Reports</div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['my_reports'] ?? 0 }}</div>
-                                </div>
-                                <div class="col-auto">
-                                    <i class="fas fa-user-chart fa-2x text-gray-300"></i>
-                                </div>
-                            </div>
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group">
+                <div class="p-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">My Reports</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-2">{{ $stats['my_reports'] ?? 0 }}</p>
+                        </div>
+                        <div class="flex items-center justify-center w-14 h-14 bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-user-chart text-white text-xl"></i>
                         </div>
                     </div>
                 </div>
+                <div class="h-1 bg-gradient-to-r from-green-500 to-green-600"></div>
+            </div>
 
-                <div class="col-xl-3 col-md-6 mb-4">
-                    <div class="card border-left-info shadow h-100 py-2">
-                        <div class="card-body">
-                            <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
-                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                        Public Reports</div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['public_reports'] ?? 0 }}</div>
-                                </div>
-                                <div class="col-auto">
-                                    <i class="fas fa-share-alt fa-2x text-gray-300"></i>
-                                </div>
-                            </div>
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group">
+                <div class="p-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Public Reports</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-2">{{ $stats['public_reports'] ?? 0 }}</p>
+                        </div>
+                        <div class="flex items-center justify-center w-14 h-14 bg-gradient-to-r from-cyan-500 to-cyan-600 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-share-alt text-white text-xl"></i>
                         </div>
                     </div>
                 </div>
+                <div class="h-1 bg-gradient-to-r from-cyan-500 to-cyan-600"></div>
+            </div>
 
-                <div class="col-xl-3 col-md-6 mb-4">
-                    <div class="card border-left-warning shadow h-100 py-2">
-                        <div class="card-body">
-                            <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
-                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                        Active Reports</div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['active_reports'] ?? 0 }}</div>
-                                </div>
-                                <div class="col-auto">
-                                    <i class="fas fa-check-circle fa-2x text-gray-300"></i>
-                                </div>
-                            </div>
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group">
+                <div class="p-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">Active Reports</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-2">{{ $stats['active_reports'] ?? 0 }}</p>
+                        </div>
+                        <div class="flex items-center justify-center w-14 h-14 bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-check-circle text-white text-xl"></i>
                         </div>
                     </div>
                 </div>
+                <div class="h-1 bg-gradient-to-r from-amber-500 to-amber-600"></div>
             </div>
         </div>
 
         <!-- Filters and Search -->
-        <div class="col-12">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-filter me-1"></i>Filters & Search
-                    </h6>
-                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#filtersCollapse">
-                        <i class="fas fa-chevron-down"></i>
-                    </button>
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 mb-8" x-data="{ filtersOpen: false }">
+            <div class="flex items-center justify-between p-6 border-b border-gray-100">
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
+                        <i class="fas fa-filter text-white"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900">Filters & Search</h3>
                 </div>
-                <div class="collapse" id="filtersCollapse">
-                    <div class="card-body">
-                        <form method="GET" id="filterForm" class="row g-3">
-                            <div class="col-md-3">
-                                <label class="form-label">Search</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
-                                    <input type="text" name="search" class="form-control" placeholder="Report name or description..." value="{{ request('search') }}">
-                                </div>
+                <button @click="filtersOpen = !filtersOpen"
+                        class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-chevron-down transform transition-transform duration-200" 
+                       :class="{ 'rotate-180': filtersOpen }"></i>
+                </button>
+            </div>
+            <div x-show="filtersOpen" 
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 transform scale-100"
+                 x-transition:leave-end="opacity-0 transform scale-95"
+                 class="p-6 border-t border-gray-100">
+                <form method="GET" id="filterForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+                    <div class="xl:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Search Reports</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-search text-gray-400"></i>
                             </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Category</label>
-                                <select name="category" class="form-select">
-                                    <option value="">All Categories</option>
-                                    @foreach(\App\Models\CustomReport::getCategories() as $key => $label)
-                                        <option value="{{ $key }}" {{ request('category') == $key ? 'selected' : '' }}>{{ $label }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Data Source</label>
-                                <select name="data_source" class="form-select">
-                                    <option value="">All Sources</option>
-                                    @php $dataSources = (new \App\Models\CustomReport())->getAvailableDataSources(); @endphp
-                                    @foreach($dataSources as $key => $info)
-                                        <option value="{{ $key }}" {{ request('data_source') == $key ? 'selected' : '' }}>{{ $info['label'] }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Visibility</label>
-                                <select name="visibility" class="form-select">
-                                    <option value="">All Visibility</option>
-                                    <option value="private" {{ request('visibility') == 'private' ? 'selected' : '' }}>Private</option>
-                                    <option value="shared" {{ request('visibility') == 'shared' ? 'selected' : '' }}>Shared</option>
-                                    <option value="public" {{ request('visibility') == 'public' ? 'selected' : '' }}>Public</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Sort By</label>
-                                <select name="sort_by" class="form-select">
+                            <input type="text" 
+                                   name="search" 
+                                   class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200" 
+                                   placeholder="Report name or description..." 
+                                   value="{{ request('search') }}">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                        <select name="category" class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200">
+                            <option value="">All Categories</option>
+                            @foreach(\App\Models\CustomReport::getCategories() as $key => $label)
+                                <option value="{{ $key }}" {{ request('category') == $key ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Data Source</label>
+                        <select name="data_source" class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200">
+                            <option value="">All Sources</option>
+                            @php $dataSources = (new \App\Models\CustomReport())->getAvailableDataSources(); @endphp
+                            @foreach($dataSources as $key => $info)
+                                <option value="{{ $key }}" {{ request('data_source') == $key ? 'selected' : '' }}>{{ $info['label'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Visibility</label>
+                        <select name="visibility" class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200">
+                            <option value="">All Visibility</option>
+                            <option value="private" {{ request('visibility') == 'private' ? 'selected' : '' }}>Private</option>
+                            <option value="shared" {{ request('visibility') == 'shared' ? 'selected' : '' }}>Shared</option>
+                            <option value="public" {{ request('visibility') == 'public' ? 'selected' : '' }}>Public</option>
+                        </select>
+                    </div>
+
+                    <div class="xl:col-span-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                                <select name="sort_by" class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200">
                                     <option value="updated_at" {{ request('sort_by', 'updated_at') == 'updated_at' ? 'selected' : '' }}>Updated</option>
                                     <option value="created_at" {{ request('sort_by') == 'created_at' ? 'selected' : '' }}>Created</option>
                                     <option value="name" {{ request('sort_by') == 'name' ? 'selected' : '' }}>Name</option>
                                     <option value="run_count" {{ request('sort_by') == 'run_count' ? 'selected' : '' }}>Usage</option>
                                 </select>
                             </div>
-                            <div class="col-md-1">
-                                <label class="form-label">Order</label>
-                                <select name="sort_direction" class="form-select">
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Order</label>
+                                <select name="sort_direction" class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200">
                                     <option value="desc" {{ request('sort_direction', 'desc') == 'desc' ? 'selected' : '' }}>DESC</option>
                                     <option value="asc" {{ request('sort_direction') == 'asc' ? 'selected' : '' }}>ASC</option>
                                 </select>
                             </div>
-                            <div class="col-12">
-                                <button type="submit" class="btn btn-primary me-2">
-                                    <i class="fas fa-search me-1"></i>Apply Filters
+
+                            <div class="sm:col-span-2 flex items-end gap-3">
+                                <button type="submit" 
+                                        class="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-105 transition-all duration-200 shadow-lg">
+                                    <i class="fas fa-search mr-2"></i>Apply Filters
                                 </button>
-                                <a href="{{ route('admin.custom-reports.index') }}" class="btn btn-outline-secondary">
-                                    <i class="fas fa-times me-1"></i>Clear All
+                                <a href="{{ route('admin.custom-reports.index') }}" 
+                                   class="px-6 py-3 bg-white border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200">
+                                    <i class="fas fa-times mr-2"></i>Clear
                                 </a>
                             </div>
-                        </form>
+                        </div>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
 
         <!-- Reports Table -->
-        <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-list me-1"></i>Custom Reports ({{ $reports->total() }})
-                    </h6>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-sm btn-outline-primary" id="selectAllBtn">
-                            <i class="fas fa-check-square me-1"></i>Select All
-                        </button>
-                        <button class="btn btn-sm btn-outline-info" id="refreshBtn">
-                            <i class="fas fa-sync-alt me-1"></i>Refresh
-                        </button>
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            <div class="flex items-center justify-between p-6 border-b border-gray-100">
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
+                        <i class="fas fa-list text-white"></i>
                     </div>
+                    <h3 class="text-lg font-semibold text-gray-900">Custom Reports ({{ $reports->total() }})</h3>
                 </div>
-                <div class="card-body p-0">
-                    <div id="reportsTable">
-                        @include('admin.custom-reports.table', ['reports' => $reports])
-                    </div>
+                <div class="flex items-center gap-3">
+                    <button id="selectAllBtn"
+                            class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                        <i class="fas fa-check-square mr-2"></i>Select All
+                    </button>
+                    <button id="refreshBtn"
+                            class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors duration-200">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
                 </div>
+            </div>
+            <div id="reportsTable" class="overflow-hidden">
+                @include('admin.custom-reports.table', ['reports' => $reports])
             </div>
         </div>
     </div>
 </div>
 
 <!-- Bulk Action Modal -->
-<div class="modal fade" id="bulkActionModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Bulk Actions</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div x-data="{ open: false }" 
+     @open-modal.window="if ($event.detail === 'bulk-action-modal') open = true"
+     @close-modal.window="if ($event.detail === 'bulk-action-modal') open = false"
+     x-show="open"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-200"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0"
+     class="fixed inset-0 z-50 overflow-y-auto"
+     style="display: none;">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" @click="open = false"></div>
+
+        <div class="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-2xl rounded-2xl"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-semibold text-gray-900">Bulk Actions</h3>
+                <button @click="open = false" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
             </div>
-            <div class="modal-body">
-                <form id="bulkActionForm">
-                    <div class="mb-3">
-                        <label class="form-label">Action</label>
-                        <select name="action" class="form-select" required>
-                            <option value="">Select action...</option>
-                            <option value="delete">Delete Reports</option>
-                            <option value="activate">Activate Reports</option>
-                            <option value="deactivate">Deactivate Reports</option>
-                            <option value="make_private">Make Private</option>
-                            <option value="make_shared">Make Shared</option>
-                        </select>
-                    </div>
-                    <div id="selectedCount" class="text-muted mb-3"></div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="executeActionBtn">Execute Action</button>
+
+            <form id="bulkActionForm">
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Select Action</label>
+                    <select name="action" 
+                            class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200" 
+                            required>
+                        <option value="">Choose an action...</option>
+                        <option value="delete">Delete Reports</option>
+                        <option value="activate">Activate Reports</option>
+                        <option value="deactivate">Deactivate Reports</option>
+                        <option value="make_private">Make Private</option>
+                        <option value="make_shared">Make Shared</option>
+                    </select>
+                </div>
+                <div id="selectedCount" class="text-sm text-gray-600 mb-6 p-3 bg-blue-50 rounded-lg"></div>
+            </form>
+
+            <div class="flex justify-end gap-3">
+                <button @click="open = false" 
+                        class="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200">
+                    Cancel
+                </button>
+                <button id="executeActionBtn"
+                        class="px-6 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200">
+                    Execute Action
+                </button>
             </div>
         </div>
     </div>
 </div>
 @endsection
-
-@push('styles')
-<style>
-.table th {
-    border-top: none;
-    font-weight: 600;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-}
-
-.badge-category {
-    font-size: 0.75em;
-    padding: 0.35em 0.65em;
-}
-
-.report-actions {
-    white-space: nowrap;
-}
-
-.data-source-badge {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-}
-
-.visibility-badge {
-    font-size: 0.75em;
-}
-
-.run-stats {
-    font-size: 0.85em;
-    color: #6c757d;
-}
-
-.checkbox-selection:checked {
-    background-color: #4e73df;
-    border-color: #4e73df;
-}
-
-.table tbody tr:hover {
-    background-color: #f8f9fc;
-}
-
-.card {
-    border: 1px solid #e3e6f0;
-}
-
-.border-left-primary {
-    border-left: 0.25rem solid #4e73df !important;
-}
-
-.border-left-success {
-    border-left: 0.25rem solid #1cc88a !important;
-}
-
-.border-left-info {
-    border-left: 0.25rem solid #36b9cc !important;
-}
-
-.border-left-warning {
-    border-left: 0.25rem solid #f6c23e !important;
-}
-</style>
-@endpush
 
 @push('scripts')
 <script>
@@ -327,10 +319,10 @@ $(document).ready(function() {
     // Update bulk action button visibility
     function updateBulkActionButton() {
         if (selectedReports.length > 0) {
-            $('#bulkActionBtn').show();
+            $('#bulkActionBtn').removeClass('hidden');
             $('#selectedCount').text(`${selectedReports.length} report(s) selected`);
         } else {
-            $('#bulkActionBtn').hide();
+            $('#bulkActionBtn').addClass('hidden');
         }
     }
     
@@ -345,7 +337,7 @@ $(document).ready(function() {
             return;
         }
         
-        $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Processing...');
+        $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>Processing...');
         
         $.post('{{ route("admin.custom-reports.bulk-action") }}', {
             _token: '{{ csrf_token() }}',
@@ -356,7 +348,7 @@ $(document).ready(function() {
             if (response.success) {
                 showNotification('success', response.message);
                 refreshTable();
-                $('#bulkActionModal').modal('hide');
+                window.dispatchEvent(new CustomEvent('close-modal', { detail: 'bulk-action-modal' }));
                 selectedReports = [];
                 updateBulkActionButton();
             }
@@ -376,7 +368,7 @@ $(document).ready(function() {
     });
     
     function refreshTable() {
-        $('#refreshBtn').find('i').addClass('fa-spin');
+        $('#refreshBtn').find('i').addClass('animate-spin');
         const url = new URL(window.location.href);
         url.searchParams.set('ajax', '1');
         
@@ -385,7 +377,7 @@ $(document).ready(function() {
             $('#reportsTable').html(response.html);
         })
         .always(function() {
-            $('#refreshBtn').find('i').removeClass('fa-spin');
+            $('#refreshBtn').find('i').removeClass('animate-spin');
         });
     }
     
@@ -446,20 +438,28 @@ $(document).ready(function() {
     });
     
     function showNotification(type, message) {
-        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
         const icon = type === 'success' ? 'check-circle' : 'exclamation-triangle';
         
         const notification = $(`
-            <div class="alert ${alertClass} alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
-                <i class="fas fa-${icon} me-2"></i>${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="fixed top-4 right-4 z-50 flex items-center p-4 ${bgColor} text-white rounded-xl shadow-2xl transform transition-all duration-500 translate-x-full">
+                <i class="fas fa-${icon} mr-3"></i>
+                <span class="font-medium">${message}</span>
+                <button class="ml-4 text-white hover:text-gray-200" onclick="$(this).parent().remove()">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
         `);
         
         $('body').append(notification);
         
-        setTimeout(function() {
-            notification.alert('close');
+        // Animate in
+        setTimeout(() => notification.removeClass('translate-x-full'), 100);
+        
+        // Auto remove
+        setTimeout(() => {
+            notification.addClass('translate-x-full');
+            setTimeout(() => notification.remove(), 500);
         }, 5000);
     }
 });
