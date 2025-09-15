@@ -753,21 +753,6 @@ class WhatsAppService
     }
 
     /**
-     * Format phone number for WhatsApp
-     */
-    protected function formatPhoneNumber(string $phoneNumber)
-    {
-        $cleaned = $this->cleanPhoneNumber($phoneNumber);
-
-        // Add @c.us suffix if not present
-        if (strpos($cleaned, '@') === false) {
-            return $cleaned.'@c.us';
-        }
-
-        return $cleaned;
-    }
-
-    /**
      * Clean phone number (remove non-numeric characters)
      */
     protected function cleanPhoneNumber(string $phoneNumber)
@@ -921,5 +906,84 @@ class WhatsAppService
         $expectedSignature = hash_hmac('sha256', json_encode($data), $webhookSecret);
 
         return hash_equals($expectedSignature, $signature);
+    }
+
+    /**
+     * Send a quick WhatsApp message to a single contact
+     */
+    public function sendQuickMessage(Contact $contact, string $message)
+    {
+        try {
+            // Validate contact has phone number
+            if (empty($contact->phone)) {
+                return [
+                    'success' => false,
+                    'message' => 'Contact does not have a phone number'
+                ];
+            }
+
+            // Get the first active WhatsApp session
+            $session = WhatsAppSession::where('is_active', true)
+                ->where('status', 'active')
+                ->first();
+
+            if (!$session) {
+                return [
+                    'success' => false,
+                    'message' => 'No active WhatsApp session available'
+                ];
+            }
+
+            // Format phone number (ensure it starts with country code)
+            $phoneNumber = $this->formatPhoneNumber($contact->phone);
+
+            // Send message using the existing sendMessage method
+            $result = $this->sendMessage($session, $phoneNumber, $message);
+
+            if ($result['success']) {
+                // Create communication record
+                \App\Models\Communication::create([
+                    'contact_id' => $contact->id,
+                    'user_id' => auth()->id() ?? 1,
+                    'type' => 'whatsapp',
+                    'direction' => 'outbound',
+                    'content' => $message,
+                    'status' => 'sent',
+                    'external_id' => $result['message_id'] ?? null,
+                    'sent_at' => now(),
+                ]);
+            }
+
+            return $result;
+
+        } catch (\Exception $e) {
+            Log::error('Quick WhatsApp Send Error: ' . $e->getMessage(), [
+                'contact_id' => $contact->id,
+                'contact_phone' => $contact->phone,
+                'message' => $message,
+                'error_trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Failed to send WhatsApp message: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Format phone number to international format
+     */
+    private function formatPhoneNumber(string $phone)
+    {
+        // Remove all non-digit characters
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+
+        // If phone doesn't start with country code, add default (40 for Romania)
+        if (!str_starts_with($phone, '40') && !str_starts_with($phone, '+40')) {
+            $phone = '40' . ltrim($phone, '0');
+        }
+
+        return $phone;
     }
 }

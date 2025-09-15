@@ -17,7 +17,8 @@ class EmailService
 {
     public function createCampaign(array $data)
     {
-        $campaign = EmailCampaign::create([
+        return EmailCampaign::query()
+            ->create([
             'name' => $data['name'],
             'subject' => $data['subject'],
             'content' => $data['content'],
@@ -28,8 +29,6 @@ class EmailService
             'settings' => $data['settings'] ?? [],
             'created_by' => auth()->id(),
         ]);
-
-        return $campaign;
     }
 
     public function addContactsToCampaign(EmailCampaign $campaign, array $contactIds)
@@ -617,5 +616,52 @@ class EmailService
             'subject' => $subject,
             'content' => $content,
         ];
+    }
+
+    /**
+     * Send a quick email to a single contact
+     */
+    public function sendQuickEmail(Contact $contact, string $subject, string $content, SmtpConfig $smtpConfig)
+    {
+        try {
+            // Validate inputs
+            if (empty($contact->email)) {
+                return [
+                    'success' => false,
+                    'message' => 'Contact does not have an email address'
+                ];
+            }
+
+            if (!$smtpConfig->is_active) {
+                return [
+                    'success' => false,
+                    'message' => 'SMTP configuration is not active'
+                ];
+            }
+
+            if (!$smtpConfig->canSend()) {
+                return [
+                    'success' => false,
+                    'message' => 'SMTP configuration has reached daily/hourly limits'
+                ];
+            }
+
+            // Use the existing sendSingleEmail method which handles all the logic
+            return $this->sendSingleEmail($contact, $subject, $content, $smtpConfig);
+
+        } catch (\Exception $e) {
+            Log::error('Quick Email Send Error: ' . $e->getMessage(), [
+                'contact_id' => $contact->id,
+                'contact_email' => $contact->email,
+                'smtp_config_id' => $smtpConfig->id,
+                'subject' => $subject,
+                'error_trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Failed to send email: ' . $e->getMessage()
+            ];
+        }
     }
 }

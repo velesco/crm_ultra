@@ -524,4 +524,48 @@ class SmsService
 
         return $results;
     }
+
+    /**
+     * Send a quick SMS to a single contact
+     */
+    public function sendQuickSms(Contact $contact, string $message)
+    {
+        try {
+            // Validate contact has phone number
+            if (empty($contact->phone)) {
+                return [
+                    'success' => false,
+                    'message' => 'Contact does not have a phone number'
+                ];
+            }
+
+            // Get the first active SMS provider
+            $provider = SmsProvider::where('is_active', true)
+                ->orderBy('priority')
+                ->first();
+
+            if (!$provider) {
+                return [
+                    'success' => false,
+                    'message' => 'No active SMS provider available'
+                ];
+            }
+
+            // Use the existing send method
+            return $this->send($provider, $contact->phone, $message, $contact);
+
+        } catch (\Exception $e) {
+            Log::error('Quick SMS Send Error: ' . $e->getMessage(), [
+                'contact_id' => $contact->id,
+                'contact_phone' => $contact->phone,
+                'message' => $message,
+                'error_trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Failed to send SMS: ' . $e->getMessage()
+            ];
+        }
+    }
 }
