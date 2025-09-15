@@ -123,7 +123,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Communications (unified inbox)
     Route::prefix('communications')->name('communications.')->group(function () {
         Route::get('/', [CommunicationController::class, 'index'])->name('index');
-        Route::post('/send', [CommunicationController::class, 'sendQuick'])->name('send');
+        Route::post('/send-quick', [CommunicationController::class, 'sendQuick'])->name('sendQuick');
         Route::get('/{contact}/conversation', [CommunicationController::class, 'conversation'])->name('conversation');
         Route::get('/inbox', [CommunicationController::class, 'inbox'])->name('inbox');
         Route::get('/sent', [CommunicationController::class, 'sent'])->name('sent');
@@ -186,6 +186,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/columns/{dataType}', [ExportController::class, 'columns'])->name('columns');
         Route::get('/stats/data', [ExportController::class, 'stats'])->name('stats');
     });
+
+
 
     /*
     |--------------------------------------------------------------------------
