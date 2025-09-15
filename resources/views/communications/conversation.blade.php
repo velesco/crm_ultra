@@ -301,18 +301,31 @@
 
 @push('scripts')
 <script>
+// Simple function to open Quick Send modal for this contact
 function openQuickSendModal(contactId = null) {
-    // This should trigger the Quick Send modal
-    // Implementation depends on your existing modal system
-    console.log('Opening Quick Send modal for contact:', contactId);
-    
-    // If you have a global modal trigger function, call it here
-    // For example: window.showQuickSendModal(contactId);
-    
-    // Or trigger an event that your existing JavaScript can listen to
-    document.dispatchEvent(new CustomEvent('open-quick-send-modal', {
-        detail: { contactId: contactId }
+    // Trigger the global Quick Send modal
+    window.dispatchEvent(new CustomEvent('open-modal', { 
+        detail: 'quick-send-modal' 
     }));
+    
+    // Pre-select the contact if provided
+    if (contactId) {
+        setTimeout(() => {
+            const contactSelect = document.getElementById('contact_id');
+            if (contactSelect) {
+                // Load contacts first, then set the value
+                if (window.loadContacts) {
+                    window.loadContacts();
+                    setTimeout(() => {
+                        contactSelect.value = contactId;
+                    }, 500);
+                } else {
+                    // If global function not available, just set the value
+                    contactSelect.value = contactId;
+                }
+            }
+        }, 100);
+    }
 }
 </script>
 @endpush

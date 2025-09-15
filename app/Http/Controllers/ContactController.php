@@ -495,35 +495,6 @@ class ContactController extends Controller
             });
     }
 
-    /**
-     * Search contacts for API/AJAX requests
-     */
-    public function searchContacts(Request $request)
-    {
-        $query = Contact::where(function ($q) {
-            $q->where('created_by', auth()->id())
-                ->orWhere('assigned_to', auth()->id());
-        });
-
-        // Search filter
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'LIKE', "%{$search}%")
-                    ->orWhere('last_name', 'LIKE', "%{$search}%")
-                    ->orWhere('email', 'LIKE', "%{$search}%")
-                    ->orWhere('phone', 'LIKE', "%{$search}%")
-                    ->orWhere('company', 'LIKE', "%{$search}%");
-            });
-        }
-
-        $contacts = $query->select('id', 'first_name', 'last_name', 'email', 'phone', 'whatsapp')
-            ->orderBy('first_name')
-            ->limit(50)
-            ->get();
-
-        return response()->json($contacts);
-    }
 
     /**
      * Get contact statistics
@@ -562,5 +533,43 @@ class ContactController extends Controller
             ->count();
 
         return $stats;
+    }
+
+    /**
+     * API endpoint to search contacts for dropdowns
+     */
+    public function searchContacts(Request $request)
+    {
+        $query = Contact::query()
+            ->where('created_by', auth()->id())
+            ->orWhere('assigned_to', auth()->id());
+
+        if ($request->filled('q')) {
+            $search = $request->get('q');
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'LIKE', "%{$search}%")
+                    ->orWhere('last_name', 'LIKE', "%{$search}%")
+                    ->orWhere('email', 'LIKE', "%{$search}%")
+                    ->orWhere('phone', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $contacts = $query->select('id', 'first_name', 'last_name', 'email', 'phone')
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->limit(50)
+            ->get()
+            ->map(function($contact) {
+                return [
+                    'id' => $contact->id,
+                    'first_name' => $contact->first_name,
+                    'last_name' => $contact->last_name,
+                    'full_name' => trim($contact->first_name . ' ' . $contact->last_name),
+                    'email' => $contact->email,
+                    'phone' => $contact->phone,
+                ];
+            });
+
+        return response()->json($contacts);
     }
 }
