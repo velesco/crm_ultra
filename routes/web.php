@@ -56,6 +56,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Contacts Management
     Route::resource('contacts', ContactController::class);
+    
+    // Explicit contacts import route (temporary fix for route resolution)
+    Route::get('contacts/import', [ContactController::class, 'import'])->name('contacts.import');
+    
     Route::prefix('contacts')->name('contacts.')->group(function () {
         Route::post('/bulk-actions', [ContactController::class, 'bulkActions'])->name('bulk-actions');
         Route::get('/export', [ContactController::class, 'export'])->name('export');
