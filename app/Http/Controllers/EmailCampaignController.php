@@ -72,18 +72,20 @@ class EmailCampaignController extends Controller
      */
     public function store(Request $request)
     {
+        // Determine if this is a draft or regular save
+        $action = $request->input('action', 'send');
+        $isDraft = ($action === 'save_draft');
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'subject' => 'required|string|max:500',
-            'content' => 'required|string',
-            'smtp_config_id' => 'required|exists:smtp_configs,id',
-            'template_id' => 'nullable|exists:email_templates,id',
-            'scheduled_at' => 'nullable|date|after:now',
-            'recipients_type' => 'required|in:all,segments,manual',
-            'segment_ids' => 'required_if:recipients_type,segments|array',
-            'segment_ids.*' => 'exists:contact_segments,id',
-            'contact_ids' => 'required_if:recipients_type,manual|array',
-            'contact_ids.*' => 'exists:contacts,id',
+            'content' => 'required_unless:email_template_id,null|string',
+            'email_template_id' => 'nullable|exists:email_templates,id',
+            'smtp_config_id' => 'nullable|exists:smtp_configs,id',
+            'send_type' => 'required|in:now,scheduled',
+            'scheduled_at' => 'required_if:send_type,scheduled|nullable|date|after:now',
+            'segments' => $isDraft ? 'nullable|array' : 'required|array|min:1',
+            'segments.*' => 'exists:contact_segments,id',
         ]);
 
         if ($validator->fails()) {
@@ -93,16 +95,46 @@ class EmailCampaignController extends Controller
         }
 
         try {
-            $campaign = $this->emailService->createCampaign($request->all());
+            // Create campaign data
+            $campaignData = [
+                'name' => $request->name,
+                'subject' => $request->subject,
+                'content' => $request->content ?? ($request->email_template_id ? EmailTemplate::find($request->email_template_id)->content : ''),
+                'from_name' => $request->from_name ?? auth()->user()->name,
+                'from_email' => auth()->user()->email,
+                'email_template_id' => $request->email_template_id,
+                'smtp_config_id' => $request->smtp_config_id,
+                'status' => $isDraft ? 'draft' : ($request->send_type === 'scheduled' ? 'scheduled' : 'pending'),
+                'scheduled_at' => $request->send_type === 'scheduled' ? $request->scheduled_at : null,
+                'created_by' => auth()->id(),
+                'total_recipients' => 0, // Will be calculated when segments are added
+            ];
 
-            // Add recipients based on type
-            $contactIds = $this->getRecipientsFromRequest($request);
-            if (! empty($contactIds)) {
-                $this->emailService->addContactsToCampaign($campaign, $contactIds);
+            $campaign = EmailCampaign::create($campaignData);
+
+            // Add segments to campaign if provided
+            if ($request->segments && count($request->segments) > 0) {
+                $totalRecipients = 0;
+                foreach ($request->segments as $segmentId) {
+                    $segment = ContactSegment::find($segmentId);
+                    if ($segment) {
+                        $campaign->segments()->attach($segmentId);
+                        $totalRecipients += $segment->contacts()->count();
+                    }
+                }
+
+                // Update total recipients count
+                $campaign->update(['total_recipients' => $totalRecipients]);
             }
 
-            return redirect()->route('email.campaigns.show', $campaign)
-                ->with('success', 'Email campaign created successfully!');
+            if ($isDraft) {
+                return redirect()->route('email.campaigns.edit', $campaign)
+                    ->with('success', 'Draft campaign saved successfully!');
+            } else {
+                // Handle sending logic here if needed
+                return redirect()->route('email.campaigns.show', $campaign)
+                    ->with('success', 'Email campaign created successfully!');
+            }
 
         } catch (\Exception $e) {
             return redirect()->back()

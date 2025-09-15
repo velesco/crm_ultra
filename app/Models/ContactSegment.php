@@ -36,6 +36,12 @@ class ContactSegment extends Model
     {
         return $this->belongsToMany(Contact::class, 'contact_segment_members');
     }
+    
+    public function emailCampaigns()
+    {
+        return $this->belongsToMany(EmailCampaign::class, 'email_campaign_segments', 'contact_segment_id', 'email_campaign_id')
+            ->withTimestamps();
+    }
 
     // Scopes
     public function scopeDynamic($query)
@@ -46,6 +52,12 @@ class ContactSegment extends Model
     public function scopeStatic($query)
     {
         return $query->where('is_dynamic', false);
+    }
+    
+    // Accessor for contacts count
+    public function getContactsCountAttribute()
+    {
+        return $this->contacts()->count();
     }
 
     // Methods

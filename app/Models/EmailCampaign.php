@@ -15,6 +15,7 @@ class EmailCampaign extends Model
         'subject',
         'content',
         'template_id',
+        'email_template_id',
         'smtp_config_id',
         'status',
         'scheduled_at',
@@ -27,6 +28,8 @@ class EmailCampaign extends Model
         'bounced_count',
         'failed_count',
         'created_by',
+        'from_name',
+        'from_email',
         'settings',
     ];
 
@@ -52,7 +55,7 @@ class EmailCampaign extends Model
 
     public function template()
     {
-        return $this->belongsTo(EmailTemplate::class, 'template_id');
+        return $this->belongsTo(EmailTemplate::class, 'email_template_id');
     }
 
     public function contacts()
@@ -65,6 +68,12 @@ class EmailCampaign extends Model
     public function logs()
     {
         return $this->hasMany(EmailLog::class, 'campaign_id');
+    }
+    
+    public function segments()
+    {
+        return $this->belongsToMany(ContactSegment::class, 'email_campaign_segments', 'email_campaign_id', 'contact_segment_id')
+            ->withTimestamps();
     }
 
     // Scopes

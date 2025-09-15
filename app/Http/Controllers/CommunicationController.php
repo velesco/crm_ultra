@@ -174,104 +174,6 @@ class CommunicationController extends Controller
     }
 
     /**
-     * Send quick message (unified sending)
-     */
-    public function sendQuick(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'contact_id' => 'required|exists:contacts,id',
-            'channel' => 'required|in:email,sms,whatsapp',
-            'subject' => 'required_if:channel,email|nullable|string|max:255',
-            'message' => 'required|string|max:4096',
-            'template_id' => 'nullable|exists:email_templates,id',
-            'smtp_config_id' => 'required_if:channel,email|nullable|exists:smtp_configs,id',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
-        }
-
-        try {
-            $contact = Contact::find($request->contact_id);
-            $result = null;
-
-            switch ($request->channel) {
-                case 'email':
-                    if (! $contact->email) {
-                        return response()->json(['success' => false, 'message' => 'Contact has no email address'], 400);
-                    }
-
-                    if (! $request->smtp_config_id) {
-                        return response()->json(['success' => false, 'message' => 'SMTP configuration is required for email'], 400);
-                    }
-
-                    // Get SMTP configuration
-                    $smtpConfig = SmtpConfig::find($request->smtp_config_id);
-                    if (! $smtpConfig || ! $smtpConfig->is_active) {
-                        return response()->json(['success' => false, 'message' => 'Invalid or inactive SMTP configuration'], 400);
-                    }
-
-                    // Get email template if provided
-                    $template = null;
-                    if ($request->template_id) {
-                        $template = EmailTemplate::find($request->template_id);
-                    }
-
-                    $result = $this->emailService->sendSingleEmail(
-                        $contact,
-                        $request->subject,
-                        $request->message,
-                        $smtpConfig,
-                        $template
-                    );
-                    break;
-
-                case 'sms':
-                    if (! $contact->phone) {
-                        return response()->json(['success' => false, 'message' => 'Contact has no phone number'], 400);
-                    }
-
-                    $result = $this->smsService->sendSms(
-                        $contact->phone,
-                        $request->message,
-                        $contact->id
-                    );
-                    break;
-
-                case 'whatsapp':
-                    if (! $contact->whatsapp) {
-                        return response()->json(['success' => false, 'message' => 'Contact has no WhatsApp number'], 400);
-                    }
-
-                    $result = $this->whatsappService->sendMessage(
-                        $contact->whatsapp,
-                        $request->message
-                    );
-                    break;
-            }
-
-            if ($result && $result['success']) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Message sent successfully via '.strtoupper($request->channel),
-                    'data' => $result,
-                ]);
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to send message: '.($result['error'] ?? 'Unknown error'),
-                ], 400);
-            }
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'An error occurred while sending message: '.$e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
      * Mark communication as read
      */
     public function markAsRead(Request $request)
@@ -516,5 +418,88 @@ class CommunicationController extends Controller
             ->whereNull('read_at')
             ->whereDate('created_at', '>=', now()->subDays(1))
             ->count();
+    }
+
+    /**
+     * Send a quick message through the unified modal
+     */
+    public function sendQuick(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'channel' => 'required|in:email,sms,whatsapp',
+            'contact_id' => 'required|exists:contacts,id',
+            'message' => 'required|string|max:10000',
+            'subject' => 'nullable|string|max:255',
+            'smtp_config_id' => 'required_if:channel,email|nullable|exists:smtp_configs,id',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('error', 'Please correct the form errors and try again.');
+        }
+
+        try {
+            $contact = Contact::findOrFail($request->contact_id);
+            $channel = $request->channel;
+            $message = $request->message;
+
+            $result = null;
+
+            switch ($channel) {
+                case 'email':
+                    $smtpConfig = SmtpConfig::findOrFail($request->smtp_config_id);
+                    $result = $this->emailService->sendQuickEmail(
+                        $contact,
+                        $request->subject ?? 'Message from CRM',
+                        $message,
+                        $smtpConfig
+                    );
+                    $successMessage = 'Email sent successfully!';
+                    break;
+
+                case 'sms':
+                    $result = $this->smsService->sendQuickSms(
+                        $contact,
+                        $message
+                    );
+                    $successMessage = 'SMS sent successfully!';
+                    break;
+
+                case 'whatsapp':
+                    $result = $this->whatsappService->sendQuickMessage(
+                        $contact,
+                        $message
+                    );
+                    $successMessage = 'WhatsApp message sent successfully!';
+                    break;
+
+                default:
+                    throw new \Exception('Unsupported communication channel.');
+            }
+
+            if ($result && isset($result['success']) && $result['success']) {
+                return redirect()->back()
+                    ->with('success', $successMessage);
+            } else {
+                $errorMessage = isset($result['message']) ? $result['message'] : 'Failed to send message. Please try again.';
+                return redirect()->back()
+                    ->with('error', $errorMessage)
+                    ->withInput();
+            }
+
+        } catch (\Exception $e) {
+            \Log::error('Quick Send Error', [
+                'channel' => $request->channel,
+                'contact_id' => $request->contact_id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'Failed to send message: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 }
