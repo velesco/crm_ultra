@@ -43,6 +43,9 @@ Route::get('/auth/google/callback', [App\Http\Controllers\Auth\GoogleController:
 // Protected routes
 Route::middleware(['auth', 'verified'])->group(function () {
 
+    // CRITICAL FIX: Explicit contacts.import route definition (must be first)
+    Route::get('/contacts/import', [ContactController::class, 'import'])->name('contacts.import');
+
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::prefix('api/dashboard')->name('dashboard.')->group(function () {
@@ -57,13 +60,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Contacts Management
     Route::resource('contacts', ContactController::class);
     
-    // Explicit contacts import route (temporary fix for route resolution)
-    Route::get('contacts/import', [ContactController::class, 'import'])->name('contacts.import');
-    
     Route::prefix('contacts')->name('contacts.')->group(function () {
         Route::post('/bulk-actions', [ContactController::class, 'bulkActions'])->name('bulk-actions');
         Route::get('/export', [ContactController::class, 'export'])->name('export');
-        Route::get('/import', [ContactController::class, 'import'])->name('import');
+        // Route::get('/import', [ContactController::class, 'import'])->name('import'); // REMOVED - defined above
         Route::post('/import', [ContactController::class, 'processImport'])->name('import.process');
         Route::get('/import/{import}/status', [ContactController::class, 'importStatus'])->name('import.status');
         Route::post('/{contact}/note', [ContactController::class, 'addNote'])->name('add-note');

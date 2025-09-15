@@ -87,8 +87,8 @@
                                class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->routeIs('contacts.create') ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
                                 Add Contact
                             </a>
-                            <a href="{{ route('contacts.import') }}"
-                               class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->routeIs('contacts.import') ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                            <a href="/contacts/import"
+                               class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->is('contacts/import') ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
                                 Import Contacts
                             </a>
                             <a href="{{ route('segments.index') }}"
