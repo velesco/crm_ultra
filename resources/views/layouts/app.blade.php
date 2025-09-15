@@ -17,8 +17,8 @@
         <!-- Alpine.js for interactive components -->
         <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-        <!-- Chart.js for dashboard charts -->
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <!-- Chart.js for dashboard charts - Fixed version -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
 
         @stack('styles')
     </head>
@@ -40,6 +40,109 @@
              class="fixed inset-0 flex z-40 lg:hidden">
             <div @click="sidebarOpen = false" class="fixed inset-0 bg-gray-600 bg-opacity-75"></div>
         </div>
+
+        <!-- Quick Send Modal -->
+        <x-modal name="quick-send-modal" max-width="2xl">
+            <div class="px-6 py-4">
+                <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-600 pb-4">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">Quick Send Message</h3>
+                    <button @click="$dispatch('close-modal', 'quick-send-modal')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <form id="quick-send-form" method="POST" action="{{ route('communications.sendQuick') }}" class="mt-6">
+                    @csrf
+                    
+                    <!-- Contact Selection -->
+                    <div class="mb-6">
+                        <label for="contact_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Contact</label>
+                        <select name="contact_id" id="contact_id" required
+                                class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">Choose a contact...</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Channel Selection -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Communication Channel</label>
+                        <div class="grid grid-cols-3 gap-4">
+                            <label class="relative flex cursor-pointer rounded-lg border border-gray-300 dark:border-gray-600 p-4 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <input type="radio" name="channel" value="email" class="sr-only" required>
+                                <div class="flex flex-col items-center">
+                                    <svg class="h-8 w-8 text-blue-500 mb-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 2.25l-8.25 6.08a3 3 0 01-3 0L2.25 9" />
+                                    </svg>
+                                    <span class="text-sm font-medium text-gray-900 dark:text-white">Email</span>
+                                </div>
+                                <div class="absolute inset-0 rounded-lg border-2 border-transparent peer-checked:border-indigo-500" aria-hidden="true"></div>
+                            </label>
+                            
+                            <label class="relative flex cursor-pointer rounded-lg border border-gray-300 dark:border-gray-600 p-4 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <input type="radio" name="channel" value="sms" class="sr-only">
+                                <div class="flex flex-col items-center">
+                                    <svg class="h-8 w-8 text-green-500 mb-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                                    </svg>
+                                    <span class="text-sm font-medium text-gray-900 dark:text-white">SMS</span>
+                                </div>
+                                <div class="absolute inset-0 rounded-lg border-2 border-transparent peer-checked:border-indigo-500" aria-hidden="true"></div>
+                            </label>
+                            
+                            <label class="relative flex cursor-pointer rounded-lg border border-gray-300 dark:border-gray-600 p-4 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <input type="radio" name="channel" value="whatsapp" class="sr-only">
+                                <div class="flex flex-col items-center">
+                                    <svg class="h-8 w-8 text-green-600 mb-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3C9.967 3 7.993 3.121 6.092 3.362 4.507 3.595 3.384 4.988 3.384 6.59v6.41z" />
+                                    </svg>
+                                    <span class="text-sm font-medium text-gray-900 dark:text-white">WhatsApp</span>
+                                </div>
+                                <div class="absolute inset-0 rounded-lg border-2 border-transparent peer-checked:border-indigo-500" aria-hidden="true"></div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Email Subject (shown when email is selected) -->
+                    <div id="email-subject-field" class="mb-6 hidden">
+                        <label for="subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Subject</label>
+                        <input type="text" name="subject" id="subject"
+                               class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                               placeholder="Enter email subject...">
+                    </div>
+                    
+                    <!-- SMTP Config (shown when email is selected) -->
+                    <div id="smtp-config-field" class="mb-6 hidden">
+                        <label for="smtp_config_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Send From Email</label>
+                        <select name="smtp_config_id" id="smtp_config_id"
+                                class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">Loading SMTP configurations...</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Message -->
+                    <div class="mb-6">
+                        <label for="message" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Message</label>
+                        <textarea name="message" id="message" rows="4" required
+                                  class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                  placeholder="Type your message here..."></textarea>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-600">
+                        <button type="button" @click="$dispatch('close-modal', 'quick-send-modal')"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Send Message
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </x-modal>
 
         <!-- Sidebar -->
         <div class="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
@@ -488,5 +591,107 @@
         </div>
 
         @stack('scripts')
+        
+        <!-- Quick Send Modal JavaScript -->
+        <script>
+        // Global functions for Quick Send Modal
+        function openQuickSendModal(contactId = null) {
+            // Load contacts if not loaded
+            loadContacts();
+            
+            // Load SMTP configs
+            loadSmtpConfigs();
+            
+            // Pre-select contact if provided
+            if (contactId) {
+                setTimeout(() => {
+                    const contactSelect = document.getElementById('contact_id');
+                    contactSelect.value = contactId;
+                }, 100);
+            }
+            
+            // Open modal
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'quick-send-modal' }));
+        }
+        
+        function loadContacts() {
+            const contactSelect = document.getElementById('contact_id');
+            
+            fetch('/api/contacts')
+                .then(response => response.json())
+                .then(contacts => {
+                    contactSelect.innerHTML = '<option value="">Choose a contact...</option>';
+                    contacts.forEach(contact => {
+                        const option = document.createElement('option');
+                        option.value = contact.id;
+                        option.textContent = `${contact.full_name} (${contact.email || contact.phone || 'No contact info'})`;
+                        contactSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading contacts:', error);
+                    contactSelect.innerHTML = '<option value="">Error loading contacts</option>';
+                });
+        }
+        
+        function loadSmtpConfigs() {
+            const smtpSelect = document.getElementById('smtp_config_id');
+            
+            fetch('/api/smtp-configs')
+                .then(response => response.json())
+                .then(configs => {
+                    smtpSelect.innerHTML = '<option value="">Select SMTP configuration...</option>';
+                    configs.forEach(config => {
+                        const option = document.createElement('option');
+                        option.value = config.id;
+                        option.textContent = `${config.name} (${config.from_email})`;
+                        smtpSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading SMTP configs:', error);
+                    smtpSelect.innerHTML = '<option value="">Error loading SMTP configs</option>';
+                });
+        }
+        
+        // Channel selection handler
+        document.addEventListener('DOMContentLoaded', function() {
+            const channelRadios = document.querySelectorAll('input[name="channel"]');
+            const emailSubjectField = document.getElementById('email-subject-field');
+            const smtpConfigField = document.getElementById('smtp-config-field');
+            
+            channelRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'email') {
+                        emailSubjectField.classList.remove('hidden');
+                        smtpConfigField.classList.remove('hidden');
+                        document.getElementById('smtp_config_id').required = true;
+                    } else {
+                        emailSubjectField.classList.add('hidden');
+                        smtpConfigField.classList.add('hidden');
+                        document.getElementById('smtp_config_id').required = false;
+                    }
+                    
+                    // Update radio button styling
+                    channelRadios.forEach(r => {
+                        const parent = r.closest('label');
+                        const border = parent.querySelector('div:last-child');
+                        if (r.checked) {
+                            border.classList.add('border-indigo-500');
+                            border.classList.remove('border-transparent');
+                        } else {
+                            border.classList.remove('border-indigo-500');
+                            border.classList.add('border-transparent');
+                        }
+                    });
+                });
+            });
+            
+            // Listen for custom events
+            document.addEventListener('open-quick-send-modal', function(event) {
+                openQuickSendModal(event.detail?.contactId);
+            });
+        });
+        </script>
     </body>
 </html>
