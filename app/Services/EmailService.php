@@ -8,17 +8,18 @@ use App\Models\EmailLog;
 use App\Models\EmailTemplate;
 use App\Models\SmtpConfig;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Mail\Message;
+use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
+use Symfony\Component\Mailer\Mailer;
+use Symfony\Component\Mime\Email;
 use Illuminate\Support\Str;
-use Swift_Mailer;
-use Swift_Message;
-use Swift_SmtpTransport;
 
 class EmailService
 {
     public function createCampaign(array $data)
     {
-        return EmailCampaign::query()
-            ->create([
+        $campaign = EmailCampaign::create([
             'name' => $data['name'],
             'subject' => $data['subject'],
             'content' => $data['content'],
@@ -29,6 +30,8 @@ class EmailService
             'settings' => $data['settings'] ?? [],
             'created_by' => auth()->id(),
         ]);
+
+        return $campaign;
     }
 
     public function addContactsToCampaign(EmailCampaign $campaign, array $contactIds)
@@ -195,50 +198,61 @@ class EmailService
             // Add tracking pixels and unsubscribe links
             $content = $this->addTrackingElements($content, $trackingId);
 
-            // Create SMTP transport
-            $transport = Swift_SmtpTransport::newInstance($smtpConfig->host, $smtpConfig->port, $smtpConfig->encryption)
-                ->setUsername($smtpConfig->username)
-                ->setPassword(decrypt($smtpConfig->password));
-
-            $mailer = Swift_Mailer::newInstance($transport);
-
-            // Create message
-            $message = Swift_Message::newInstance($subject)
-                ->setFrom([$smtpConfig->from_address => $smtpConfig->from_name])
-                ->setTo([$contact->email => $contact->full_name])
-                ->setBody($content, 'text/html');
-
-            // Add text version
-            $textContent = strip_tags($content);
-            $message->addPart($textContent, 'text/plain');
-
-            // Send email
-            $result = $mailer->send($message);
-
-            if ($result) {
-                // Log email
-                EmailLog::create([
-                    'campaign_id' => $campaign->id,
-                    'contact_id' => $contact->id,
-                    'smtp_config_id' => $smtpConfig->id,
-                    'subject' => $subject,
-                    'content' => $content,
-                    'to_email' => $contact->email,
-                    'status' => 'sent',
-                    'sent_at' => now(),
-                    'tracking_id' => $trackingId,
+            // Send email using Laravel's Mail facade with custom SMTP config
+            $result = Mail::send([], [], function (Message $message) use ($subject, $content, $contact, $smtpConfig) {
+                $message->to($contact->email, $contact->full_name)
+                        ->subject($subject)
+                        ->from($smtpConfig->from_email, $smtpConfig->from_name);
+                        
+                // Set both HTML and text content
+                $message->setBody($content, 'text/html');
+                $textContent = strip_tags($content);
+                $message->addPart($textContent, 'text/plain');
+                
+                // Configure SMTP for this message
+                $transportConfig = [
+                    'host' => $smtpConfig->host,
+                    'port' => $smtpConfig->port,
+                    'encryption' => $smtpConfig->encryption,
+                    'username' => $smtpConfig->username,
+                    'password' => $smtpConfig->password,
+                ];
+                
+                // Set custom mailer configuration
+                config([
+                    'mail.mailers.custom_smtp' => [
+                        'transport' => 'smtp',
+                        'host' => $smtpConfig->host,
+                        'port' => $smtpConfig->port,
+                        'encryption' => $smtpConfig->encryption,
+                        'username' => $smtpConfig->username,
+                        'password' => $smtpConfig->password,
+                        'timeout' => null,
+                    ]
                 ]);
+            });
 
-                // Update SMTP config stats
-                $smtpConfig->incrementSent();
+            // Log email
+            EmailLog::create([
+                'campaign_id' => $campaign->id,
+                'contact_id' => $contact->id,
+                'smtp_config_id' => $smtpConfig->id,
+                'subject' => $subject,
+                'content' => $content,
+                'to_email' => $contact->email,
+                'status' => 'sent',
+                'sent_at' => now(),
+                'tracking_id' => $trackingId,
+            ]);
 
-                // Create communication record
-                $this->createCommunication($contact, $subject, $content);
+            // Update SMTP config stats
+            $smtpConfig->incrementSent();
 
-                return ['success' => true];
-            }
+            // Create communication record
+            $this->createCommunication($contact, $subject, $content);
 
-            throw new \Exception('Failed to send email');
+            return ['success' => true];
+
         } catch (\Exception $e) {
             // Log failed email
             EmailLog::create([
@@ -307,6 +321,178 @@ class EmailService
         ]);
     }
 
+    public function sendSingleEmail(Contact $contact, string $subject, string $content, SmtpConfig $smtpConfig, ?EmailTemplate $template = null)
+    {
+        try {
+            // Create a temporary campaign for single emails
+            $campaign = EmailCampaign::create([
+                'name' => 'Single Email: '.$subject,
+                'subject' => $subject,
+                'content' => $content,
+                'template_id' => $template?->id,
+                'smtp_config_id' => $smtpConfig->id,
+                'status' => 'sending',
+                'total_recipients' => 1,
+                'created_by' => auth()->id(),
+            ]);
+
+            // Add contact to campaign
+            $campaign->contacts()->attach($contact->id, ['status' => 'pending']);
+
+            // Send email
+            $result = $this->sendEmailToContact($campaign, $contact, $smtpConfig);
+
+            // Update campaign status
+            if ($result['success']) {
+                $campaign->update([
+                    'status' => 'sent',
+                    'sent_at' => now(),
+                    'sent_count' => 1,
+                    'delivered_count' => 1,
+                ]);
+            } else {
+                $campaign->update([
+                    'status' => 'failed',
+                    'failed_count' => 1,
+                ]);
+            }
+
+            return $result;
+
+        } catch (\Exception $e) {
+            Log::error('Single email send error: '.$e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Failed to send email: '.$e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Send a quick email to a single contact using modern Laravel Mail
+     */
+    public function sendQuickEmail(Contact $contact, string $subject, string $content, SmtpConfig $smtpConfig)
+    {
+        try {
+            // Validate inputs
+            if (empty($contact->email)) {
+                return [
+                    'success' => false,
+                    'message' => 'Contact does not have an email address'
+                ];
+            }
+
+            if (!$smtpConfig->is_active) {
+                return [
+                    'success' => false,
+                    'message' => 'SMTP configuration is not active'
+                ];
+            }
+
+            if (!$smtpConfig->canSend()) {
+                return [
+                    'success' => false,
+                    'message' => 'SMTP configuration has reached daily/hourly limits'
+                ];
+            }
+
+            // Generate tracking ID
+            $trackingId = Str::uuid();
+
+            // Prepare email content with personalization
+            $variables = [
+                'first_name' => $contact->first_name,
+                'last_name' => $contact->last_name,
+                'full_name' => $contact->full_name,
+                'email' => $contact->email,
+                'company' => $contact->company,
+                'phone' => $contact->phone,
+            ];
+
+            $personalizedSubject = $this->replaceVariables($subject, $variables);
+            $personalizedContent = $this->replaceVariables($content, $variables);
+
+            // Configure mailer with SMTP config
+            config([
+                'mail.mailers.smtp' => [
+                    'transport' => 'smtp',
+                    'host' => $smtpConfig->host,
+                    'port' => $smtpConfig->port,
+                    'encryption' => $smtpConfig->encryption,
+                    'username' => $smtpConfig->username,
+                    'password' => $smtpConfig->password,
+                    'timeout' => null,
+                ],
+                'mail.from' => [
+                    'address' => $smtpConfig->from_email,
+                    'name' => $smtpConfig->from_name,
+                ]
+            ]);
+
+            // Send email using Laravel Mail
+            Mail::send([], [], function (Message $message) use ($personalizedSubject, $personalizedContent, $contact, $smtpConfig) {
+                $message->to($contact->email, $contact->full_name)
+                        ->subject($personalizedSubject)
+                        ->from($smtpConfig->from_email, $smtpConfig->from_name)
+                        ->html($personalizedContent);
+            });
+
+            // Create temporary campaign for logging
+            $campaign = EmailCampaign::create([
+                'name' => 'Quick Email: '.$personalizedSubject,
+                'subject' => $personalizedSubject,
+                'content' => $personalizedContent,
+                'smtp_config_id' => $smtpConfig->id,
+                'status' => 'sent',
+                'total_recipients' => 1,
+                'sent_count' => 1,
+                'delivered_count' => 1,
+                'sent_at' => now(),
+                'created_by' => auth()->id(),
+            ]);
+
+            // Log email
+            EmailLog::create([
+                'campaign_id' => $campaign->id,
+                'contact_id' => $contact->id,
+                'smtp_config_id' => $smtpConfig->id,
+                'subject' => $personalizedSubject,
+                'content' => $personalizedContent,
+                'to_email' => $contact->email,
+                'status' => 'sent',
+                'sent_at' => now(),
+                'tracking_id' => $trackingId,
+            ]);
+
+            // Update SMTP config stats
+            $smtpConfig->incrementSent();
+
+            // Create communication record
+            $this->createCommunication($contact, $personalizedSubject, $personalizedContent);
+
+            return [
+                'success' => true,
+                'message' => 'Email sent successfully'
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Quick Email Send Error: ' . $e->getMessage(), [
+                'contact_id' => $contact->id,
+                'contact_email' => $contact->email,
+                'smtp_config_id' => $smtpConfig->id,
+                'subject' => $subject,
+                'error_trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Failed to send email: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    // Add other methods that were in the original file...
     public function trackEmailOpen(string $trackingId, ?string $userAgent = null, ?string $ipAddress = null)
     {
         $emailLog = EmailLog::where('tracking_id', $trackingId)->first();
@@ -370,298 +556,5 @@ class EmailService
             'success' => false,
             'message' => 'Invalid unsubscribe link',
         ];
-    }
-
-    public function sendSingleEmail(Contact $contact, string $subject, string $content, SmtpConfig $smtpConfig, ?EmailTemplate $template = null)
-    {
-        try {
-            // Create a temporary campaign for single emails
-            $campaign = EmailCampaign::create([
-                'name' => 'Single Email: '.$subject,
-                'subject' => $subject,
-                'content' => $content,
-                'template_id' => $template?->id,
-                'smtp_config_id' => $smtpConfig->id,
-                'status' => 'sending',
-                'total_recipients' => 1,
-                'created_by' => auth()->id(),
-            ]);
-
-            // Add contact to campaign
-            $campaign->contacts()->attach($contact->id, ['status' => 'pending']);
-
-            // Send email
-            $result = $this->sendEmailToContact($campaign, $contact, $smtpConfig);
-
-            // Update campaign status
-            if ($result['success']) {
-                $campaign->update([
-                    'status' => 'sent',
-                    'sent_at' => now(),
-                    'sent_count' => 1,
-                    'delivered_count' => 1,
-                ]);
-            } else {
-                $campaign->update([
-                    'status' => 'failed',
-                    'failed_count' => 1,
-                ]);
-            }
-
-            return $result;
-
-        } catch (\Exception $e) {
-            Log::error('Single email send error: '.$e->getMessage());
-
-            return [
-                'success' => false,
-                'message' => 'Failed to send email: '.$e->getMessage(),
-            ];
-        }
-    }
-
-    public function bulkSend(array $contacts, string $subject, string $content, SmtpConfig $smtpConfig, ?EmailTemplate $template = null)
-    {
-        // Create campaign for bulk send
-        $campaign = EmailCampaign::create([
-            'name' => 'Bulk Email: '.$subject,
-            'subject' => $subject,
-            'content' => $content,
-            'template_id' => $template?->id,
-            'smtp_config_id' => $smtpConfig->id,
-            'status' => 'sending',
-            'total_recipients' => count($contacts),
-            'created_by' => auth()->id(),
-        ]);
-
-        // Add contacts to campaign
-        $contactIds = collect($contacts)->pluck('id')->toArray();
-        $this->addContactsToCampaign($campaign, $contactIds);
-
-        // Send campaign
-        return $this->sendCampaign($campaign);
-    }
-
-    public function pauseCampaign(EmailCampaign $campaign)
-    {
-        if ($campaign->status !== 'sending') {
-            return [
-                'success' => false,
-                'message' => 'Campaign cannot be paused from current status: '.$campaign->status,
-            ];
-        }
-
-        $campaign->update(['status' => 'paused']);
-
-        return [
-            'success' => true,
-            'message' => 'Campaign paused successfully',
-        ];
-    }
-
-    public function resumeCampaign(EmailCampaign $campaign)
-    {
-        if ($campaign->status !== 'paused') {
-            return [
-                'success' => false,
-                'message' => 'Campaign cannot be resumed from current status: '.$campaign->status,
-            ];
-        }
-
-        $campaign->update(['status' => 'sending']);
-
-        // Continue sending
-        return $this->sendCampaign($campaign);
-    }
-
-    public function cancelCampaign(EmailCampaign $campaign)
-    {
-        if (! in_array($campaign->status, ['draft', 'scheduled', 'paused'])) {
-            return [
-                'success' => false,
-                'message' => 'Campaign cannot be cancelled from current status: '.$campaign->status,
-            ];
-        }
-
-        $campaign->update(['status' => 'cancelled']);
-
-        return [
-            'success' => true,
-            'message' => 'Campaign cancelled successfully',
-        ];
-    }
-
-    public function getCampaignStats(EmailCampaign $campaign)
-    {
-        return [
-            'total_recipients' => $campaign->total_recipients,
-            'sent_count' => $campaign->sent_count,
-            'delivered_count' => $campaign->delivered_count,
-            'opened_count' => $campaign->opened_count,
-            'clicked_count' => $campaign->clicked_count,
-            'bounced_count' => $campaign->bounced_count,
-            'failed_count' => $campaign->failed_count,
-            'open_rate' => $campaign->open_rate,
-            'click_rate' => $campaign->click_rate,
-            'bounce_rate' => $campaign->bounce_rate,
-        ];
-    }
-
-    public function getHourlyStats(EmailCampaign $campaign)
-    {
-        $logs = $campaign->logs()->whereNotNull('opened_at')
-            ->selectRaw('HOUR(opened_at) as hour, COUNT(*) as count')
-            ->groupBy('hour')
-            ->orderBy('hour')
-            ->get();
-
-        $hourlyData = [];
-        for ($i = 0; $i < 24; $i++) {
-            $hourlyData[$i] = 0;
-        }
-
-        foreach ($logs as $log) {
-            $hourlyData[$log->hour] = $log->count;
-        }
-
-        return $hourlyData;
-    }
-
-    public function getClickStats(EmailCampaign $campaign)
-    {
-        return $campaign->logs()
-            ->whereNotNull('clicked_at')
-            ->selectRaw('DATE(clicked_at) as date, COUNT(*) as clicks')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->limit(30)
-            ->get();
-    }
-
-    public function getDeviceStats(EmailCampaign $campaign)
-    {
-        $stats = $campaign->logs()
-            ->whereNotNull('user_agent')
-            ->selectRaw('user_agent, COUNT(*) as count')
-            ->groupBy('user_agent')
-            ->orderByDesc('count')
-            ->limit(10)
-            ->get();
-
-        $deviceStats = [
-            'desktop' => 0,
-            'mobile' => 0,
-            'tablet' => 0,
-            'unknown' => 0,
-        ];
-
-        foreach ($stats as $stat) {
-            $userAgent = strtolower($stat->user_agent);
-            if (strpos($userAgent, 'mobile') !== false || strpos($userAgent, 'android') !== false || strpos($userAgent, 'iphone') !== false) {
-                $deviceStats['mobile'] += $stat->count;
-            } elseif (strpos($userAgent, 'tablet') !== false || strpos($userAgent, 'ipad') !== false) {
-                $deviceStats['tablet'] += $stat->count;
-            } elseif (strpos($userAgent, 'mozilla') !== false || strpos($userAgent, 'chrome') !== false || strpos($userAgent, 'safari') !== false) {
-                $deviceStats['desktop'] += $stat->count;
-            } else {
-                $deviceStats['unknown'] += $stat->count;
-            }
-        }
-
-        return $deviceStats;
-    }
-
-    public function duplicateCampaign(EmailCampaign $campaign)
-    {
-        $duplicated = EmailCampaign::create([
-            'name' => $campaign->name.' - Copy',
-            'subject' => $campaign->subject,
-            'content' => $campaign->content,
-            'template_id' => $campaign->template_id,
-            'smtp_config_id' => $campaign->smtp_config_id,
-            'status' => 'draft',
-            'scheduled_at' => null,
-            'settings' => $campaign->settings,
-            'created_by' => auth()->id(),
-        ]);
-
-        // Copy contacts
-        $contactIds = $campaign->contacts()->pluck('contact_id')->toArray();
-        if (! empty($contactIds)) {
-            $this->addContactsToCampaign($duplicated, $contactIds);
-        }
-
-        return $duplicated;
-    }
-
-    public function generatePreview(EmailCampaign $campaign, Contact $contact)
-    {
-        $variables = [
-            'first_name' => $contact->first_name,
-            'last_name' => $contact->last_name,
-            'full_name' => $contact->full_name,
-            'email' => $contact->email,
-            'company' => $contact->company,
-            'phone' => $contact->phone,
-        ];
-
-        $subject = $this->replaceVariables($campaign->subject, $variables);
-        $content = $this->replaceVariables($campaign->content, $variables);
-
-        // Remove tracking elements for preview
-        $content = preg_replace('/<img[^>]+src="[^"]*track[^"]*"[^>]*>/i', '', $content);
-        $content = preg_replace('/<p[^>]*>.*?<a[^>]+href="[^"]*unsubscribe[^"]*"[^>]*>.*?<\/p>/i', '', $content);
-
-        return [
-            'subject' => $subject,
-            'content' => $content,
-        ];
-    }
-
-    /**
-     * Send a quick email to a single contact
-     */
-    public function sendQuickEmail(Contact $contact, string $subject, string $content, SmtpConfig $smtpConfig)
-    {
-        try {
-            // Validate inputs
-            if (empty($contact->email)) {
-                return [
-                    'success' => false,
-                    'message' => 'Contact does not have an email address'
-                ];
-            }
-
-            if (!$smtpConfig->is_active) {
-                return [
-                    'success' => false,
-                    'message' => 'SMTP configuration is not active'
-                ];
-            }
-
-            if (!$smtpConfig->canSend()) {
-                return [
-                    'success' => false,
-                    'message' => 'SMTP configuration has reached daily/hourly limits'
-                ];
-            }
-
-            // Use the existing sendSingleEmail method which handles all the logic
-            return $this->sendSingleEmail($contact, $subject, $content, $smtpConfig);
-
-        } catch (\Exception $e) {
-            Log::error('Quick Email Send Error: ' . $e->getMessage(), [
-                'contact_id' => $contact->id,
-                'contact_email' => $contact->email,
-                'smtp_config_id' => $smtpConfig->id,
-                'subject' => $subject,
-                'error_trace' => $e->getTraceAsString()
-            ]);
-
-            return [
-                'success' => false,
-                'message' => 'Failed to send email: ' . $e->getMessage()
-            ];
-        }
     }
 }
