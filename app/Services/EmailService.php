@@ -10,16 +10,13 @@ use App\Models\SmtpConfig;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Mail\Message;
-use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
-use Symfony\Component\Mailer\Mailer;
-use Symfony\Component\Mime\Email;
 use Illuminate\Support\Str;
 
 class EmailService
 {
     public function createCampaign(array $data)
     {
-        $campaign = EmailCampaign::create([
+        return EmailCampaign::query()->create([
             'name' => $data['name'],
             'subject' => $data['subject'],
             'content' => $data['content'],
@@ -30,8 +27,6 @@ class EmailService
             'settings' => $data['settings'] ?? [],
             'created_by' => auth()->id(),
         ]);
-
-        return $campaign;
     }
 
     public function addContactsToCampaign(EmailCampaign $campaign, array $contactIds)
@@ -203,12 +198,12 @@ class EmailService
                 $message->to($contact->email, $contact->full_name)
                         ->subject($subject)
                         ->from($smtpConfig->from_email, $smtpConfig->from_name);
-                        
+
                 // Set both HTML and text content
                 $message->setBody($content, 'text/html');
                 $textContent = strip_tags($content);
                 $message->addPart($textContent, 'text/plain');
-                
+
                 // Configure SMTP for this message
                 $transportConfig = [
                     'host' => $smtpConfig->host,
@@ -217,7 +212,7 @@ class EmailService
                     'username' => $smtpConfig->username,
                     'password' => $smtpConfig->password,
                 ];
-                
+
                 // Set custom mailer configuration
                 config([
                     'mail.mailers.custom_smtp' => [
