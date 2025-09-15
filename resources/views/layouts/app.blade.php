@@ -594,6 +594,25 @@
         
         <!-- Quick Send Modal JavaScript -->
         <script>
+        // Global CRM object for utilities
+        window.CRM = {
+            showToast: function(message, type = 'info') {
+                // Simple toast implementation
+                const toast = document.createElement('div');
+                toast.className = `fixed top-4 right-4 z-50 px-4 py-2 rounded-md shadow-lg transition-all duration-300 ${
+                    type === 'success' ? 'bg-green-500 text-white' : 
+                    type === 'error' ? 'bg-red-500 text-white' : 
+                    'bg-blue-500 text-white'
+                }`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    setTimeout(() => document.body.removeChild(toast), 300);
+                }, 3000);
+            }
+        };
         // Global functions for Quick Send Modal
         window.openQuickSendModal = function openQuickSendModal(contactId = null) {
             // Load contacts and SMTP configs

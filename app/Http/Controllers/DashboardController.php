@@ -534,30 +534,6 @@ class DashboardController extends Controller
         return $days;
     }
 
-    /**
-     * Get real-time dashboard stats (API endpoint)
-     */
-    public function getStats(Request $request)
-    {
-        $user = auth()->user();
-        $period = $request->get('period', 'month');
-
-        // Clear cache if requested
-        if ($request->boolean('refresh')) {
-            Cache::forget("dashboard_stats_{$user->id}");
-        }
-
-        $stats = $this->calculateStats($user);
-
-        // Broadcast updated stats via WebSocket
-        broadcast(new DashboardStatsUpdated($user->id, $stats));
-
-        return response()->json([
-            'success' => true,
-            'stats' => $stats,
-            'timestamp' => now()->toISOString(),
-        ]);
-    }
 
     /**
      * Get real-time activities (API endpoint)
@@ -744,5 +720,14 @@ class DashboardController extends Controller
             'cached' => ! $request->boolean('refresh'),
             'timestamp' => now()->toISOString(),
         ]);
+    }
+
+    /**
+     * Get dashboard statistics (API endpoint)
+     */
+    public function getStats(Request $request)
+    {
+        // Reuse the getDashboardStats method
+        return $this->getDashboardStats($request);
     }
 }

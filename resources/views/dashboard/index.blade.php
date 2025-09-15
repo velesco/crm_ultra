@@ -242,6 +242,12 @@ function dashboardData() {
         },
         
         initCharts() {
+            // Destroy existing charts if they exist
+            if (this.communicationsChart) {
+                this.communicationsChart.destroy();
+                this.communicationsChart = null;
+            }
+            
             // Communications Chart
             const commCtx = document.getElementById('communicationsChart');
             if (commCtx) {
@@ -295,9 +301,16 @@ function dashboardData() {
             this.loading = true;
             try {
                 const response = await fetch('/api/dashboard/stats');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 const data = await response.json();
-                this.stats = data;
-                CRM.showToast('Data refreshed successfully', 'success');
+                if (data.success) {
+                    this.stats = data.stats;
+                    CRM.showToast('Data refreshed successfully', 'success');
+                } else {
+                    throw new Error(data.message || 'Unknown error');
+                }
             } catch (error) {
                 console.error('Failed to refresh data:', error);
                 CRM.showToast('Failed to refresh data', 'error');
