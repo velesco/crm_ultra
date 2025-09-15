@@ -11,6 +11,7 @@ class SmtpConfig extends Model
 
     protected $fillable = [
         'name',
+        'provider',
         'host',
         'port',
         'username',
@@ -19,6 +20,7 @@ class SmtpConfig extends Model
         'from_email',
         'from_name',
         'is_active',
+        'priority',
         'daily_limit',
         'hourly_limit',
         'sent_today',
