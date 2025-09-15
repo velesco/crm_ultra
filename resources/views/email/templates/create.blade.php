@@ -122,7 +122,7 @@
                                            placeholder="Enter email subject line">
                                 </div>
                                 <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                                    Use variables like {{'{{'}}name{{'}}'}} or {{'{{'}}company{{'}}'}} to personalize the subject line.
+                                    Use variables like @{{name}} or @{{company}} to personalize the subject line.
                                 </p>
                                 @error('subject')
                                     <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -149,10 +149,10 @@
                                 <div class="mt-1">
                                     <textarea name="content" id="content" rows="12" required x-model="content"
                                               class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                              placeholder="Enter your email content here. You can use HTML and variables like {{'{{'}}name{{'}}'}}, {{'{{'}}email{{'}}'}}, etc.">{{ old('content') }}</textarea>
+                                              placeholder="Enter your email content here. You can use HTML and variables like @{{name}}, @{{email}}, etc.">{{ old('content') }}</textarea>
                                 </div>
                                 <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                                    HTML is supported. Use variables in double curly braces, e.g., {{'{{'}}name{{'}}'}}, {{'{{'}}email{{'}}'}}, {{'{{'}}company{{'}}'}}.
+                                    HTML is supported. Use variables in double curly braces, e.g., @{{name}}, @{{email}}, @{{company}}.
                                 </p>
                                 @error('content')
                                     <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -162,19 +162,19 @@
                             <!-- Content Toolbar -->
                             <div class="mt-4 flex flex-wrap gap-2">
                                 <button type="button" @click="insertVariable('name')" class="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                    {{'{{'}}name{{'}}'}}
+                                    @{{name}}
                                 </button>
                                 <button type="button" @click="insertVariable('email')" class="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                    {{'{{'}}email{{'}}'}}
+                                    @{{email}}
                                 </button>
                                 <button type="button" @click="insertVariable('company')" class="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                    {{'{{'}}company{{'}}'}}
+                                    @{{company}}
                                 </button>
                                 <button type="button" @click="insertVariable('phone')" class="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                    {{'{{'}}phone{{'}}'}}
+                                    @{{phone}}
                                 </button>
                                 <button type="button" @click="insertVariable('unsubscribe_link')" class="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                    {{'{{'}}unsubscribe_link{{'}}'}}
+                                    @{{unsubscribe_link}}
                                 </button>
                             </div>
                         </div>
