@@ -165,13 +165,13 @@ class SmtpConfig extends Model
      */
     public function loadUsageStats()
     {
-        // Load email campaign statistics
+        // Load email campaign statistics with correct column names
         $this->campaignStats = $this->emailCampaigns()
             ->selectRaw('COUNT(*) as total_campaigns')
-            ->selectRaw('SUM(total_sent) as total_emails_sent')
-            ->selectRaw('SUM(total_delivered) as total_delivered')
-            ->selectRaw('SUM(total_opened) as total_opened')
-            ->selectRaw('SUM(total_clicked) as total_clicked')
+            ->selectRaw('SUM(sent_count) as total_emails_sent')
+            ->selectRaw('SUM(delivered_count) as total_delivered')
+            ->selectRaw('SUM(opened_count) as total_opened')
+            ->selectRaw('SUM(clicked_count) as total_clicked')
             ->first();
             
         // Load recent email logs (last 30 days)
@@ -192,11 +192,12 @@ class SmtpConfig extends Model
             ->orderBy('date')
             ->get();
             
-        // Calculate usage rates
-        if ($this->campaignStats && $this->campaignStats->total_emails_sent > 0) {
-            $this->deliveryRate = round(($this->campaignStats->total_delivered / $this->campaignStats->total_emails_sent) * 100, 2);
-            $this->openRate = round(($this->campaignStats->total_opened / $this->campaignStats->total_emails_sent) * 100, 2);
-            $this->clickRate = round(($this->campaignStats->total_clicked / $this->campaignStats->total_emails_sent) * 100, 2);
+        // Calculate usage rates with safe null handling
+        $totalSent = $this->campaignStats->total_emails_sent ?? 0;
+        if ($totalSent > 0) {
+            $this->deliveryRate = round((($this->campaignStats->total_delivered ?? 0) / $totalSent) * 100, 2);
+            $this->openRate = round((($this->campaignStats->total_opened ?? 0) / $totalSent) * 100, 2);
+            $this->clickRate = round((($this->campaignStats->total_clicked ?? 0) / $totalSent) * 100, 2);
         } else {
             $this->deliveryRate = 0;
             $this->openRate = 0;
