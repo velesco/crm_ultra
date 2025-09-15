@@ -161,8 +161,8 @@ class CommunicationController extends Controller
             'total_emails' => $emails->count(),
             'total_sms' => $smsMessages->count(),
             'total_whatsapp' => $whatsappMessages->count(),
-            'first_contact' => $allCommunications->first()?->created_at,
-            'last_contact' => $allCommunications->last()?->created_at,
+            'first_contact' => $allCommunications->first()['created_at'] ?? null,
+            'last_contact' => $allCommunications->last()['created_at'] ?? null,
             'unread_messages' => $whatsappMessages->where('direction', 'inbound')->whereNull('read_at')->count(),
         ];
 
