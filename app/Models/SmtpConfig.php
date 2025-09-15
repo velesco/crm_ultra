@@ -133,28 +133,88 @@ class SmtpConfig extends Model
         try {
             // Get decrypted password
             $password = $this->password;
-
-            // Use Symfony Mailer instead of SwiftMailer (Laravel 9+ standard)
-            $transport = new \Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport(
-                $this->host,
-                $this->port,
-                $this->encryption === 'tls'
-            );
             
-            if ($this->encryption === 'ssl') {
-                $transport->setEncryption('ssl');
+            // DEBUG: Log the decrypted password for testing
+            \Log::info('SMTP Test - Password Debug', [
+                'host' => $this->host,
+                'username' => $this->username,
+                'encrypted_password_length' => strlen($this->attributes['password'] ?? ''),
+                'decrypted_password' => $password, // CAREFUL: This will log the actual password
+                'decrypted_password_length' => strlen($password ?? ''),
+                'password_starts_with' => substr($password ?? '', 0, 3) . '***'
+            ]);
+            
+            // Validate basic settings
+            if (empty($this->host) || empty($this->username) || empty($password)) {
+                \Log::error('SMTP Test: Missing required settings', [
+                    'host' => $this->host,
+                    'username' => $this->username,
+                    'password_set' => !empty($password),
+                    'password_value' => $password // DEBUG: Show actual password value
+                ]);
+                return false;
+            }
+
+            // Use Laravel's built-in SMTP testing approach
+            $config = [
+                'transport' => 'smtp',
+                'host' => $this->host,
+                'port' => $this->port,
+                'encryption' => $this->encryption === 'tls' ? 'tls' : ($this->encryption === 'ssl' ? 'ssl' : null),
+                'username' => $this->username,
+                'password' => $password,
+                'timeout' => 10,
+            ];
+            
+            // Create a temporary mailer instance for testing
+            $transport = \Illuminate\Mail\Transport\SesTransport::class;
+            
+            // Use Symfony's SMTP transport directly for testing
+            if ($this->encryption === 'tls' && $this->port == 587) {
+                // For TLS/STARTTLS connections (like Hostinger)
+                $dsn = "smtp://{$this->username}:" . urlencode($password) . "@{$this->host}:{$this->port}?encryption=tls";
+            } elseif ($this->encryption === 'ssl' && $this->port == 465) {
+                // For SSL connections
+                $dsn = "smtp://{$this->username}:" . urlencode($password) . "@{$this->host}:{$this->port}?encryption=ssl";
+            } else {
+                // For plain connections
+                $dsn = "smtp://{$this->username}:" . urlencode($password) . "@{$this->host}:{$this->port}";
             }
             
-            $transport->setUsername($this->username)
-                     ->setPassword($password);
-
-            // Test the connection
+            \Log::info('SMTP Test - DSN Debug', [
+                'dsn' => $dsn,
+                'host' => $this->host,
+                'port' => $this->port,
+                'encryption' => $this->encryption
+            ]);
+            
+            // Test using Symfony Mailer Transport
+            $transport = \Symfony\Component\Mailer\Transport::fromDsn($dsn);
+            
+            // Try to connect and authenticate
             $transport->start();
-            $transport->stop();
-
+            
+            \Log::info('SMTP Test Connection Success', [
+                'host' => $this->host,
+                'port' => $this->port,
+                'encryption' => $this->encryption,
+                'username' => $this->username,
+                'password_used' => $password // DEBUG: Show successful password
+            ]);
+            
             return true;
+            
         } catch (\Exception $e) {
-            \Log::error('SMTP Test Connection Error: '.$e->getMessage());
+            \Log::error('SMTP Test Connection Error: ' . $e->getMessage(), [
+                'host' => $this->host,
+                'port' => $this->port,
+                'encryption' => $this->encryption,
+                'username' => $this->username,
+                'password_attempted' => $password ?? 'NULL', // DEBUG: Show attempted password
+                'error_class' => get_class($e),
+                'error_code' => $e->getCode(),
+                'error_trace' => $e->getTraceAsString()
+            ]);
 
             return false;
         }

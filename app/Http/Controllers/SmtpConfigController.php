@@ -176,23 +176,73 @@ class SmtpConfigController extends Controller
     public function test(SmtpConfig $smtpConfig)
     {
         try {
+            // Get decrypted password for debugging
+            $password = $smtpConfig->password;
+            
+            \Log::info('SMTP Test Request Debug', [
+                'smtp_id' => $smtpConfig->id,
+                'name' => $smtpConfig->name,
+                'host' => $smtpConfig->host,
+                'port' => $smtpConfig->port,
+                'encryption' => $smtpConfig->encryption,
+                'username' => $smtpConfig->username,
+                'password_decoded' => $password, // DEBUG: Show decoded password
+                'password_length' => strlen($password ?? ''),
+                'from_email' => $smtpConfig->from_email
+            ]);
+            
             $success = $smtpConfig->testConnection();
 
             if ($success) {
                 return response()->json([
                     'success' => true,
                     'message' => 'SMTP connection test successful!',
+                    'debug_info' => [
+                        'host' => $smtpConfig->host,
+                        'port' => $smtpConfig->port,
+                        'encryption' => $smtpConfig->encryption,
+                        'username' => $smtpConfig->username,
+                        'password_preview' => substr($password ?? '', 0, 3) . str_repeat('*', max(0, strlen($password ?? '') - 3)),
+                        'password_length' => strlen($password ?? '')
+                    ]
                 ]);
             } else {
+                // Get recent logs to help with debugging
+                $recentLogs = [];
+                if (function_exists('storage_path')) {
+                    $logFile = storage_path('logs/laravel.log');
+                    if (file_exists($logFile)) {
+                        $logs = file($logFile);
+                        $recentLogs = array_slice($logs, -10); // Last 10 lines
+                    }
+                }
+                
                 return response()->json([
                     'success' => false,
-                    'message' => 'SMTP connection test failed. Please check your settings.',
+                    'message' => 'SMTP connection test failed. Please check your settings and logs.',
+                    'debug_info' => [
+                        'host' => $smtpConfig->host,
+                        'port' => $smtpConfig->port,
+                        'encryption' => $smtpConfig->encryption,
+                        'username' => $smtpConfig->username,
+                        'password_preview' => substr($password ?? '', 0, 3) . str_repeat('*', max(0, strlen($password ?? '') - 3)),
+                        'password_length' => strlen($password ?? ''),
+                        'password_decoded' => $password, // DEBUG: Show actual password on failure
+                        'recent_logs' => array_slice($recentLogs, -3) // Last 3 log entries
+                    ]
                 ], 422);
             }
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Connection test failed: '.$e->getMessage(),
+                'debug_info' => [
+                    'error_class' => get_class($e),
+                    'error_code' => $e->getCode(),
+                    'error_line' => $e->getLine(),
+                    'error_file' => $e->getFile(),
+                    'password_attempted' => $smtpConfig->password ?? 'NULL'
+                ]
             ], 422);
         }
     }
@@ -312,6 +362,48 @@ class SmtpConfigController extends Controller
         return response()->json($settings[$provider] ?? []);
     }
 
+    /**
+     * Debug SMTP password decryption.
+     */
+    public function debugPassword(SmtpConfig $smtpConfig)
+    {
+        try {
+            $rawPassword = $smtpConfig->attributes['password'] ?? null;
+            $decryptedPassword = $smtpConfig->password;
+            
+            \Log::info('SMTP Password Debug', [
+                'smtp_id' => $smtpConfig->id,
+                'raw_encrypted' => $rawPassword,
+                'raw_length' => strlen($rawPassword ?? ''),
+                'decrypted' => $decryptedPassword,
+                'decrypted_length' => strlen($decryptedPassword ?? ''),
+                'is_encrypted' => $rawPassword !== $decryptedPassword
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'debug_data' => [
+                    'raw_encrypted_length' => strlen($rawPassword ?? ''),
+                    'decrypted_password' => $decryptedPassword,
+                    'decrypted_length' => strlen($decryptedPassword ?? ''),
+                    'password_preview' => substr($decryptedPassword ?? '', 0, 3) . '***',
+                    'is_encrypted' => $rawPassword !== $decryptedPassword,
+                    'encryption_test' => [
+                        'original' => 'test123',
+                        'encrypted' => encrypt('test123'),
+                        'decrypted' => decrypt(encrypt('test123'))
+                    ]
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'raw_password' => $smtpConfig->attributes['password'] ?? 'NULL'
+            ]);
+        }
+    }
+    
     /**
      * Get active SMTP configurations for API/AJAX
      */

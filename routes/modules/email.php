@@ -71,6 +71,7 @@ Route::resource('smtp-configs', SmtpConfigController::class)->names([
 
 Route::prefix('smtp-configs')->name('smtp-configs.')->group(function () {
     Route::post('/{smtpConfig}/test', [SmtpConfigController::class, 'test'])->name('test');
+    Route::get('/{smtpConfig}/debug-password', [SmtpConfigController::class, 'debugPassword'])->name('debug-password');
     Route::patch('/{smtpConfig}/toggle', [SmtpConfigController::class, 'toggle'])->name('toggle');
     Route::post('/{smtpConfig}/duplicate', [SmtpConfigController::class, 'duplicate'])->name('duplicate');
     Route::post('/{smtpConfig}/reset-counters', [SmtpConfigController::class, 'resetCounters'])->name('reset-counters');
