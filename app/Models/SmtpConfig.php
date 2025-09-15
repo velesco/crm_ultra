@@ -134,12 +134,23 @@ class SmtpConfig extends Model
             // Get decrypted password
             $password = $this->password;
 
-            $transport = \Swift_SmtpTransport::newInstance($this->host, $this->port, $this->encryption)
-                ->setUsername($this->username)
-                ->setPassword($password);
+            // Use Symfony Mailer instead of SwiftMailer (Laravel 9+ standard)
+            $transport = new \Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport(
+                $this->host,
+                $this->port,
+                $this->encryption === 'tls'
+            );
+            
+            if ($this->encryption === 'ssl') {
+                $transport->setEncryption('ssl');
+            }
+            
+            $transport->setUsername($this->username)
+                     ->setPassword($password);
 
-            $mailer = \Swift_Mailer::newInstance($transport);
-            $mailer->getTransport()->start();
+            // Test the connection
+            $transport->start();
+            $transport->stop();
 
             return true;
         } catch (\Exception $e) {
@@ -147,5 +158,51 @@ class SmtpConfig extends Model
 
             return false;
         }
+    }
+    
+    /**
+     * Load usage statistics for this SMTP config
+     */
+    public function loadUsageStats()
+    {
+        // Load email campaign statistics
+        $this->campaignStats = $this->emailCampaigns()
+            ->selectRaw('COUNT(*) as total_campaigns')
+            ->selectRaw('SUM(total_sent) as total_emails_sent')
+            ->selectRaw('SUM(total_delivered) as total_delivered')
+            ->selectRaw('SUM(total_opened) as total_opened')
+            ->selectRaw('SUM(total_clicked) as total_clicked')
+            ->first();
+            
+        // Load recent email logs (last 30 days)
+        $thirtyDaysAgo = now()->subDays(30);
+        $this->recentStats = $this->emailLogs()
+            ->where('sent_at', '>=', $thirtyDaysAgo)
+            ->selectRaw('COUNT(*) as recent_sent')
+            ->selectRaw('COUNT(CASE WHEN status = "delivered" THEN 1 END) as recent_delivered')
+            ->selectRaw('COUNT(CASE WHEN opened_at IS NOT NULL THEN 1 END) as recent_opened')
+            ->selectRaw('COUNT(CASE WHEN clicked_at IS NOT NULL THEN 1 END) as recent_clicked')
+            ->first();
+            
+        // Load daily usage for last 7 days
+        $this->dailyUsage = $this->emailLogs()
+            ->where('sent_at', '>=', now()->subDays(7))
+            ->selectRaw('DATE(sent_at) as date, COUNT(*) as count')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+            
+        // Calculate usage rates
+        if ($this->campaignStats && $this->campaignStats->total_emails_sent > 0) {
+            $this->deliveryRate = round(($this->campaignStats->total_delivered / $this->campaignStats->total_emails_sent) * 100, 2);
+            $this->openRate = round(($this->campaignStats->total_opened / $this->campaignStats->total_emails_sent) * 100, 2);
+            $this->clickRate = round(($this->campaignStats->total_clicked / $this->campaignStats->total_emails_sent) * 100, 2);
+        } else {
+            $this->deliveryRate = 0;
+            $this->openRate = 0;
+            $this->clickRate = 0;
+        }
+        
+        return $this;
     }
 }

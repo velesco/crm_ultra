@@ -221,10 +221,10 @@ class AnalyticsController extends Controller
 
     private function getEngagementMetrics($startDate, $endDate)
     {
-        $totalEmails = EmailLog::whereBetween('sent_at', [$startDate, $endDate])->count();
-        $openedEmails = EmailLog::whereBetween('sent_at', [$startDate, $endDate])
+        $totalEmails = (int) EmailLog::whereBetween('sent_at', [$startDate, $endDate])->count();
+        $openedEmails = (int) EmailLog::whereBetween('sent_at', [$startDate, $endDate])
             ->whereNotNull('opened_at')->count();
-        $clickedEmails = EmailLog::whereBetween('sent_at', [$startDate, $endDate])
+        $clickedEmails = (int) EmailLog::whereBetween('sent_at', [$startDate, $endDate])
             ->whereNotNull('clicked_at')->count();
 
         return [
@@ -303,6 +303,10 @@ class AnalyticsController extends Controller
 
     private function calculatePercentageChange($current, $previous)
     {
+        // Ensure we're working with numbers
+        $current = (float) $current;
+        $previous = (float) $previous;
+        
         if ($previous == 0) {
             return $current > 0 ? 100 : 0;
         }
@@ -352,8 +356,8 @@ class AnalyticsController extends Controller
     private function calculateOverallEngagementRate($startDate, $endDate)
     {
         // Simplified engagement calculation - can be enhanced based on business logic
-        $totalMessages = $this->getTotalMessagesCount($startDate, $endDate);
-        $engaged = EmailLog::whereBetween('sent_at', [$startDate, $endDate])
+        $totalMessages = (int) $this->getTotalMessagesCount($startDate, $endDate);
+        $engaged = (int) EmailLog::whereBetween('sent_at', [$startDate, $endDate])
             ->whereNotNull('opened_at')->count();
 
         return $totalMessages > 0 ? round(($engaged / $totalMessages) * 100, 2) : 0;
@@ -373,16 +377,16 @@ class AnalyticsController extends Controller
 
     private function calculateGrowthRate($startDate, $endDate)
     {
-        $current = Contact::whereBetween('created_at', [$startDate, $endDate])->count();
-        $days = Carbon::parse($endDate)->diffInDays(Carbon::parse($startDate));
+        $current = (int) Contact::whereBetween('created_at', [$startDate, $endDate])->count();
+        $days = (int) Carbon::parse($endDate)->diffInDays(Carbon::parse($startDate));
 
         return $days > 0 ? round($current / $days, 2) : 0;
     }
 
     private function calculateSmsDeliveryRate($startDate, $endDate)
     {
-        $total = SmsMessage::whereBetween('created_at', [$startDate, $endDate])->count();
-        $delivered = SmsMessage::whereBetween('created_at', [$startDate, $endDate])
+        $total = (int) SmsMessage::whereBetween('created_at', [$startDate, $endDate])->count();
+        $delivered = (int) SmsMessage::whereBetween('created_at', [$startDate, $endDate])
             ->where('status', 'delivered')->count();
 
         return $total > 0 ? round(($delivered / $total) * 100, 2) : 0;
@@ -390,9 +394,9 @@ class AnalyticsController extends Controller
 
     private function calculateWhatsAppResponseRate($startDate, $endDate)
     {
-        $sent = WhatsAppMessage::whereBetween('created_at', [$startDate, $endDate])
+        $sent = (int) WhatsAppMessage::whereBetween('created_at', [$startDate, $endDate])
             ->where('direction', 'outbound')->count();
-        $received = WhatsAppMessage::whereBetween('created_at', [$startDate, $endDate])
+        $received = (int) WhatsAppMessage::whereBetween('created_at', [$startDate, $endDate])
             ->where('direction', 'inbound')->count();
 
         return $sent > 0 ? round(($received / $sent) * 100, 2) : 0;
@@ -412,18 +416,28 @@ class AnalyticsController extends Controller
 
     private function arrayToCsv($data)
     {
-        if (empty($data)) {
+        if (empty($data) || !is_array($data)) {
             return '';
         }
 
         $output = fopen('php://temp', 'w');
-
-        // Write headers
-        fputcsv($output, array_keys((array) $data[0]));
-
-        // Write data
-        foreach ($data as $row) {
-            fputcsv($output, (array) $row);
+        
+        // Ensure first row is an array or object for headers
+        $firstRow = reset($data);
+        if (!is_array($firstRow) && !is_object($firstRow)) {
+            // Simple data, create basic headers
+            fputcsv($output, ['index', 'value']);
+            foreach ($data as $index => $value) {
+                fputcsv($output, [$index, $value]);
+            }
+        } else {
+            // Write headers
+            fputcsv($output, array_keys((array) $firstRow));
+            
+            // Write data
+            foreach ($data as $row) {
+                fputcsv($output, (array) $row);
+            }
         }
 
         rewind($output);

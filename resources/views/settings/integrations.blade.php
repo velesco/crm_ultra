@@ -85,13 +85,13 @@
                 </div>
                 
                 <div class="space-y-3">
-                    <!-- Twilio -->
+                    <!-- Custom SMS Providers -->
                     <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                         <div class="flex items-center">
-                            <div class="w-2 h-2 bg-{{ $twilioStatus === 'active' ? 'green' : 'gray' }}-500 rounded-full mr-3"></div>
+                            <div class="w-2 h-2 bg-{{ ($integrations['sms']['status'] ?? 'inactive') === 'active' ? 'green' : 'gray' }}-500 rounded-full mr-3"></div>
                             <div>
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">Twilio</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $twilioStatus === 'active' ? 'Connected' : 'Not connected' }}</p>
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">Custom SMS Server</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ ($integrations['sms']['status'] ?? 'inactive') === 'active' ? 'Connected' : 'Not connected' }}</p>
                             </div>
                         </div>
                         <a href="{{ route('sms.providers.index') }}" class="text-blue-600 hover:text-blue-700 text-sm font-medium">Configure</a>

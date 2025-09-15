@@ -67,6 +67,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{contact}/sms', [ContactController::class, 'sendQuickSms'])->name('quick-sms');
         Route::post('/{contact}/whatsapp', [ContactController::class, 'sendQuickWhatsApp'])->name('quick-whatsapp');
     });
+    
+    // Additional fallback route for contacts import (in case of URL issues)
+    Route::get('/contacts/import/', [ContactController::class, 'import'])->name('contacts.import.fallback');
 
     // Contact Segments
     Route::resource('segments', ContactSegmentController::class);
@@ -157,6 +160,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/update', [SettingsController::class, 'update'])->name('update');
         Route::post('/security/password', [SettingsController::class, 'updatePassword'])->name('security.password');
         Route::post('/notifications/update', [SettingsController::class, 'updateNotifications'])->name('notifications.update');
+        
+        // Profile Avatar Upload
+        Route::post('/profile/avatar', [SettingsController::class, 'updateAvatar'])->name('profile.avatar');
+        
+        // Two-Factor Authentication (placeholder routes - to be implemented later)
+        Route::post('/security/two-factor/enable', [SettingsController::class, 'enableTwoFactor'])->name('security.two-factor.enable');
+        Route::post('/security/two-factor/disable', [SettingsController::class, 'disableTwoFactor'])->name('security.two-factor.disable');
     });
 
     // Export Management (Accessible to all authenticated users)

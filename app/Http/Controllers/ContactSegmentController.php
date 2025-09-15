@@ -490,9 +490,21 @@ class ContactSegmentController extends Controller
      */
     private function applyCondition($query, $condition)
     {
-        $field = $condition['field'];
-        $operator = $condition['operator'];
+        // Ensure condition is an array to prevent string offset access errors
+        if (!is_array($condition)) {
+            \Log::warning('ContactSegmentController: Invalid condition format', ['condition' => $condition]);
+            return;
+        }
+        
+        $field = $condition['field'] ?? null;
+        $operator = $condition['operator'] ?? null;
         $value = $condition['value'] ?? '';
+        
+        // Validate required fields
+        if (!$field || !$operator) {
+            \Log::warning('ContactSegmentController: Missing required condition fields', ['condition' => $condition]);
+            return;
+        }
 
         switch ($operator) {
             case 'equals':
@@ -532,6 +544,9 @@ class ContactSegmentController extends Controller
                 break;
             case 'not_in_last_days':
                 $query->where($field, '<', now()->subDays(intval($value)));
+                break;
+            default:
+                \Log::warning('ContactSegmentController: Unknown operator', ['operator' => $operator]);
                 break;
         }
     }
