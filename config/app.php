@@ -140,6 +140,7 @@ return [
         App\Providers\RouteServiceProvider::class,
         App\Providers\TelescopeServiceProvider::class,
         App\Providers\HorizonServiceProvider::class,
+        App\Providers\GmailBadgeServiceProvider::class,
         //        App\Providers\CrmServiceProvider::class,
 
     ],

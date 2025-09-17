@@ -183,13 +183,43 @@
                     </div>
 
                     <!-- Communications -->
-                    <a href="{{ route('communications.index') }}"
-                       class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->routeIs('communications.*') ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
-                        <svg class="mr-3 flex-shrink-0 h-5 w-5 {{ request()->routeIs('communications.*') ? 'text-indigo-500' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2v-6a2 2 0 012-2h8z"></path>
-                        </svg>
-                        Unified Inbox
-                    </a>
+                    <div x-data="{ open: {{ request()->routeIs('communications.*') || request()->routeIs('gmail.*') ? 'true' : 'false' }} }">
+                        <button @click="open = !open"
+                                class="w-full group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <svg class="mr-3 flex-shrink-0 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2v-6a2 2 0 012-2h8z"></path>
+                            </svg>
+                            Communications
+                            <svg :class="{ 'rotate-90': open }" class="ml-auto h-4 w-4 transform transition-transform">
+                                <path fill="currentColor" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
+                            </svg>
+                        </button>
+                        <div x-show="open" x-transition class="ml-8 space-y-1">
+                            <a href="{{ route('communications.index') }}"
+                               class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->routeIs('communications.index') ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                                <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2v-6a2 2 0 012-2h8z"></path>
+                                </svg>
+                                Unified Inbox
+                            </a>
+                            <a href="{{ route('gmail.inbox') }}"
+                               class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->routeIs('gmail.*') ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                                <svg class="mr-2 h-4 w-4 text-red-500" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819L11.18 15.545c-.317-.17-.692-.17-1.01 0L2.455 21.002H2.636C1.732 21.002 1 20.27 1 19.366V5.457c0-.904.732-1.636 1.636-1.636h20.728C24.268 3.821 24 4.553 24 5.457zm-1.636 1.139L12 11.183 1.636 6.596V5.457c0-.301.244-.545.545-.545h19.638c.301 0 .545.244.545.545v1.139z"/>
+                                </svg>
+                                Gmail Inbox
+                                @if($gmailBadges && $gmailBadges['unread_count'] > 0)
+                                    <span class="ml-auto inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                        {{ $gmailBadges['unread_count'] }}
+                                    </span>
+                                @elseif($gmailBadges && $gmailBadges['has_data'])
+                                    <span class="ml-auto inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                        {{ $gmailBadges['total_accounts'] }} account{{ $gmailBadges['total_accounts'] > 1 ? 's' : '' }}
+                                    </span>
+                                @endif
+                            </a>
+                        </div>
+                    </div>
 
                     <!-- Data Management -->
                     <div x-data="{ open: {{ request()->routeIs('data.*') || request()->routeIs('google-sheets.*') ? 'true' : 'false' }} }">

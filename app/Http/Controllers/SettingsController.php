@@ -289,6 +289,44 @@ class SettingsController extends Controller
     }
 
     /**
+     * Integrations settings
+     */
+    public function integrations()
+    {
+        $user = Auth::user();
+        
+        // Get Gmail accounts count
+        $gmailAccounts = \App\Models\GoogleAccount::where('user_id', $user->id)->get();
+        
+        // Get integration status
+        $integrations = [
+            'sms' => [
+                'status' => SmsProvider::where('is_active', true)->exists() ? 'active' : 'inactive'
+            ],
+            'whatsapp' => [
+                'status' => WhatsAppSession::where('status', 'connected')->exists() ? 'connected' : 'disconnected'
+            ],
+        ];
+        
+        // SMTP count
+        $smtpCount = SmtpConfig::where('is_active', true)->count();
+        
+        // Provider status
+        $vonageStatus = 'inactive'; // Placeholder - implement actual check
+        $orangeStatus = 'inactive'; // Placeholder - implement actual check
+        $whatsappStatus = WhatsAppSession::where('status', 'connected')->exists() ? 'connected' : 'disconnected';
+        
+        return view('settings.integrations', compact(
+            'gmailAccounts',
+            'integrations', 
+            'smtpCount',
+            'vonageStatus',
+            'orangeStatus',
+            'whatsappStatus'
+        ));
+    }
+
+    /**
      * Enable two-factor authentication
      */
     public function enableTwoFactor(Request $request)

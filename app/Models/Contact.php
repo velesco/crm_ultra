@@ -21,11 +21,20 @@ class Contact extends Model
         'address',
         'city',
         'country',
+        'website',
         'tags',
         'notes',
         'custom_fields',
         'status',
         'source',
+        'source_metadata',
+        'first_email_at',
+        'last_email_at',
+        'email_count',
+        'linkedin_url',
+        'twitter_handle',
+        'social_profiles',
+        'team_id',
         'created_by',
         'assigned_to',
     ];
@@ -33,6 +42,10 @@ class Contact extends Model
     protected $casts = [
         'tags' => 'array',
         'custom_fields' => 'array',
+        'source_metadata' => 'array',
+        'social_profiles' => 'array',
+        'first_email_at' => 'datetime',
+        'last_email_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -47,6 +60,96 @@ class Contact extends Model
     public function assignedUser()
     {
         return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function team()
+    {
+        return $this->belongsTo(Team::class);
+    }
+
+    /**
+     * Get all emails where this contact is a participant (from or to).
+     */
+    public function relatedEmails()
+    {
+        return Email::where(function($query) {
+            $query->where('from_email', $this->email)
+                  ->orWhereJsonContains('to_recipients', $this->email)
+                  ->orWhereJsonContains('cc_recipients', $this->email)
+                  ->orWhereJsonContains('bcc_recipients', $this->email);
+        })->orderBy('date_received', 'desc');
+    }
+
+    /**
+     * Update email statistics for this contact.
+     */
+    public function updateEmailStats()
+    {
+        $emails = $this->relatedEmails()->get();
+        
+        if ($emails->isNotEmpty()) {
+            $this->update([
+                'first_email_at' => $emails->min('date_received'),
+                'last_email_at' => $emails->max('date_received'),
+                'email_count' => $emails->count(),
+            ]);
+        }
+    }
+
+    /**
+     * Check if contact was created from Gmail.
+     */
+    public function isFromGmail(): bool
+    {
+        return $this->source === 'gmail';
+    }
+
+    /**
+     * Check if contact was created from Google Sheets.
+     */
+    public function isFromSheets(): bool
+    {
+        return $this->source === 'sheets';
+    }
+
+    /**
+     * Get full name.
+     */
+    public function getFullNameAttribute(): string
+    {
+        return trim($this->first_name . ' ' . $this->last_name);
+    }
+
+    /**
+     * Scope: Contacts from Gmail.
+     */
+    public function scopeFromGmail($query)
+    {
+        return $query->where('source', 'gmail');
+    }
+
+    /**
+     * Scope: Contacts from Google Sheets.
+     */
+    public function scopeFromSheets($query)
+    {
+        return $query->where('source', 'sheets');
+    }
+
+    /**
+     * Scope: Contacts for specific team.
+     */
+    public function scopeForTeam($query, $teamId)
+    {
+        return $query->where('team_id', $teamId);
+    }
+
+    /**
+     * Scope: Contacts with recent email activity.
+     */
+    public function scopeWithRecentEmails($query, $days = 30)
+    {
+        return $query->where('last_email_at', '>=', now()->subDays($days));
     }
 
     public function emailCampaigns()

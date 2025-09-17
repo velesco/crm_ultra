@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DataImportController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\GoogleSheetsController;
+use App\Http\Controllers\GmailOAuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingsController;
@@ -173,6 +174,34 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/security/two-factor/disable', [SettingsController::class, 'disableTwoFactor'])->name('security.two-factor.disable');
     });
 
+    // Gmail OAuth Integration - FAZA 2 Implementation
+    Route::prefix('gmail-oauth')->name('gmail.oauth.')->group(function () {
+        Route::get('/', [App\Http\Controllers\GmailOAuthController::class, 'index'])->name('index');
+        Route::get('/connect', [App\Http\Controllers\GmailOAuthController::class, 'redirectToGoogle'])->name('connect');
+        Route::get('/callback', [App\Http\Controllers\GmailOAuthController::class, 'handleCallback'])->name('callback');
+        Route::delete('/{googleAccount}/disconnect', [App\Http\Controllers\GmailOAuthController::class, 'disconnect'])->name('disconnect');
+        Route::get('/{googleAccount}/reconnect', [App\Http\Controllers\GmailOAuthController::class, 'reconnect'])->name('reconnect');
+        Route::post('/{googleAccount}/refresh-token', [App\Http\Controllers\GmailOAuthController::class, 'refreshToken'])->name('refresh-token');
+        Route::get('/{googleAccount}/status', [App\Http\Controllers\GmailOAuthController::class, 'status'])->name('status');
+        Route::patch('/{googleAccount}/sync-settings', [App\Http\Controllers\GmailOAuthController::class, 'updateSyncSettings'])->name('sync-settings');
+    });
+    
+    // Gmail Team Management - FAZA 7-8 Implementation
+    Route::prefix('gmail-team')->name('gmail.team.')->group(function () {
+        Route::get('/', [App\Http\Controllers\GmailTeamController::class, 'index'])->name('index');
+        Route::post('/{googleAccount}/update-visibility', [App\Http\Controllers\GmailTeamController::class, 'updateVisibility'])->name('update-visibility');
+        Route::post('/{googleAccount}/grant-access', [App\Http\Controllers\GmailTeamController::class, 'grantAccess'])->name('grant-access');
+        Route::delete('/{googleAccount}/revoke-access/{user}', [App\Http\Controllers\GmailTeamController::class, 'revokeAccess'])->name('revoke-access');
+        Route::get('/stats', [App\Http\Controllers\GmailTeamController::class, 'getTeamStats'])->name('stats');
+        Route::post('/sync-settings', [App\Http\Controllers\GmailTeamController::class, 'updateTeamSyncSettings'])->name('sync-settings');
+        Route::get('/export-settings', [App\Http\Controllers\GmailTeamController::class, 'exportTeamSettings'])->name('export-settings');
+    });
+    
+    // Gmail Unified Inbox - FAZA 4 Implementation
+    Route::prefix('gmail')->name('gmail.')->group(function () {
+        Route::get('/inbox', [App\Http\Controllers\GmailInboxController::class, 'index'])->name('inbox');
+    });
+
     // Export Management (Accessible to all authenticated users)
     Route::resource('exports', ExportController::class);
     Route::prefix('exports')->name('exports.')->group(function () {
@@ -230,6 +259,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/smtp-configs', [App\Http\Controllers\SmtpConfigController::class, 'getConfigs'])->name('smtp-configs');
         Route::get('/sms-providers', [App\Http\Controllers\SmsProviderController::class, 'getProviders'])->name('sms-providers');
         Route::get('/whatsapp-sessions', [App\Http\Controllers\WhatsAppSessionController::class, 'getSessions'])->name('whatsapp-sessions');
+        
+        // Gmail API endpoints
+        Route::prefix('gmail')->name('gmail.')->group(function () {
+            Route::get('/{email}', [App\Http\Controllers\GmailInboxController::class, 'show'])->name('show');
+            Route::post('/mark-read', [App\Http\Controllers\GmailInboxController::class, 'markAsRead'])->name('mark-read');
+            Route::post('/star', [App\Http\Controllers\GmailInboxController::class, 'starEmails'])->name('star');
+            Route::post('/{email}/toggle-star', [App\Http\Controllers\GmailInboxController::class, 'toggleStar'])->name('toggle-star');
+            Route::post('/{email}/mark-read', [App\Http\Controllers\GmailInboxController::class, 'markEmailAsRead'])->name('mark-email-read');
+            Route::post('/sync-all', [App\Http\Controllers\GmailInboxController::class, 'syncAll'])->name('sync-all');
+            
+            // Team management endpoints
+            Route::prefix('team')->name('team.')->group(function () {
+                Route::get('/stats', [App\Http\Controllers\GmailTeamController::class, 'getTeamStats'])->name('stats');
+                Route::post('/settings', [App\Http\Controllers\GmailTeamController::class, 'updateTeamSyncSettings'])->name('settings.update');
+                Route::get('/export-settings', [App\Http\Controllers\GmailTeamController::class, 'exportTeamSettings'])->name('export-settings');
+                Route::post('/{googleAccount}/visibility', [App\Http\Controllers\GmailTeamController::class, 'updateVisibility'])->name('visibility');
+                Route::post('/{googleAccount}/grant-access', [App\Http\Controllers\GmailTeamController::class, 'grantAccess'])->name('grant-access');
+                Route::delete('/{googleAccount}/revoke-access/{user}', [App\Http\Controllers\GmailTeamController::class, 'revokeAccess'])->name('revoke-access');
+            });
+        });
     });
 });
 

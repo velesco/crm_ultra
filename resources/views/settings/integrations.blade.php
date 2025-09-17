@@ -20,6 +20,58 @@
 
     <!-- Integration Categories -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Gmail Integration -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div class="p-6">
+                <div class="flex items-center mb-4">
+                    <div class="w-10 h-10 bg-red-100 dark:bg-red-900 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.283 10.356h-8.327v3.451h4.792c-.446 2.193-2.313 3.453-4.792 3.453a5.27 5.27 0 0 1-5.279-5.28 5.27 5.27 0 0 1 5.279-5.279c1.259 0 2.397.447 3.29 1.178l2.6-2.599c-1.584-1.381-3.615-2.233-5.89-2.233a8.908 8.908 0 0 0-8.934 8.934 8.907 8.907 0 0 0 8.934 8.934c4.467 0 8.529-3.249 8.529-8.934 0-.528-.081-1.097-.202-1.625z"/>
+                        </svg>
+                    </div>
+                    <h3 class="ml-3 text-lg font-semibold text-gray-900 dark:text-white">Gmail Integration</h3>
+                </div>
+                
+                <div class="space-y-3">
+                    <!-- Gmail OAuth -->
+                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-2 h-2 bg-{{ isset($gmailAccounts) && $gmailAccounts->count() > 0 ? 'green' : 'gray' }}-500 rounded-full mr-3"></div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">Gmail Accounts</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ isset($gmailAccounts) ? $gmailAccounts->count() : 0 }} connected</p>
+                            </div>
+                        </div>
+                        <a href="{{ route('gmail.oauth.index') }}" class="text-blue-600 hover:text-blue-700 text-sm font-medium">Manage</a>
+                    </div>
+
+                    <!-- Unified Inbox -->
+                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-2 h-2 bg-{{ isset($gmailAccounts) && $gmailAccounts->where('status', 'active')->count() > 0 ? 'green' : 'gray' }}-500 rounded-full mr-3"></div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">Unified Inbox</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ isset($gmailAccounts) && $gmailAccounts->where('status', 'active')->count() > 0 ? 'Active' : 'Inactive' }}</p>
+                            </div>
+                        </div>
+                        <a href="{{ route('communications.inbox') }}" class="text-blue-600 hover:text-blue-700 text-sm font-medium">View Inbox</a>
+                    </div>
+
+                    <!-- Auto Contact Creation -->
+                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">Auto Contacts</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">From Gmail sync</p>
+                            </div>
+                        </div>
+                        <span class="text-gray-500 text-sm font-medium">Enabled</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Email Services -->
         <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <div class="p-6">

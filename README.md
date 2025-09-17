@@ -38,12 +38,32 @@ CRM Ultra este un sistem CRM modern și complet bazat pe Laravel 10, cu funcțio
 
 ## 🚀 Quick Start
 
-### Setup & Installation
+### 📦 Automatic Installation (Recommended)
 ```bash
-# Complete setup
-./setup.sh
+# 1. Check system requirements
+./check_installation.sh
 
-# Or manual:
+# 2. Complete automated installation
+./install.sh
+
+# 3. Configure external services (optional)
+./setup_services.sh
+
+# 4. Verify configuration
+php check_config.php
+```
+
+### 📚 Installation Documentation
+- **[INSTALLATION_GUIDE.md](INSTALLATION_GUIDE.md)** - Complete installation guide
+- **[QUICK_INSTALL.md](QUICK_INSTALL.md)** - Quick reference for installation
+- **check_installation.sh** - System requirements checker
+- **install.sh** - Interactive installation script
+- **setup_services.sh** - External services configuration
+- **check_config.php** - Configuration verification
+
+### 🛠️ Manual Installation (Alternative)
+```bash
+# Manual setup process
 composer install && npm install && npm run build
 cp .env.example .env && php artisan key:generate
 php artisan migrate --seed

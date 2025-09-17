@@ -12,7 +12,21 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Gmail auto-sync every 5 minutes
+        $schedule->command('gmail:auto-sync')
+                 ->everyFiveMinutes()
+                 ->withoutOverlapping()
+                 ->runInBackground()
+                 ->onOneServer();
+
+        // Optional: More frequent sync during business hours
+        $schedule->command('gmail:auto-sync --max-results=20')
+                 ->everyTwoMinutes()
+                 ->between('08:00', '18:00')
+                 ->weekdays()
+                 ->withoutOverlapping()
+                 ->runInBackground()
+                 ->onOneServer();
     }
 
     /**
