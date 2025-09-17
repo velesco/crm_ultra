@@ -237,22 +237,41 @@ function dashboardData() {
         communicationsChart: null,
         
         init() {
-            // Delay chart initialization to ensure DOM is ready
-            this.$nextTick(() => {
-                setTimeout(() => {
-                    this.initCharts();
-                }, 100);
-            });
+            // Wait for all scripts to load, including Chart.js
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    this.initializeAfterLoad();
+                });
+            } else {
+                this.initializeAfterLoad();
+            }
             this.startPolling();
         },
         
+        initializeAfterLoad() {
+            // Multiple checks to ensure Chart.js is loaded
+            let attempts = 0;
+            const maxAttempts = 10;
+            
+            const checkAndInit = () => {
+                attempts++;
+                if (typeof Chart !== 'undefined' && Chart.version) {
+                    console.log('Chart.js loaded successfully, version:', Chart.version);
+                    this.initCharts();
+                } else if (attempts < maxAttempts) {
+                    console.log(`Chart.js not ready, attempt ${attempts}/${maxAttempts}`);
+                    setTimeout(checkAndInit, 200);
+                } else {
+                    console.error('Chart.js failed to load after', maxAttempts, 'attempts');
+                    CRM.showToast('Chart.js failed to load', 'error');
+                }
+            };
+            
+            checkAndInit();
+        },
+        
         initCharts() {
-            // Check if Chart.js is loaded
-            if (typeof Chart === 'undefined') {
-                console.error('Chart.js is not loaded yet');
-                setTimeout(() => this.initCharts(), 200);
-                return;
-            }
+            console.log('Initializing charts...');
             
             // Destroy existing charts if they exist
             if (this.communicationsChart) {
@@ -266,10 +285,15 @@ function dashboardData() {
             
             // Communications Chart
             const commCtx = document.getElementById('communicationsChart');
+            console.log('Canvas element found:', !!commCtx, 'Can get context:', !!(commCtx && commCtx.getContext));
+            
             if (commCtx && commCtx.getContext) {
                 try {
                     const ctx = commCtx.getContext('2d');
+                    console.log('2D context obtained:', !!ctx);
+                    
                     if (ctx) {
+                        console.log('Creating Chart instance...');
                         this.communicationsChart = new Chart(commCtx, {
                     type: 'line',
                     data: {
@@ -313,6 +337,9 @@ function dashboardData() {
                         }
                     }
                         });
+                        console.log('Chart created successfully!');
+                    } else {
+                        console.error('Could not get 2D context from canvas');
                     }
                 } catch (error) {
                     console.error('Error initializing communications chart:', error);
