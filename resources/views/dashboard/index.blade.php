@@ -237,21 +237,40 @@ function dashboardData() {
         communicationsChart: null,
         
         init() {
-            this.initCharts();
+            // Delay chart initialization to ensure DOM is ready
+            this.$nextTick(() => {
+                setTimeout(() => {
+                    this.initCharts();
+                }, 100);
+            });
             this.startPolling();
         },
         
         initCharts() {
+            // Check if Chart.js is loaded
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js is not loaded yet');
+                setTimeout(() => this.initCharts(), 200);
+                return;
+            }
+            
             // Destroy existing charts if they exist
             if (this.communicationsChart) {
-                this.communicationsChart.destroy();
+                try {
+                    this.communicationsChart.destroy();
+                } catch (error) {
+                    console.warn('Error destroying chart:', error);
+                }
                 this.communicationsChart = null;
             }
             
             // Communications Chart
             const commCtx = document.getElementById('communicationsChart');
-            if (commCtx) {
-                this.communicationsChart = new Chart(commCtx, {
+            if (commCtx && commCtx.getContext) {
+                try {
+                    const ctx = commCtx.getContext('2d');
+                    if (ctx) {
+                        this.communicationsChart = new Chart(commCtx, {
                     type: 'line',
                     data: {
                         labels: ['Jan 1', 'Jan 2', 'Jan 3', 'Jan 4', 'Jan 5', 'Jan 6', 'Jan 7'],
@@ -293,7 +312,22 @@ function dashboardData() {
                             }
                         }
                     }
-                });
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error initializing communications chart:', error);
+                    CRM.showToast('Failed to initialize chart', 'error');
+                }
+            } else {
+                console.warn('Canvas element communicationsChart not found or not ready');
+                // Retry after a short delay
+                setTimeout(() => {
+                    const retryCtx = document.getElementById('communicationsChart');
+                    if (retryCtx && retryCtx.getContext) {
+                        console.log('Retrying chart initialization...');
+                        this.initCharts();
+                    }
+                }, 500);
             }
         },
         

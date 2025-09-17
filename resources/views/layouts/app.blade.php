@@ -17,8 +17,8 @@
         <!-- Alpine.js for interactive components -->
         <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-        <!-- Chart.js for dashboard charts - Updated stable version -->
-        <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+        <!-- Chart.js for dashboard charts - Latest stable version -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
 
         @stack('styles')
     </head>
@@ -686,6 +686,33 @@
                     console.error('Error loading SMTP configs:', error);
                     smtpSelect.innerHTML = '<option value="">Error loading SMTP configs</option>';
                 });
+        };
+        
+        // Global CRM object for toast notifications and utilities
+        window.CRM = {
+            showToast: function(message, type = 'info') {
+                console.log(`${type.toUpperCase()}: ${message}`);
+                // You can implement a proper toast library here later
+                if (window.Alpine && window.Alpine.store) {
+                    // If using Alpine stores for global state
+                    console.log(`Toast: ${message} (${type})`);
+                } else {
+                    // Simple fallback
+                    const toast = document.createElement('div');
+                    toast.className = `fixed top-4 right-4 z-50 p-4 rounded-md text-white ${
+                        type === 'success' ? 'bg-green-500' : 
+                        type === 'error' ? 'bg-red-500' : 
+                        type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+                    }`;
+                    toast.textContent = message;
+                    document.body.appendChild(toast);
+                    setTimeout(() => {
+                        if (toast.parentNode) {
+                            toast.parentNode.removeChild(toast);
+                        }
+                    }, 5000);
+                }
+            }
         };
         
         // Initialize when DOM is loaded
