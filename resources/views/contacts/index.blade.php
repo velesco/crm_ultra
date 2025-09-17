@@ -279,7 +279,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex flex-wrap gap-1">
-                                        @foreach($contact->tags as $tag)
+                                        @foreach(($contact->tags ?? []) as $tag)
                                             <span class="inline-flex px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded">
                                                 {{ $tag }}
                                             </span>

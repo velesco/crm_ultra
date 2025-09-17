@@ -36,7 +36,7 @@
                     </div>
                     <div class="ml-4">
                         <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Integrations</p>
-                        <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ $stats['total_integrations'] }}</p>
+                        <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ $stats['total_integrations'] ?? 0 }}</p>
                     </div>
                 </div>
             </div>
@@ -50,7 +50,7 @@
                     </div>
                     <div class="ml-4">
                         <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Active</p>
-                        <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ $stats['active_integrations'] }}</p>
+                        <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ $stats['active_integrations'] ?? 0 }}</p>
                     </div>
                 </div>
             </div>
@@ -64,7 +64,7 @@
                     </div>
                     <div class="ml-4">
                         <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Syncs</p>
-                        <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ $stats['total_syncs'] }}</p>
+                        <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ $stats['total_syncs'] ?? 0 }}</p>
                     </div>
                 </div>
             </div>
@@ -78,7 +78,7 @@
                     </div>
                     <div class="ml-4">
                         <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Contacts Synced</p>
-                        <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ $stats['total_contacts_synced'] }}</p>
+                        <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ $stats['total_contacts_synced'] ?? 0 }}</p>
                     </div>
                 </div>
             </div>

@@ -17,7 +17,7 @@
                 </svg>
                 New Import
             </a>
-            <a href="{{ route('data.template') }}" class="btn-secondary">
+            <a href="#" onclick="downloadTemplate()" class="btn-secondary">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
@@ -350,6 +350,33 @@ function deleteImport(importId) {
         `;
         document.body.appendChild(form);
         form.submit();
+    }
+}
+
+function downloadTemplate() {
+    // Create a CSV template for contacts import
+    const headers = [
+        'first_name', 'last_name', 'email', 'phone', 'company', 'title', 
+        'address', 'city', 'country', 'source', 'tags', 'notes'
+    ];
+    
+    const sampleData = [
+        'John', 'Doe', 'john.doe@example.com', '+1234567890', 'Example Corp', 'Manager',
+        '123 Main St', 'New York', 'USA', 'Website', 'vip,customer', 'Sample contact'
+    ];
+    
+    const csvContent = [headers.join(','), sampleData.join(',')].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'contacts_import_template.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 }
 </script>
