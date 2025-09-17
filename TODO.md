@@ -375,6 +375,8 @@ php check_config.php
 - 📄 **.env.production** (4KB) - Template .env cu toate variabilele
 - 🧹 **cleanup_project.sh** (6KB) - Curățare fișiere temporare
 - 🔍 **auto_cleanup.sh** (4KB) - Detecție automată fișiere temporare
+- 📧 **setup_gmail_tables.sh** (3KB) - Setup automat tabele Gmail
+- 🌨️ **inbox-setup.blade.php** - View pentru ghidare setup Gmail
 
 **Status**: 🎆 **COMPLETE DEPLOYMENT PACKAGE READY** 🎆  
 **Data actualizare**: September 17, 2025 - 22:30  
@@ -425,6 +427,18 @@ php check_config.php
   - Return graceful (null) dacă tabelele nu există încă
 - **Status**: ✅ **RESOLVED** - Provider-ul nu mai căde sistemul
 - **Beneficiu**: Sistemul funcționează chiar dacă migrarea Gmail nu e rulată
+
+### ✅ **FIXED: Gmail Inbox Controller Database Error**
+- **Issue**: "SQLSTATE[42S22]: Column not found: 1054 Unknown column 'user_id'" în GmailInboxController
+- **Cause**: Controller-ul accesa tabela `google_accounts` fără verificare de existență
+- **Fix Applied**:
+  - Adăugat verificare `Schema::hasTable()` în metodele critice
+  - Creat view `inbox-setup.blade.php` pentru ghidare utilizatori
+  - Error handling comprehensive cu logging
+  - Fallback graceful la pagina de setup
+- **Status**: ✅ **RESOLVED** - Controller-ul nu mai căde sistemul
+- **Beneficiu**: UX elegant pentru utilizatori înainte de setup Gmail
+- **Tool adăugat**: `setup_gmail_tables.sh` pentru setup automat
 
 ---
 

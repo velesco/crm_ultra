@@ -320,6 +320,14 @@ class GmailInboxController extends Controller
     public function syncAll(Request $request)
     {
         try {
+            // Check if Gmail tables exist
+            if (!Schema::hasTable('google_accounts')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gmail integration not set up. Please run migrations first.'
+                ], 503);
+            }
+
             $user = Auth::user();
             
             $accounts = GoogleAccount::where('user_id', $user->id)
