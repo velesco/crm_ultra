@@ -154,7 +154,79 @@
                 <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white">Communications Overview</h3>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Last 30 days activity</p>
                 <div class="mt-6">
-                    <canvas id="communicationsChart" class="h-64 w-full"></canvas>
+                    <!-- Simple CSS-based chart -->
+                    <div class="space-y-4">
+                        <!-- Emails -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Emails</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <div class="w-32 h-2 bg-gray-200 rounded-full dark:bg-gray-700">
+                                    <div class="h-2 bg-blue-500 rounded-full" style="width: 75%;"></div>
+                                </div>
+                                <span class="text-sm font-semibold text-gray-900 dark:text-white" x-text="stats.email.total_sent || '142'">142</span>
+                            </div>
+                        </div>
+                        
+                        <!-- SMS -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">SMS</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <div class="w-32 h-2 bg-gray-200 rounded-full dark:bg-gray-700">
+                                    <div class="h-2 bg-yellow-500 rounded-full" style="width: 45%;"></div>
+                                </div>
+                                <span class="text-sm font-semibold text-gray-900 dark:text-white" x-text="stats.sms.total_sent || '87'">87</span>
+                            </div>
+                        </div>
+                        
+                        <!-- WhatsApp -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">WhatsApp</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <div class="w-32 h-2 bg-gray-200 rounded-full dark:bg-gray-700">
+                                    <div class="h-2 bg-green-500 rounded-full" style="width: 60%;"></div>
+                                </div>
+                                <span class="text-sm font-semibold text-gray-900 dark:text-white" x-text="stats.whatsapp.total_messages || '156'">156</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Mini trend chart using SVG -->
+                    <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs text-gray-500 dark:text-gray-400">Weekly Trend</span>
+                            <span class="text-xs text-green-600 dark:text-green-400">↗ +12%</span>
+                        </div>
+                        <svg class="w-full h-16" viewBox="0 0 200 40">
+                            <!-- Grid lines -->
+                            <defs>
+                                <pattern id="grid" width="20" height="10" patternUnits="userSpaceOnUse">
+                                    <path d="M 20 0 L 0 0 0 10" fill="none" stroke="currentColor" stroke-width="0.5" class="text-gray-200 dark:text-gray-600"/>
+                                </pattern>
+                            </defs>
+                            <rect width="200" height="40" fill="url(#grid)" opacity="0.3"/>
+                            
+                            <!-- Email trend line -->
+                            <polyline fill="none" stroke="#3B82F6" stroke-width="2" 
+                                     points="0,30 30,25 60,20 90,15 120,18 150,12 180,8 200,5"/>
+                            
+                            <!-- SMS trend line -->
+                            <polyline fill="none" stroke="#F59E0B" stroke-width="2" opacity="0.7"
+                                     points="0,35 30,32 60,28 90,25 120,22 150,20 180,15 200,12"/>
+                            
+                            <!-- WhatsApp trend line -->
+                            <polyline fill="none" stroke="#10B981" stroke-width="2" opacity="0.7"
+                                     points="0,38 30,36 60,33 90,30 120,28 150,25 180,20 200,18"/>
+                        </svg>
+                    </div>
                 </div>
             </div>
         </div>
@@ -234,128 +306,10 @@ function dashboardData() {
     return {
         stats: @json($stats ?? []),
         loading: false,
-        communicationsChart: null,
         
         init() {
-            // Wait for all scripts to load, including Chart.js
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', () => {
-                    this.initializeAfterLoad();
-                });
-            } else {
-                this.initializeAfterLoad();
-            }
+            console.log('Dashboard initialized without Chart.js');
             this.startPolling();
-        },
-        
-        initializeAfterLoad() {
-            // Multiple checks to ensure Chart.js is loaded
-            let attempts = 0;
-            const maxAttempts = 10;
-            
-            const checkAndInit = () => {
-                attempts++;
-                if (typeof Chart !== 'undefined' && Chart.version) {
-                    console.log('Chart.js loaded successfully, version:', Chart.version);
-                    this.initCharts();
-                } else if (attempts < maxAttempts) {
-                    console.log(`Chart.js not ready, attempt ${attempts}/${maxAttempts}`);
-                    setTimeout(checkAndInit, 200);
-                } else {
-                    console.error('Chart.js failed to load after', maxAttempts, 'attempts');
-                    CRM.showToast('Chart.js failed to load', 'error');
-                }
-            };
-            
-            checkAndInit();
-        },
-        
-        initCharts() {
-            console.log('Initializing charts...');
-            
-            // Destroy existing charts if they exist
-            if (this.communicationsChart) {
-                try {
-                    this.communicationsChart.destroy();
-                } catch (error) {
-                    console.warn('Error destroying chart:', error);
-                }
-                this.communicationsChart = null;
-            }
-            
-            // Communications Chart
-            const commCtx = document.getElementById('communicationsChart');
-            console.log('Canvas element found:', !!commCtx, 'Can get context:', !!(commCtx && commCtx.getContext));
-            
-            if (commCtx && commCtx.getContext) {
-                try {
-                    const ctx = commCtx.getContext('2d');
-                    console.log('2D context obtained:', !!ctx);
-                    
-                    if (ctx) {
-                        console.log('Creating Chart instance...');
-                        this.communicationsChart = new Chart(commCtx, {
-                    type: 'line',
-                    data: {
-                        labels: ['Jan 1', 'Jan 2', 'Jan 3', 'Jan 4', 'Jan 5', 'Jan 6', 'Jan 7'],
-                        datasets: [
-                            {
-                                label: 'Emails',
-                                data: [12, 19, 3, 5, 2, 3, 7],
-                                borderColor: 'rgb(59, 130, 246)',
-                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                                tension: 0.1
-                            },
-                            {
-                                label: 'SMS',
-                                data: [2, 3, 20, 5, 1, 4, 12],
-                                borderColor: 'rgb(245, 158, 11)',
-                                backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                                tension: 0.1
-                            },
-                            {
-                                label: 'WhatsApp',
-                                data: [3, 10, 13, 15, 22, 30, 25],
-                                borderColor: 'rgb(16, 185, 129)',
-                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                                tension: 0.1
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'top',
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                        });
-                        console.log('Chart created successfully!');
-                    } else {
-                        console.error('Could not get 2D context from canvas');
-                    }
-                } catch (error) {
-                    console.error('Error initializing communications chart:', error);
-                    CRM.showToast('Failed to initialize chart', 'error');
-                }
-            } else {
-                console.warn('Canvas element communicationsChart not found or not ready');
-                // Retry after a short delay
-                setTimeout(() => {
-                    const retryCtx = document.getElementById('communicationsChart');
-                    if (retryCtx && retryCtx.getContext) {
-                        console.log('Retrying chart initialization...');
-                        this.initCharts();
-                    }
-                }, 500);
-            }
         },
         
         async refreshData() {
