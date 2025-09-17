@@ -57,6 +57,8 @@ Testează toate configurările și conexiunile.
 - **configure_env.sh** - 🔧 Wizard configurare .env
 - **setup_services.sh** - ⚙️ Configurare servicii externe
 - **check_config.php** - 📊 Verificare configurări Laravel
+- **cleanup_project.sh** - 🧹 Curățare fișiere temporare
+- **auto_cleanup.sh** - 🔍 Detecție automată cleanup
 
 ## 🆘 Ajutor Rapid
 
@@ -85,6 +87,21 @@ php artisan queue:restart
 2. **Pornește Queue Worker**: `php artisan queue:work`  
 3. **Accesează aplicația**: `https://your-domain.com`
 4. **Creează primul admin** din interfața web
+
+## 🧹 Curățare Proiect
+
+Pentru a curăța fișierele temporare de dezvoltare:
+
+```bash
+# Detecție automată fișiere temporare
+./auto_cleanup.sh
+
+# Sau cleanup manual cu listă predefinită
+./cleanup_project.sh
+```
+
+**Ce se șterge**: Documentația de debug, scripturi de testare, directoare auxiliare  
+**Ce se păstrează**: Aplicația Laravel, documentația importantă, scripturile de instalare
 
 ## 📊 Status Proiect
 **100% Production Ready** ✅  
