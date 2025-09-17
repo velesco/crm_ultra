@@ -56,8 +56,10 @@ php check_config.php
 ### 📚 Installation Documentation
 - **[INSTALLATION_GUIDE.md](INSTALLATION_GUIDE.md)** - Complete installation guide
 - **[QUICK_INSTALL.md](QUICK_INSTALL.md)** - Quick reference for installation
+- **[ENV_CONFIGURATION_GUIDE.md](ENV_CONFIGURATION_GUIDE.md)** - Detailed .env setup guide
 - **check_installation.sh** - System requirements checker
 - **install.sh** - Interactive installation script
+- **configure_env.sh** - .env setup wizard
 - **setup_services.sh** - External services configuration
 - **check_config.php** - Configuration verification
 

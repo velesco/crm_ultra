@@ -1,13 +1,21 @@
 # 🚀 CRM Ultra - Instalare Rapidă
 
-## 📋 Cerințe Minimum
+## 📟 Cerințe Minimum
 - PHP 8.1+
 - MySQL 8.0+
 - Composer 2.x
 - Node.js 18.x+
 - Apache/Nginx cu SSL
 
-## ⚡ Instalare în 3 Pași
+## ⚡ Instalare în 1 Pas (Recomandat)
+
+### 🎆 **Master Installer**
+```bash
+./master_install.sh
+```
+**Ce face**: Installer complet cu wizard interactiv (10-15 min)
+
+## ⚡ Instalare în 4 Pași (Manual)
 
 ### 1️⃣ Verificare Sistem
 ```bash
@@ -21,14 +29,34 @@ Verifică dacă toate cerințele sunt întrunite.
 ```
 Script interactiv care instalează și configurează tot ce e necesar.
 
-### 3️⃣ Verificare Finală
+### 3️⃣ Configurare .env
+```bash
+./configure_env.sh
+# SAU
+./setup_services.sh  # pentru servicii externe
+```
+Configurează toate variabilele necesare.
+
+### 4️⃣ Verificare Finală
 ```bash
 php check_config.php
 ```
 Testează toate configurările și conexiunile.
 
 ## 📚 Documentație Completă
-Pentru ghid detaliat: **[INSTALLATION_GUIDE.md](INSTALLATION_GUIDE.md)**
+
+### 📄 **Ghiduri de Instalare**
+- **[INSTALLATION_GUIDE.md](INSTALLATION_GUIDE.md)** - Ghid complet detaliat
+- **[ENV_CONFIGURATION_GUIDE.md](ENV_CONFIGURATION_GUIDE.md)** - Configurare .env pas cu pas
+- **[ENV_QUICK_REFERENCE.md](ENV_QUICK_REFERENCE.md)** - Reference rapid .env
+
+### 🤖 **Scripturi Disponibile**
+- **master_install.sh** - 🎆 Installer complet cu wizard
+- **check_installation.sh** - 🔍 Verificare cerințe sistem  
+- **install.sh** - 🛠️ Instalare dependințe și setup de bază
+- **configure_env.sh** - 🔧 Wizard configurare .env
+- **setup_services.sh** - ⚙️ Configurare servicii externe
+- **check_config.php** - 📊 Verificare configurări Laravel
 
 ## 🆘 Ajutor Rapid
 
