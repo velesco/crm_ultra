@@ -209,11 +209,6 @@ class Contact extends Model
     }
 
     // Accessors
-    public function getFullNameAttribute()
-    {
-        return trim($this->first_name.' '.$this->last_name);
-    }
-
     public function getLastActivityAtAttribute()
     {
         return $this->communications()->latest()->first()?->created_at;
