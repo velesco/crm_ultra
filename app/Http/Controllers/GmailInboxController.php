@@ -9,6 +9,7 @@ use App\Jobs\GmailSyncInboxJob;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Exception;
 
@@ -27,23 +28,52 @@ class GmailInboxController extends Controller
      */
     public function index(Request $request)
     {
-        $user = Auth::user();
-        
-        // Get user's Google accounts
-        $googleAccounts = GoogleAccount::where('user_id', $user->id)
-                                     ->active()
-                                     ->get();
+        try {
+            // Check if Gmail tables exist
+            if (!Schema::hasTable('google_accounts')) {
+                return view('gmail.inbox-setup', [
+                    'error' => 'Gmail integration not set up. Please run migrations first.',
+                    'show_setup' => true
+                ]);
+            }
 
-        // Build email query with filters
-        $emailsQuery = $this->buildEmailQuery($request, $googleAccounts);
+            if (!Schema::hasTable('emails')) {
+                return view('gmail.inbox-setup', [
+                    'error' => 'Gmail tables not ready. Please complete the setup.',
+                    'show_setup' => true
+                ]);
+            }
 
-        // Paginate results
-        $emails = $emailsQuery->paginate(25)->withQueryString();
+            $user = Auth::user();
+            
+            // Get user's Google accounts
+            $googleAccounts = GoogleAccount::where('user_id', $user->id)
+                                         ->active()
+                                         ->get();
 
-        // Get inbox statistics
-        $stats = $this->getInboxStats($googleAccounts);
+            // Build email query with filters
+            $emailsQuery = $this->buildEmailQuery($request, $googleAccounts);
 
-        return view('gmail.inbox', compact('emails', 'googleAccounts', 'stats'));
+            // Paginate results
+            $emails = $emailsQuery->paginate(25)->withQueryString();
+
+            // Get inbox statistics
+            $stats = $this->getInboxStats($googleAccounts);
+
+            return view('gmail.inbox', compact('emails', 'googleAccounts', 'stats'));
+            
+        } catch (Exception $e) {
+            Log::error('Gmail Inbox Controller Error', [
+                'method' => 'index',
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+            
+            return view('gmail.inbox-setup', [
+                'error' => 'Gmail inbox temporarily unavailable. Please try again later.',
+                'show_setup' => false
+            ]);
+        }
     }
 
     /**
