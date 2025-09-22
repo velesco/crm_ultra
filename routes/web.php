@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DataImportController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\GoogleSheetsController;
+use App\Http\Controllers\GmailOAuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingsController;
@@ -173,32 +174,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/security/two-factor/disable', [SettingsController::class, 'disableTwoFactor'])->name('security.two-factor.disable');
     });
 
-    // Gmail OAuth Integration - FAZA 2 Implementation
-    Route::prefix('gmail-oauth')->name('gmail.oauth.')->group(function () {
-        Route::get('/', [App\Http\Controllers\GmailOAuthController::class, 'index'])->name('index');
-        Route::get('/connect', [App\Http\Controllers\GmailOAuthController::class, 'redirectToGoogle'])->name('connect');
-        Route::get('/callback', [App\Http\Controllers\GmailOAuthController::class, 'handleCallback'])->name('callback');
-        Route::delete('/{googleAccount}/disconnect', [App\Http\Controllers\GmailOAuthController::class, 'disconnect'])->name('disconnect');
-        Route::get('/{googleAccount}/reconnect', [App\Http\Controllers\GmailOAuthController::class, 'reconnect'])->name('reconnect');
-        Route::post('/{googleAccount}/refresh-token', [App\Http\Controllers\GmailOAuthController::class, 'refreshToken'])->name('refresh-token');
-        Route::get('/{googleAccount}/status', [App\Http\Controllers\GmailOAuthController::class, 'status'])->name('status');
-        Route::patch('/{googleAccount}/sync-settings', [App\Http\Controllers\GmailOAuthController::class, 'updateSyncSettings'])->name('sync-settings');
-    });
-
-    // Gmail Team Management - FAZA 7-8 Implementation
-    Route::prefix('gmail-team')->name('gmail.team.')->group(function () {
-        Route::get('/', [App\Http\Controllers\GmailTeamController::class, 'index'])->name('index');
-        Route::post('/{googleAccount}/update-visibility', [App\Http\Controllers\GmailTeamController::class, 'updateVisibility'])->name('update-visibility');
-        Route::post('/{googleAccount}/grant-access', [App\Http\Controllers\GmailTeamController::class, 'grantAccess'])->name('grant-access');
-        Route::delete('/{googleAccount}/revoke-access/{user}', [App\Http\Controllers\GmailTeamController::class, 'revokeAccess'])->name('revoke-access');
-        Route::get('/stats', [App\Http\Controllers\GmailTeamController::class, 'getTeamStats'])->name('stats');
-        Route::post('/sync-settings', [App\Http\Controllers\GmailTeamController::class, 'updateTeamSyncSettings'])->name('sync-settings');
-        Route::get('/export-settings', [App\Http\Controllers\GmailTeamController::class, 'exportTeamSettings'])->name('export-settings');
-    });
-
-    // Gmail Unified Inbox - FAZA 4 Implementation
+    // Gmail Integration Routes - UNIFIED SECTION
     Route::prefix('gmail')->name('gmail.')->group(function () {
         Route::get('/inbox', [App\Http\Controllers\GmailInboxController::class, 'index'])->name('inbox');
+        Route::get('/oauth', [App\Http\Controllers\GmailOAuthController::class, 'index'])->name('oauth.index');
+        Route::get('/oauth/connect', [App\Http\Controllers\GmailOAuthController::class, 'redirectToGoogle'])->name('oauth.connect');
+        Route::get('/oauth/callback', [App\Http\Controllers\GmailOAuthController::class, 'handleCallback'])->name('oauth.callback');
+        Route::delete('/oauth/{googleAccount}', [App\Http\Controllers\GmailOAuthController::class, 'disconnect'])->name('oauth.disconnect');
+        Route::post('/oauth/{googleAccount}/refresh', [App\Http\Controllers\GmailOAuthController::class, 'refreshToken'])->name('oauth.refresh');
+        Route::get('/oauth/{googleAccount}/status', [App\Http\Controllers\GmailOAuthController::class, 'status'])->name('oauth.status');
+        Route::patch('/oauth/{googleAccount}/sync-settings', [App\Http\Controllers\GmailOAuthController::class, 'updateSyncSettings'])->name('oauth.sync-settings');
     });
 
     // Export Management (Accessible to all authenticated users)
@@ -280,16 +265,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
     });
 
-    // Gmail Integration Routes
-    Route::prefix('gmail')->name('gmail.')->group(function () {
-        Route::get('/inbox', [App\Http\Controllers\GmailInboxController::class, 'index'])->name('inbox');
-        Route::get('/oauth', [App\Http\Controllers\GmailOAuthController::class, 'index'])->name('oauth.index');
-        Route::get('/oauth/connect', [App\Http\Controllers\GmailOAuthController::class, 'connect'])->name('oauth.connect');
-        Route::get('/oauth/callback', [App\Http\Controllers\GmailOAuthController::class, 'callback'])->name('oauth.callback');
-        Route::delete('/oauth/{googleAccount}', [App\Http\Controllers\GmailOAuthController::class, 'disconnect'])->name('oauth.disconnect');
-        Route::post('/oauth/{googleAccount}/refresh', [App\Http\Controllers\GmailOAuthController::class, 'refreshToken'])->name('oauth.refresh');
-    });
-
     // Google Sheets Integration Routes
     Route::prefix('google-sheets')->name('google-sheets.')->group(function () {
         Route::get('/', [GoogleSheetsController::class, 'index'])->name('index');
@@ -305,21 +280,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Settings with Google Integration
     Route::prefix('settings')->name('settings.')->group(function () {
-        Route::get('/', [SettingsController::class, 'index'])->name('index');
-        Route::get('/profile', [SettingsController::class, 'profile'])->name('profile');
-        Route::put('/profile', [SettingsController::class, 'updateProfile'])->name('profile.update');
-        Route::get('/notifications', [SettingsController::class, 'notifications'])->name('notifications');
-        Route::put('/notifications', [SettingsController::class, 'updateNotifications'])->name('notifications.update');
-        Route::get('/security', [SettingsController::class, 'security'])->name('security');
-        Route::post('/security/password', [SettingsController::class, 'updatePassword'])->name('security.password');
-        Route::post('/security/2fa', [SettingsController::class, 'toggle2FA'])->name('security.2fa');
-
-        // Google services section
-        Route::prefix('google')->name('google.')->group(function () {
-            Route::get('/', [SettingsController::class, 'google'])->name('index');
-            Route::get('/gmail', [App\Http\Controllers\GmailOAuthController::class, 'index'])->name('gmail');
-            Route::get('/sheets', [GoogleSheetsController::class, 'index'])->name('sheets');
-        });
+        Route::get('/google', [SettingsController::class, 'google'])->name('google.index');
+        Route::get('/google/gmail-settings', [SettingsController::class, 'gmailSettings'])->name('google.gmail-settings');
+        Route::get('/google/sheets-settings', [SettingsController::class, 'sheetsSettings'])->name('google.sheets-settings');
     });
 });
 
