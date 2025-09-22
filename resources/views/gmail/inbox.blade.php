@@ -1,7 +1,44 @@
 @extends('layouts.app')
 
-@section('title', 'Unified Gmail Inbox')
+@section('title', 'Gmail Unified Inbox')
 @section('page-title', 'Gmail Inbox')
+
+@push('styles')
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+/* Custom button styles to match design */
+.btn {
+    @apply inline-flex items-center justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2;
+}
+.btn-primary {
+    @apply bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500;
+}
+.btn-secondary {
+    @apply bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500;
+}
+.btn-sm {
+    @apply px-3 py-2 text-xs;
+}
+
+/* Custom toast styles */
+.toast {
+    @apply fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transition-all duration-300 transform;
+}
+.toast-success { @apply bg-green-500 text-white; }
+.toast-error { @apply bg-red-500 text-white; }
+.toast-info { @apply bg-blue-500 text-white; }
+
+/* Loading spinner */
+.spinner {
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+</style>
+@endpush
 
 @section('header-actions')
 <div class="flex items-center space-x-3">
@@ -20,7 +57,7 @@
         <i class="fas fa-sync-alt mr-2" id="refreshIcon"></i>
         <span id="refreshText">Refresh</span>
         <div id="loadingSpinner" class="hidden absolute inset-0 flex items-center justify-center">
-            <svg class="animate-spin h-4 w-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg class="spinner h-4 w-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
@@ -287,7 +324,16 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Email item click handler
+    // Initialize CSRF token if not already set
+    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+    if (!csrfToken) {
+        const metaTag = document.createElement('meta');
+        metaTag.name = 'csrf-token';
+        metaTag.content = '{{ csrf_token() }}';
+        document.head.appendChild(metaTag);
+    }
+    
+    // Email item click handler with error checking
     document.querySelectorAll('.email-item').forEach(function(item) {
         item.addEventListener('click', function(e) {
             // Don't trigger on checkbox, star button clicks
@@ -296,7 +342,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             const emailId = this.dataset.emailId;
-            openEmailModal(emailId);
+            if (emailId) {
+                openEmailModal(emailId);
+            } else {
+                console.error('Email ID not found for email item');
+                showToast('Error: Cannot open email details.', 'error');
+            }
         });
     });
 
@@ -324,7 +375,7 @@ function toggleSelectAll() {
 
 function getSelectedEmails() {
     const checkboxes = document.querySelectorAll('.email-checkbox:checked');
-    return Array.from(checkboxes).map(cb => cb.value);
+    return Array.from(checkboxes).map(cb => cb.value).filter(id => id && id.trim() !== '');
 }
 
 function markSelectedAsRead() {
@@ -335,11 +386,18 @@ function markSelectedAsRead() {
         return;
     }
     
+    // Validate CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+    if (!csrfToken || !csrfToken.content) {
+        showToast('Security token missing. Please refresh the page.', 'error');
+        return;
+    }
+    
     // Show loading state
     const button = event.target;
     const originalText = button.innerHTML;
     button.disabled = true;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Processing...';
+    button.innerHTML = '<i class="fas fa-spinner spinner mr-1"></i> Processing...';
     
     // Make AJAX call to mark as read
     fetch('/api/gmail/mark-read', {
@@ -392,11 +450,18 @@ function starSelected() {
         return;
     }
     
+    // Validate CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+    if (!csrfToken || !csrfToken.content) {
+        showToast('Security token missing. Please refresh the page.', 'error');
+        return;
+    }
+    
     // Show loading state
     const button = event.target;
     const originalText = button.innerHTML;
     button.disabled = true;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Processing...';
+    button.innerHTML = '<i class="fas fa-spinner spinner mr-1"></i> Processing...';
     
     // Make AJAX call to star emails
     fetch('/api/gmail/star', {
@@ -587,18 +652,23 @@ function resetRefreshButton() {
     loadingSpinner.classList.add('hidden');
 }
 
-// Toast notification function
+// Toast notification function - Updated with CSS classes
 function showToast(message, type = 'info') {
     const toast = document.createElement('div');
-    const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+    const typeClass = type === 'success' ? 'toast-success' : type === 'error' ? 'toast-error' : 'toast-info';
     
-    toast.className = `fixed top-4 right-4 z-50 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full`;
-    toast.innerHTML = `
-        <div class="flex items-center space-x-2">
-            <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
-            <span>${message}</span>
-        </div>
-    `;
+    toast.className = `toast ${typeClass} translate-x-full`;
+    
+    if (typeof message === 'string') {
+        toast.innerHTML = `
+            <div class="flex items-center space-x-2">
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+    } else {
+        toast.innerHTML = message; // For HTML content like keyboard shortcuts
+    }
     
     document.body.appendChild(toast);
     
@@ -607,7 +677,8 @@ function showToast(message, type = 'info') {
         toast.classList.remove('translate-x-full');
     }, 100);
     
-    // Remove after delay
+    // Remove after delay (longer for HTML content)
+    const delay = typeof message === 'string' ? 3000 : 5000;
     setTimeout(() => {
         toast.classList.add('translate-x-full');
         setTimeout(() => {
@@ -615,7 +686,7 @@ function showToast(message, type = 'info') {
                 toast.parentNode.removeChild(toast);
             }
         }, 300);
-    }, 3000);
+    }, delay);
 }
 
 // Show sync progress

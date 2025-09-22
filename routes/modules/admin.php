@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\ApiKeyController;
+use App\Http\Controllers\Admin\AppSettingsController;
 use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\ComplianceController;
 use App\Http\Controllers\Admin\PerformanceController;
@@ -84,6 +85,17 @@ Route::prefix('admin')->name('admin.')->middleware(['role:super_admin|admin'])->
     Route::post('/settings/bulk-action', [SystemSettingsController::class, 'bulkAction'])->name('settings.bulk-action');
     Route::get('/settings/export', [SystemSettingsController::class, 'export'])->name('settings.export');
     Route::post('/settings/clear-cache', [SystemSettingsController::class, 'clearCache'])->name('settings.clear-cache');
+
+    // Application Settings Management (.env + Database)
+    Route::resource('app-settings', AppSettingsController::class)->names('app-settings');
+    Route::prefix('app-settings')->name('app-settings.')->group(function () {
+        Route::post('/bulk-update', [AppSettingsController::class, 'bulkUpdate'])->name('bulk-update');
+        Route::post('/initialize-defaults', [AppSettingsController::class, 'initializeDefaults'])->name('initialize-defaults');
+        Route::post('/test/{provider}', [AppSettingsController::class, 'testConnection'])->name('test-connection');
+        Route::post('/sync-to-env', [AppSettingsController::class, 'syncToEnv'])->name('sync-to-env');
+        Route::get('/categories', [AppSettingsController::class, 'getCategories'])->name('categories');
+        Route::get('/export/{category?}', [AppSettingsController::class, 'export'])->name('export');
+    });
 
     // API Key Management
     Route::resource('api-keys', ApiKeyController::class)->names('api-keys');
