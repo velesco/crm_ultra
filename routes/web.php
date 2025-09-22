@@ -278,6 +278,47 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::post('/{googleAccount}/grant-access', [App\Http\Controllers\GmailTeamController::class, 'grantAccess'])->name('grant-access');
                 Route::delete('/{googleAccount}/revoke-access/{user}', [App\Http\Controllers\GmailTeamController::class, 'revokeAccess'])->name('revoke-access');
             });
+    });
+    
+    // Gmail Integration Routes
+    Route::prefix('gmail')->name('gmail.')->group(function () {
+        Route::get('/inbox', [App\Http\Controllers\GmailInboxController::class, 'index'])->name('inbox');
+        Route::get('/oauth', [App\Http\Controllers\GmailOAuthController::class, 'index'])->name('oauth.index');
+        Route::get('/oauth/connect', [App\Http\Controllers\GmailOAuthController::class, 'connect'])->name('oauth.connect');
+        Route::get('/oauth/callback', [App\Http\Controllers\GmailOAuthController::class, 'callback'])->name('oauth.callback');
+        Route::delete('/oauth/{googleAccount}', [App\Http\Controllers\GmailOAuthController::class, 'disconnect'])->name('oauth.disconnect');
+        Route::post('/oauth/{googleAccount}/refresh', [App\Http\Controllers\GmailOAuthController::class, 'refreshToken'])->name('oauth.refresh');
+    });
+
+    // Google Sheets Integration Routes
+    Route::prefix('google-sheets')->name('google-sheets.')->group(function () {
+        Route::get('/', [GoogleSheetsController::class, 'index'])->name('index');
+        Route::get('/connect', [GoogleSheetsController::class, 'connect'])->name('connect');
+        Route::get('/callback', [GoogleSheetsController::class, 'callback'])->name('callback');
+        Route::post('/import', [GoogleSheetsController::class, 'import'])->name('import');
+        Route::get('/sheets/{googleAccount}', [GoogleSheetsController::class, 'getSheets'])->name('sheets');
+        Route::get('/columns/{googleAccount}/{sheetId}', [GoogleSheetsController::class, 'getColumns'])->name('columns');
+        Route::post('/preview', [GoogleSheetsController::class, 'preview'])->name('preview');
+        Route::get('/logs', [GoogleSheetsController::class, 'logs'])->name('logs');
+        Route::delete('/disconnect/{googleAccount}', [GoogleSheetsController::class, 'disconnect'])->name('disconnect');
+    });
+
+    // Settings with Google Integration
+    Route::prefix('settings')->name('settings.')->group(function () {
+        Route::get('/', [SettingsController::class, 'index'])->name('index');
+        Route::get('/profile', [SettingsController::class, 'profile'])->name('profile');
+        Route::put('/profile', [SettingsController::class, 'updateProfile'])->name('profile.update');
+        Route::get('/notifications', [SettingsController::class, 'notifications'])->name('notifications');
+        Route::put('/notifications', [SettingsController::class, 'updateNotifications'])->name('notifications.update');
+        Route::get('/security', [SettingsController::class, 'security'])->name('security');
+        Route::post('/security/password', [SettingsController::class, 'updatePassword'])->name('security.password');
+        Route::post('/security/2fa', [SettingsController::class, 'toggle2FA'])->name('security.2fa');
+        
+        // Google services section
+        Route::prefix('google')->name('google.')->group(function () {
+            Route::get('/', [SettingsController::class, 'google'])->name('index');
+            Route::get('/gmail', [App\Http\Controllers\GmailOAuthController::class, 'index'])->name('gmail');
+            Route::get('/sheets', [GoogleSheetsController::class, 'index'])->name('sheets');
         });
     });
 });
