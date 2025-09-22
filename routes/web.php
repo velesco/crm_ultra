@@ -102,10 +102,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/export/communications', [DataImportController::class, 'exportCommunications'])->name('export.communications');
     });
 
-    // Google Sheets Integration
+    // Google Sheets Integration - UNIFIED SECTION
     Route::prefix('google-sheets')->name('google.sheets.')->group(function () {
         Route::get('/', [GoogleSheetsController::class, 'index'])->name('index');
         Route::get('/auth', [GoogleSheetsController::class, 'authenticate'])->name('auth');
+        Route::get('/connect', [GoogleSheetsController::class, 'connect'])->name('connect');
         Route::get('/callback', [GoogleSheetsController::class, 'callback'])->name('callback');
         Route::get('/create', [GoogleSheetsController::class, 'create'])->name('create');
         Route::post('/store', [GoogleSheetsController::class, 'store'])->name('store');
@@ -116,9 +117,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{integration}/sync', [GoogleSheetsController::class, 'sync'])->name('sync');
         Route::post('/{integration}/test', [GoogleSheetsController::class, 'test'])->name('test');
         Route::get('/{integration}/preview', [GoogleSheetsController::class, 'preview'])->name('preview');
+        
+        // API endpoints for Sheets data
         Route::get('/api/spreadsheet/{spreadsheet_id}/info', [GoogleSheetsController::class, 'getSpreadsheetInfo'])->name('api.spreadsheet.info');
         Route::get('/api/spreadsheet/{spreadsheet_id}/sheets', [GoogleSheetsController::class, 'getSheets'])->name('api.spreadsheet.sheets');
         Route::get('/api/spreadsheet/{spreadsheet_id}/headers', [GoogleSheetsController::class, 'getHeaders'])->name('api.spreadsheet.headers');
+        
+        // Import and management routes
+        Route::post('/import', [GoogleSheetsController::class, 'import'])->name('import');
+        Route::get('/sheets/{googleAccount}', [GoogleSheetsController::class, 'getSheetsList'])->name('sheets');
+        Route::get('/columns/{googleAccount}/{sheetId}', [GoogleSheetsController::class, 'getColumns'])->name('columns');
+        Route::post('/preview', [GoogleSheetsController::class, 'preview'])->name('preview');
+        Route::get('/logs', [GoogleSheetsController::class, 'logs'])->name('logs');
+        Route::delete('/disconnect/{googleAccount}', [GoogleSheetsController::class, 'disconnect'])->name('disconnect');
     });
 
     // Communications (unified inbox)
@@ -263,19 +274,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::delete('/{googleAccount}/revoke-access/{user}', [App\Http\Controllers\GmailTeamController::class, 'revokeAccess'])->name('revoke-access');
             });
         });
-    });
-
-    // Google Sheets Integration Routes
-    Route::prefix('google-sheets')->name('google-sheets.')->group(function () {
-        Route::get('/', [GoogleSheetsController::class, 'index'])->name('index');
-        Route::get('/connect', [GoogleSheetsController::class, 'connect'])->name('connect');
-        Route::get('/callback', [GoogleSheetsController::class, 'callback'])->name('callback');
-        Route::post('/import', [GoogleSheetsController::class, 'import'])->name('import');
-        Route::get('/sheets/{googleAccount}', [GoogleSheetsController::class, 'getSheets'])->name('sheets');
-        Route::get('/columns/{googleAccount}/{sheetId}', [GoogleSheetsController::class, 'getColumns'])->name('columns');
-        Route::post('/preview', [GoogleSheetsController::class, 'preview'])->name('preview');
-        Route::get('/logs', [GoogleSheetsController::class, 'logs'])->name('logs');
-        Route::delete('/disconnect/{googleAccount}', [GoogleSheetsController::class, 'disconnect'])->name('disconnect');
     });
 
     // Settings with Google Integration

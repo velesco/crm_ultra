@@ -411,47 +411,6 @@ class SettingsController extends Controller
     }
 
     /**
-     * Integrations overview
-     */
-    public function integrations()
-    {
-        $integrations = [
-            'google' => [
-                'name' => 'Google Services',
-                'status' => config('services.google.client_id') ? 'configured' : 'not_configured',
-                'features' => ['OAuth Login', 'Google Sheets', 'Gmail API'],
-                'connected_accounts' => GoogleSheetsIntegration::where('created_by', Auth::id())->count(),
-            ],
-            'smtp' => [
-                'name' => 'SMTP Servers',
-                'status' => SmtpConfig::where('is_active', true)->exists() ? 'active' : 'inactive',
-                'features' => ['Email Campaigns', 'Transactional Emails'],
-                'configured_servers' => SmtpConfig::count(),
-            ],
-            'sms' => [
-                'name' => 'SMS Providers',
-                'status' => SmsProvider::where('is_active', true)->exists() ? 'active' : 'inactive',
-                'features' => ['Bulk SMS', 'Automated Messages'],
-                'active_providers' => SmsProvider::where('is_active', true)->count(),
-            ],
-            'whatsapp' => [
-                'name' => 'WhatsApp Business',
-                'status' => WhatsAppSession::where('status', 'connected')->exists() ? 'active' : 'inactive',
-                'features' => ['Direct Messaging', 'Bulk Messages'],
-                'active_sessions' => WhatsAppSession::where('status', 'connected')->count(),
-            ],
-            'zapier' => [
-                'name' => 'Zapier',
-                'status' => config('crm.integrations.zapier.enabled') ? 'available' : 'disabled',
-                'features' => ['Automation', 'Third-party Connections'],
-                'webhooks' => 0, // Would come from webhooks table
-            ],
-        ];
-
-        return view('settings.integrations', compact('integrations'));
-    }
-
-    /**
      * API Keys management
      */
     public function apiKeys()
