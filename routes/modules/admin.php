@@ -189,12 +189,6 @@ Route::prefix('admin')->name('admin.')->middleware(['role:super_admin|admin'])->
         Route::put('/{export}', [ExportController::class, 'update'])->name('update');
         Route::delete('/{export}', [ExportController::class, 'destroy'])->name('destroy');
 
-        // Export actions
-        Route::post('/{export}/start', [ExportController::class, 'start'])->name('start');
-        Route::post('/{export}/cancel', [ExportController::class, 'cancel'])->name('cancel');
-        Route::post('/{export}/duplicate', [ExportController::class, 'duplicate'])->name('duplicate');
-        Route::get('/{export}/download', [ExportController::class, 'download'])->name('download');
-        Route::get('/{export}/progress', [ExportController::class, 'progress'])->name('progress');
 
         // Additional views
         Route::get('/scheduled/index', [ExportController::class, 'scheduled'])->name('scheduled');

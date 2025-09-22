@@ -7,7 +7,6 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DataImportController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\GoogleSheetsController;
-use App\Http\Controllers\GmailOAuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingsController;
@@ -60,7 +59,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Contacts Management
     Route::resource('contacts', ContactController::class);
-    
+
     Route::prefix('contacts')->name('contacts.')->group(function () {
         Route::post('/bulk-actions', [ContactController::class, 'bulkActions'])->name('bulk-actions');
         Route::get('/export', [ContactController::class, 'export'])->name('export');
@@ -72,7 +71,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{contact}/sms', [ContactController::class, 'sendQuickSms'])->name('quick-sms');
         Route::post('/{contact}/whatsapp', [ContactController::class, 'sendQuickWhatsApp'])->name('quick-whatsapp');
     });
-    
+
     // Additional fallback route for contacts import (in case of URL issues)
     Route::get('/contacts/import/', [ContactController::class, 'import'])->name('contacts.import.fallback');
 
@@ -165,10 +164,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/update', [SettingsController::class, 'update'])->name('update');
         Route::post('/security/password', [SettingsController::class, 'updatePassword'])->name('security.password');
         Route::post('/notifications/update', [SettingsController::class, 'updateNotifications'])->name('notifications.update');
-        
+
         // Profile Avatar Upload
         Route::post('/profile/avatar', [SettingsController::class, 'updateAvatar'])->name('profile.avatar');
-        
+
         // Two-Factor Authentication (placeholder routes - to be implemented later)
         Route::post('/security/two-factor/enable', [SettingsController::class, 'enableTwoFactor'])->name('security.two-factor.enable');
         Route::post('/security/two-factor/disable', [SettingsController::class, 'disableTwoFactor'])->name('security.two-factor.disable');
@@ -185,7 +184,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{googleAccount}/status', [App\Http\Controllers\GmailOAuthController::class, 'status'])->name('status');
         Route::patch('/{googleAccount}/sync-settings', [App\Http\Controllers\GmailOAuthController::class, 'updateSyncSettings'])->name('sync-settings');
     });
-    
+
     // Gmail Team Management - FAZA 7-8 Implementation
     Route::prefix('gmail-team')->name('gmail.team.')->group(function () {
         Route::get('/', [App\Http\Controllers\GmailTeamController::class, 'index'])->name('index');
@@ -196,7 +195,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/sync-settings', [App\Http\Controllers\GmailTeamController::class, 'updateTeamSyncSettings'])->name('sync-settings');
         Route::get('/export-settings', [App\Http\Controllers\GmailTeamController::class, 'exportTeamSettings'])->name('export-settings');
     });
-    
+
     // Gmail Unified Inbox - FAZA 4 Implementation
     Route::prefix('gmail')->name('gmail.')->group(function () {
         Route::get('/inbox', [App\Http\Controllers\GmailInboxController::class, 'index'])->name('inbox');
@@ -259,7 +258,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/smtp-configs', [App\Http\Controllers\SmtpConfigController::class, 'getConfigs'])->name('smtp-configs');
         Route::get('/sms-providers', [App\Http\Controllers\SmsProviderController::class, 'getProviders'])->name('sms-providers');
         Route::get('/whatsapp-sessions', [App\Http\Controllers\WhatsAppSessionController::class, 'getSessions'])->name('whatsapp-sessions');
-        
+
         // Gmail API endpoints
         Route::prefix('gmail')->name('gmail.')->group(function () {
             Route::get('/{email}', [App\Http\Controllers\GmailInboxController::class, 'show'])->name('show');
@@ -268,7 +267,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/{email}/toggle-star', [App\Http\Controllers\GmailInboxController::class, 'toggleStar'])->name('toggle-star');
             Route::post('/{email}/mark-read', [App\Http\Controllers\GmailInboxController::class, 'markEmailAsRead'])->name('mark-email-read');
             Route::post('/sync-all', [App\Http\Controllers\GmailInboxController::class, 'syncAll'])->name('sync-all');
-            
+
             // Team management endpoints
             Route::prefix('team')->name('team.')->group(function () {
                 Route::get('/stats', [App\Http\Controllers\GmailTeamController::class, 'getTeamStats'])->name('stats');
@@ -278,8 +277,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 Route::post('/{googleAccount}/grant-access', [App\Http\Controllers\GmailTeamController::class, 'grantAccess'])->name('grant-access');
                 Route::delete('/{googleAccount}/revoke-access/{user}', [App\Http\Controllers\GmailTeamController::class, 'revokeAccess'])->name('revoke-access');
             });
+        });
     });
-    
+
     // Gmail Integration Routes
     Route::prefix('gmail')->name('gmail.')->group(function () {
         Route::get('/inbox', [App\Http\Controllers\GmailInboxController::class, 'index'])->name('inbox');
@@ -313,7 +313,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/security', [SettingsController::class, 'security'])->name('security');
         Route::post('/security/password', [SettingsController::class, 'updatePassword'])->name('security.password');
         Route::post('/security/2fa', [SettingsController::class, 'toggle2FA'])->name('security.2fa');
-        
+
         // Google services section
         Route::prefix('google')->name('google.')->group(function () {
             Route::get('/', [SettingsController::class, 'google'])->name('index');
