@@ -251,25 +251,34 @@ $(document).ready(function() {
     });
 
     function showNotification(message, type) {
-        const bgColor = type === 'success' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
-        const iconColor = type === 'success' ? 'text-green-400' : 'text-red-400';
-        const textColor = type === 'success' ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200';
-        const iconPath = type === 'success' ? 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' : 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
+        let bgColor, iconColor, textColor, iconPath;
         
-        const notification = $(`
-            <div class="mb-6 ${bgColor} border rounded-md p-4" style="position: fixed; top: 20px; right: 20px; z-index: 1000; max-width: 400px;">
-                <div class="flex">
-                    <svg class="w-5 h-5 ${iconColor} mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${iconPath}"></path>
-                    </svg>
-                    <p class="text-sm ${textColor}">${message}</p>
-                </div>
-            </div>
-        `);
+        if (type === 'success') {
+            bgColor = 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800';
+            iconColor = 'text-green-400';
+            textColor = 'text-green-800 dark:text-green-200';
+            iconPath = 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z';
+        } else {
+            bgColor = 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
+            iconColor = 'text-red-400';
+            textColor = 'text-red-800 dark:text-red-200';
+            iconPath = 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
+        }
+        
+        const notification = $('<div class="mb-6 ' + bgColor + ' border rounded-md p-4" style="position: fixed; top: 20px; right: 20px; z-index: 1000; max-width: 400px;">' +
+            '<div class="flex">' +
+                '<svg class="w-5 h-5 ' + iconColor + ' mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="' + iconPath + '"></path>' +
+                '</svg>' +
+                '<p class="text-sm ' + textColor + '">' + message + '</p>' +
+            '</div>' +
+        '</div>');
         
         $('body').append(notification);
-        setTimeout(() => {
-            notification.fadeOut(() => notification.remove());
+        setTimeout(function() {
+            notification.fadeOut(function() {
+                notification.remove();
+            });
         }, 5000);
     }
 });

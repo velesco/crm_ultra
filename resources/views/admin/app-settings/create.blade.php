@@ -252,69 +252,32 @@ $(document).ready(function() {
         
         switch (type) {
             case 'boolean':
-                inputHtml = `
-                    <select id="value" name="value" class="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="1" ${currentValue === '1' ? 'selected' : ''}>True</option>
-                        <option value="0" ${currentValue === '0' || currentValue === '' ? 'selected' : ''}>False</option>
-                    </select>
-                `;
+                inputHtml = '<select id="value" name="value" class="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">' +
+                    '<option value="1"' + (currentValue === '1' ? ' selected' : '') + '>True</option>' +
+                    '<option value="0"' + (currentValue === '0' || currentValue === '' ? ' selected' : '') + '>False</option>' +
+                '</select>';
                 break;
                 
             case 'integer':
-                inputHtml = `
-                    <input type="number" 
-                           id="value" 
-                           name="value" 
-                           value="${currentValue}" 
-                           placeholder="Enter integer value..." 
-                           class="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
-                `;
+                inputHtml = '<input type="number" id="value" name="value" value="' + currentValue + '" placeholder="Enter integer value..." class="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">';
                 break;
                 
             case 'float':
-                inputHtml = `
-                    <input type="number" 
-                           id="value" 
-                           name="value" 
-                           value="${currentValue}" 
-                           step="0.01" 
-                           placeholder="Enter decimal value..." 
-                           class="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
-                `;
+                inputHtml = '<input type="number" id="value" name="value" value="' + currentValue + '" step="0.01" placeholder="Enter decimal value..." class="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">';
                 break;
                 
             case 'json':
-                inputHtml = `
-                    <textarea id="value" 
-                              name="value" 
-                              rows="4" 
-                              placeholder="Enter JSON data..." 
-                              class="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm">${currentValue}</textarea>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Enter valid JSON format</p>
-                `;
+                inputHtml = '<textarea id="value" name="value" rows="4" placeholder="Enter JSON data..." class="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm">' + currentValue + '</textarea>' +
+                    '<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Enter valid JSON format</p>';
                 break;
                 
             case 'encrypted':
-                inputHtml = `
-                    <input type="password" 
-                           id="value" 
-                           name="value" 
-                           value="${currentValue}" 
-                           placeholder="Enter sensitive value (will be encrypted)..." 
-                           class="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">This value will be encrypted when stored</p>
-                `;
+                inputHtml = '<input type="password" id="value" name="value" value="' + currentValue + '" placeholder="Enter sensitive value (will be encrypted)..." class="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">' +
+                    '<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">This value will be encrypted when stored</p>';
                 break;
                 
             default: // string
-                inputHtml = `
-                    <input type="text" 
-                           id="value" 
-                           name="value" 
-                           value="${currentValue}" 
-                           placeholder="Enter text value..." 
-                           class="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
-                `;
+                inputHtml = '<input type="text" id="value" name="value" value="' + currentValue + '" placeholder="Enter text value..." class="block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">';
         }
         
         container.html(inputHtml);
