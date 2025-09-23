@@ -116,7 +116,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/{integration}', [GoogleSheetsController::class, 'destroy'])->name('destroy');
         Route::post('/{integration}/sync', [GoogleSheetsController::class, 'sync'])->name('sync');
         Route::post('/{integration}/test', [GoogleSheetsController::class, 'test'])->name('test');
-        Route::get('/{integration}/preview', [GoogleSheetsController::class, 'preview'])->name('preview');
+        Route::get('/{integration}/preview', [GoogleSheetsController::class, 'preview'])->name('integration.preview');
         
         // API endpoints for Sheets data
         Route::get('/api/spreadsheet/{spreadsheet_id}/info', [GoogleSheetsController::class, 'getSpreadsheetInfo'])->name('api.spreadsheet.info');
@@ -127,7 +127,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/import', [GoogleSheetsController::class, 'import'])->name('import');
         Route::get('/sheets/{googleAccount}', [GoogleSheetsController::class, 'getSheetsList'])->name('sheets');
         Route::get('/columns/{googleAccount}/{sheetId}', [GoogleSheetsController::class, 'getColumns'])->name('columns');
-        Route::post('/preview', [GoogleSheetsController::class, 'preview'])->name('preview');
+        Route::post('/preview', [GoogleSheetsController::class, 'preview'])->name('data.preview');
         Route::get('/logs', [GoogleSheetsController::class, 'logs'])->name('logs');
         Route::delete('/disconnect/{googleAccount}', [GoogleSheetsController::class, 'disconnect'])->name('disconnect');
     });

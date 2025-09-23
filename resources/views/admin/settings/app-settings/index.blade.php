@@ -55,6 +55,20 @@
 </div>
 @endsection
 
+@php
+function getCategoryIcon($category) {
+    $icons = [
+        'google' => 'google',
+        'sms' => 'sms',
+        'whatsapp' => 'whatsapp',
+        'email' => 'envelope',
+        'general' => 'cog',
+        'database' => 'database'
+    ];
+    return $icons[$category] ?? 'cog';
+}
+@endphp
+
 @section('content')
 <div class="space-y-6">
     
@@ -98,7 +112,7 @@
                 <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-medium text-gray-900 dark:text-white flex items-center">
-                            <i class="category-icon fas fa-{{ $this->getCategoryIcon($categoryName) }} mr-3 text-indigo-500"></i>
+                            <i class="category-icon fas fa-{{ getCategoryIcon($categoryName) }} mr-3 text-indigo-500"></i>
                             {{ ucfirst($categoryName) }} Settings
                         </h3>
                         <button onclick="bulkUpdate('{{ $categoryName }}')" 
@@ -370,8 +384,8 @@ document.getElementById('deleteModal').addEventListener('click', function(e) {
     }
 });
 
-// Helper function for category icons
-function getCategoryIcon(category) {
+// Helper function for category icons (moved to JavaScript)
+function getCategoryIconJS(category) {
     const icons = {
         'google': 'google',
         'sms': 'sms',

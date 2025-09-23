@@ -222,6 +222,21 @@ class AppSetting extends Model
      */
     public static function getCategories()
     {
+        return collect([
+            'general' => 'General',
+            'google' => 'Google',
+            'sms' => 'SMS',
+            'whatsapp' => 'WhatsApp',
+            'email' => 'Email',
+            'database' => 'Database',
+        ]);
+    }
+
+    /**
+     * Get all existing categories from database
+     */
+    public static function getExistingCategories()
+    {
         return static::distinct('category')->pluck('category')->sort();
     }
 
